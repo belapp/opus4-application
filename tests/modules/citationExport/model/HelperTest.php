@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,45 +25,51 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Tests
- * @author      Sascha Szott <szott@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2015, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class CitationExport_Model_HelperTest extends ControllerTestCase {
+use Opus\Common\DnbInstitute;
+use Opus\Common\Document;
 
-    private $_documentId;
+class CitationExport_Model_HelperTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database'];
 
-    private $_helper;
+    /** @var int */
+    private $documentId;
 
-    public function setUp() {
+    /** @var CitationExport_Model_Helper */
+    private $helper;
+
+    public function setUp(): void
+    {
         parent::setUp();
 
         $document = $this->createTestDocument();
         $document->setServerState('published');
 
-        $this->_documentId = $document->store();
-        $this->assertNotNull($this->_documentId);
+        $this->documentId = $document->store();
+        $this->assertNotNull($this->documentId);
 
-        $this->_helper = new CitationExport_Model_Helper(
+        $this->helper = new CitationExport_Model_Helper(
             '/testpath',
             APPLICATION_PATH . '/modules/citationExport/views/scripts/index'
         );
     }
 
-    public function testGetScriptPath() {
+    public function testGetScriptPath()
+    {
         $this->assertEquals(
             APPLICATION_PATH . '/modules/citationExport/views/scripts/index',
-            $this->_helper->getScriptPath()
+            $this->helper->getScriptPath()
         );
     }
 
-    public function testGetAvailableStylesheets() {
-        $stylesheets = $this->_helper->getAvailableStylesheets();
+    public function testGetAvailableStylesheets()
+    {
+        $stylesheets = $this->helper->getAvailableStylesheets();
 
         $this->assertContains('ris', $stylesheets);
         $this->assertContains('bibtex', $stylesheets);
@@ -71,31 +78,33 @@ class CitationExport_Model_HelperTest extends ControllerTestCase {
         $this->assertNotContains('download.phtml', $stylesheets);
     }
 
-    public function testBibtexAttributeSchoolForMasterThesis() {
-        $document = new Opus_Document($this->_documentId);
+    public function testBibtexAttributeSchoolForMasterThesis()
+    {
+        $document = Document::get($this->documentId);
 
         $document->setType('masterthesis');
-        $institute = new Opus_DnbInstitute(4);
+        $institute = DnbInstitute::get(4);
         $document->addThesisPublisher($institute);
 
         $document->store();
 
         $request = $this->getRequest();
 
-        $request->setParam('docId', $this->_documentId);
+        $request->setParam('docId', $this->documentId);
         $request->setParam('output', 'bibtex');
 
-        $output = $this->_helper->getOutput($request);
+        $output = $this->helper->getOutput($request);
 
         $this->assertContains('school      = {School of Life},', $output);
     }
 
-    public function testBibtexAttributeSchoolWithDepartment() {
-        $document = new Opus_Document($this->_documentId);
+    public function testBibtexAttributeSchoolWithDepartment()
+    {
+        $document = Document::get($this->documentId);
 
         $document->setType('masterthesis');
 
-        $institute = new Opus_DnbInstitute();
+        $institute = DnbInstitute::new();
         $institute->setName('Test Uni');
         $institute->setDepartment('Test Dep');
         $institute->setIsPublisher(true);
@@ -108,126 +117,130 @@ class CitationExport_Model_HelperTest extends ControllerTestCase {
 
         $request = $this->getRequest();
 
-        $request->setParam('docId', $this->_documentId);
+        $request->setParam('docId', $this->documentId);
         $request->setParam('output', 'bibtex');
 
-        $output = $this->_helper->getOutput($request);
+        $output = $this->helper->getOutput($request);
 
         $institute->delete();
 
         $this->assertContains('school      = {Test Uni, Test Dep},', $output);
     }
 
-    public function testBibtexAttributeSchoolForDoctoralThesis() {
-        $document = new Opus_Document($this->_documentId);
+    public function testBibtexAttributeSchoolForDoctoralThesis()
+    {
+        $document = Document::get($this->documentId);
 
         $document->setType('doctoralthesis');
-        $institute = new Opus_DnbInstitute(4);
+        $institute = DnbInstitute::get(4);
         $document->addThesisPublisher($institute);
 
         $document->store();
 
         $request = $this->getRequest();
 
-        $request->setParam('docId', $this->_documentId);
+        $request->setParam('docId', $this->documentId);
         $request->setParam('output', 'bibtex');
 
-        $output = $this->_helper->getOutput($request);
+        $output = $this->helper->getOutput($request);
 
         $this->assertContains('school      = {School of Life},', $output);
     }
 
-    public function testGetExtension() {
-        $this->assertEquals('bib', $this->_helper->getExtension('bibtex'));
-        $this->assertEquals('ris', $this->_helper->getExtension('ris'));
-        $this->assertEquals('txt', $this->_helper->getExtension('unknown'));
-        $this->assertEquals('txt', $this->_helper->getExtension(null));
-        $this->assertEquals('txt', $this->_helper->getExtension(''));
+    public function testGetExtension()
+    {
+        $this->assertEquals('bib', $this->helper->getExtension('bibtex'));
+        $this->assertEquals('ris', $this->helper->getExtension('ris'));
+        $this->assertEquals('txt', $this->helper->getExtension('unknown'));
+        $this->assertEquals('txt', $this->helper->getExtension(null));
+        $this->assertEquals('txt', $this->helper->getExtension(''));
     }
 
-    public function testGetTemplateForDocument() {
-        $document = new Opus_Document($this->_documentId);
+    public function testGetTemplateForDocument()
+    {
+        $document = Document::get($this->documentId);
 
         $document->setType('masterthesis');
         $document->store();
 
-        $this->assertEquals('bibtex_masterthesis.xslt', $this->_helper->getTemplateForDocument($document, 'bibtex'));
-        $this->assertEquals('ris.xslt', $this->_helper->getTemplateForDocument($document, 'ris'));
+        $this->assertEquals('bibtex_masterthesis.xslt', $this->helper->getTemplateForDocument($document, 'bibtex'));
+        $this->assertEquals('ris.xslt', $this->helper->getTemplateForDocument($document, 'ris'));
 
         $document->setType('lecture');
         $document->store();
 
-        $this->assertEquals('bibtex.xslt', $this->_helper->getTemplateForDocument($document, 'bibtex'));
+        $this->assertEquals('bibtex.xslt', $this->helper->getTemplateForDocument($document, 'bibtex'));
     }
 
-    /**
-     * @expectedException CitationExport_Model_Exception
-     * @expectedExceptionMessage invalid_format
-     */
-    public function testGetTemplateForDocumentInvalidFormat() {
-        $document = new Opus_Document($this->_documentId);
+    public function testGetTemplateForDocumentInvalidFormat()
+    {
+        $document = Document::get($this->documentId);
 
         $document->setType('masterthesis');
         $document->store();
 
-        $this->assertEquals('bibtex_masterthesis.xslt', $this->_helper->getTemplateForDocument($document, 'plain'));
+        $this->expectException(CitationExport_Model_Exception::class);
+        $this->expectExceptionMessage('invalid_format');
+        $this->assertEquals('bibtex_masterthesis.xslt', $this->helper->getTemplateForDocument($document, 'plain'));
     }
 
-    /**
-     * @expectedException CitationExport_Model_Exception
-     * @expectedExceptionMessage invalid_docid
-     */
-    public function testGetDocumentMissingDocId() {
-        $this->_helper->getDocument($this->getRequest());
+    public function testGetDocumentMissingDocId()
+    {
+        $this->expectException(CitationExport_Model_Exception::class);
+        $this->expectExceptionMessage('invalid_docid');
+        $this->helper->getDocument($this->getRequest());
     }
 
-    /**
-     * @expectedException CitationExport_Model_Exception
-     * @expectedExceptionMessage invalid_docid
-     */
-    public function testGetDocumentInvalidDocId() {
+    public function testGetDocumentInvalidDocId()
+    {
         $request = $this->getRequest();
         $request->setParam('docId', '9999');
-        $this->_helper->getDocument($request);
+
+        $this->expectException(CitationExport_Model_Exception::class);
+        $this->expectExceptionMessage('invalid_docid');
+        $this->helper->getDocument($request);
     }
 
-    public function testGetDocument() {
+    public function testGetDocument()
+    {
         $request = $this->getRequest();
         $request->setParam('docId', '146');
-        $document = $this->_helper->getDocument($request);
+        $document = $this->helper->getDocument($request);
         $this->assertNotNull($document);
         $this->assertEquals(146, $document->getId());
     }
 
     /**
      * Check if non-admin user has access to unpublished documents.
-     * @expectedException Application_Exception
-     * @expectedExceptionMessage not allowed
      */
-    public function testGetDocumentUnpublished() {
+    public function testGetDocumentUnpublished()
+    {
         $this->enableSecurity();
         $this->loginUser('security7', 'security7pwd');
 
-        $document = new Opus_Document($this->_documentId);
+        $document = Document::get($this->documentId);
         $document->setServerState('unpublished');
         $document->store();
 
         $request = $this->getRequest();
-        $request->setParam('docId', $this->_documentId);
-        $document = $this->_helper->getDocument($request);
+        $request->setParam('docId', $this->documentId);
+
+        $this->expectException(Application_Exception::class);
+        $this->expectExceptionMessage('not allowed');
+        $document = $this->helper->getDocument($request);
+
         $this->assertNotNull($document);
-        $this->assertEquals($this->_documentId, $document->getId());
+        $this->assertEquals($this->documentId, $document->getId());
     }
 
-    public function testGetPlainOutputRis() {
-        $document = new Opus_Document(146);
+    public function testGetPlainOutputRis()
+    {
+        $document = Document::get(146);
 
-        $output = $this->_helper->getPlainOutput($document, 'ris.xslt');
+        $output = $this->helper->getPlainOutput($document, 'ris.xslt');
 
         $this->assertContains('T1  - KOBV', $output);
         $this->assertContains('T1  - COLN', $output);
         $this->assertContains('T2  - Parent Title', $output);
     }
-
 }
-

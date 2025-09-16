@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,7 +24,12 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\DocumentInterface;
 
 /**
  * Formular fuer den Upload von Dateien in der Administration.
@@ -35,29 +41,23 @@
  * - Label
  * - Kommentar
  * - Language
- *
- * @category    Application
- * @package     Admin_Form_File
- * @author      Henning Gerhardt (henning.gerhardt@slub-dresden.de)
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_Form_File_Upload extends Application_Form_Model_Abstract {
+class Admin_Form_File_Upload extends Application_Form_Model_Abstract
+{
+    public const ELEMENT_HASH       = 'OpusHash';
+    public const ELEMENT_FILE       = 'File';
+    public const ELEMENT_LABEL      = 'Label';
+    public const ELEMENT_COMMENT    = 'Comment';
+    public const ELEMENT_LANGUAGE   = 'Language';
+    public const ELEMENT_SORT_ORDER = 'SortOrder';
 
-    const ELEMENT_HASH       = 'OpusHash';
-    const ELEMENT_FILE       = 'File';
-    const ELEMENT_LABEL      = 'Label';
-    const ELEMENT_COMMENT    = 'Comment';
-    const ELEMENT_LANGUAGE   = 'Language';
-    const ELEMENT_SORT_ORDER = 'SortOrder';
+    public const SUBFORM_DOCINFO = 'Info';
 
-    const SUBFORM_DOCINFO    = 'Info';
+    /** @var array */
+    private $fileInfo;
 
-    private $_fileInfo = null;
-
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->addSubForm(new Admin_Form_InfoBox(), self::SUBFORM_DOCINFO);
@@ -68,19 +68,32 @@ class Admin_Form_File_Upload extends Application_Form_Model_Abstract {
         $this->setUseNameAsLabel(true);
 
         $element = $this->createElement(
-            'file', self::ELEMENT_FILE, array(
-            'required' => true,
-            'label' => 'admin_filemanager_element_file',
-            )
+            'file',
+            self::ELEMENT_FILE,
+            [
+                'required' => true,
+                'label'    => 'admin_filemanager_element_file',
+            ]
         );
+
+        $config = $this->getApplicationConfig();
+
+        $filenameOptions   = [
+            'filenameMaxLength' => $config->publish->filenameMaxLength,
+            'filenameFormat'    => $config->publish->filenameFormat,
+        ];
+        $filenameValidator = new Application_Form_Validate_Filename($filenameOptions);
+
+        $element->addValidator($filenameValidator, false);
         $element->addValidator('Count', false, 1); // ensure only 1 file
+
         $this->addElement($element);
 
-        $this->addElement('Language', self::ELEMENT_LANGUAGE, array('label' => 'Language', 'required' => true));
+        $this->addElement('Language', self::ELEMENT_LANGUAGE, ['label' => 'Language', 'required' => true]);
         $this->addElement('text', self::ELEMENT_LABEL);
         $this->addElement('textarea', self::ELEMENT_COMMENT);
-        $hash = $this->createElement('hash', self::ELEMENT_HASH, array('salt' => 'unique'));
-        $hash->addDecorator('HtmlTag', array('tag' => 'div'));
+        $hash = $this->createElement('hash', self::ELEMENT_HASH, ['salt' => 'unique']);
+        $hash->addDecorator('HtmlTag', ['tag' => 'div']);
         $this->addElement($hash);
 
         $this->addElement('SortOrder', self::ELEMENT_SORT_ORDER);
@@ -88,7 +101,11 @@ class Admin_Form_File_Upload extends Application_Form_Model_Abstract {
         $this->getElement(self::ELEMENT_MODEL_ID)->setRequired(true);
     }
 
-    public function populateFromModel($document) {
+    /**
+     * @param DocumentInterface $document
+     */
+    public function populateFromModel($document)
+    {
         $this->getSubForm(self::SUBFORM_DOCINFO)->populateFromModel($document);
         $this->getElement(self::ELEMENT_MODEL_ID)->setValue($document->getId());
     }
@@ -96,9 +113,10 @@ class Admin_Form_File_Upload extends Application_Form_Model_Abstract {
     /**
      * Speichert Datei und verknüpft sie mit dem Dokument.
      *
-     * @param Opus_Model_AbstractDb $document
+     * @param DocumentInterface $document
      */
-    public function updateModel($document) {
+    public function updateModel($document)
+    {
         $files = $this->getFileInfo();
 
         foreach ($files as $file) {
@@ -122,18 +140,24 @@ class Admin_Form_File_Upload extends Application_Form_Model_Abstract {
         }
     }
 
-    public function getFileInfo() {
-        if (is_null($this->_fileInfo)) {
+    /**
+     * @return array
+     */
+    public function getFileInfo()
+    {
+        if ($this->fileInfo === null) {
             $upload = new Zend_File_Transfer_Adapter_Http();
             return $upload->getFileInfo();
-        }
-        else {
-            return $this->_fileInfo;
+        } else {
+            return $this->fileInfo;
         }
     }
 
-    public function setFileInfo($fileInfo) {
-        $this->_fileInfo = $fileInfo;
+    /**
+     * @param array $fileInfo
+     */
+    public function setFileInfo($fileInfo)
+    {
+        $this->fileInfo = $fileInfo;
     }
-
 }

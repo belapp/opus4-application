@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,69 +25,74 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Account;
+use Opus\Common\AccountInterface;
+use Opus\Common\Model\NotFoundException;
 
 /**
  * Account administration form.
  *
  * TODO handle password change validation internally (not in AccountController)
- * by checking the context and the edit mode
+ *      by checking the context and the edit mode
+ * TODO clean up MODE handling (see constructor)
  */
-class Admin_Form_Account extends Admin_Form_RolesAbstract {
+class Admin_Form_Account extends Application_Form_Model_Abstract
+{
+    public const ELEMENT_LOGIN            = 'username';
+    public const ELEMENT_FIRST_NAME       = 'firstname';
+    public const ELEMENT_LAST_NAME        = 'lastname';
+    public const ELEMENT_EMAIL            = 'email';
+    public const ELEMENT_PASSWORD         = 'password';
+    public const ELEMENT_PASSWORD_CONFIRM = 'confirmPassword';
 
-    const ELEMENT_LOGIN = 'username';
-    const ELEMENT_FIRST_NAME = 'firstname';
-    const ELEMENT_LAST_NAME = 'lastname';
-    const ELEMENT_EMAIL = 'email';
-    const ELEMENT_PASSWORD = 'password';
-    const ELEMENT_PASSWORD_CONFIRM = 'confirmPassword';
+    public const SUBFORM_ROLES = 'roles';
 
-    private $_mode;
+    public const MODE_NEW  = 'new';
+    public const MODE_EDIT = 'edit';
+
+    /** @var string Mode modifies validation depending on if an account is being created or edited. */
+    private $mode;
 
     /**
-     * Constructs empty form or populates it with values from Opus_Account($id).
-     * @param mixed $id
+     * Constructs empty form or populates it with values from Account($id).
+     *
+     * @param int|null $id TODO BUG int should not be null
      */
-    public function __construct($id = null) {
+    public function __construct($id = null)
+    {
+        // TODO cannot call setMode() here because it access elements created later in init()
+        $this->mode = empty($id) ? self::MODE_NEW : self::MODE_EDIT;
+
         parent::__construct();
 
-        $env = (empty($id)) ? 'new' : 'edit';
-
-        $this->_mode = $env;
-
-        if (!empty($id)) {
-            $account = new Opus_Account($id);
-
+        if ($this->getMode() === self::MODE_EDIT) {
+            $account = Account::get($id);
             $this->populateFromModel($account);
-
-            // when editing account password isn't required
-            $this->getElement(self::ELEMENT_PASSWORD)->setRequired(false);
-            $this->getElement(self::ELEMENT_PASSWORD_CONFIRM)->setRequired(false);
-            // force validation on empty field to check identity to password
-            $this->getElement(self::ELEMENT_PASSWORD_CONFIRM)->setAllowEmpty(false);
         }
+
+        $this->setMode($this->mode);
     }
 
     /**
      * Create form elements.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->setLabelPrefix('admin_account_label_');
         $this->setUseNameAsLabel(true);
+        $this->setModelClass(Account::class);
 
         $this->addElement('login', self::ELEMENT_LOGIN);
 
         $this->getElement(self::ELEMENT_LOGIN)->addValidator(
             new Application_Form_Validate_LoginAvailable(
-                array('ignoreCase' => $this->_mode === 'edit')
+                ['ignoreCase' => $this->mode === self::MODE_EDIT]
             )
         );
 
@@ -97,41 +103,218 @@ class Admin_Form_Account extends Admin_Form_RolesAbstract {
         $this->addElement('password', self::ELEMENT_PASSWORD_CONFIRM);
 
         // add password validator
-        $confirmPassword = $this->getElement(self::ELEMENT_PASSWORD_CONFIRM);
+        $confirmPassword   = $this->getElement(self::ELEMENT_PASSWORD_CONFIRM);
         $passwordValidator = new Application_Form_Validate_Password();
-        $confirmPassword->setValidators(array($passwordValidator));
+        $confirmPassword->setValidators([$passwordValidator]);
 
-        // add form elements for selecting roles
-        $this->_addRolesGroup();
+        $roles = new Admin_Form_UserRoles();
+
+        $this->addSubForm($roles, self::SUBFORM_ROLES);
     }
 
     /**
-     * Populate the form values from Opus_Account instance.
-     * @param <type> $account
+     * Populate the form values from Account instance.
+     *
+     * @param AccountInterface $account
      */
-    public function populateFromModel($account) {
-        $this->getElement(self::ELEMENT_LOGIN)->setValue(strtolower($account->getLogin()));
+    public function populateFromModel($account)
+    {
+        $this->getElement(self::ELEMENT_MODEL_ID)->setValue($account->getId());
+        $this->getElement(self::ELEMENT_LOGIN)->setValue(strtolower($account->getLogin() ?? ''));
         $this->getElement(self::ELEMENT_FIRST_NAME)->setValue($account->getFirstName());
         $this->getElement(self::ELEMENT_LAST_NAME)->setValue($account->getLastName());
         $this->getElement(self::ELEMENT_EMAIL)->setValue($account->getEmail());
 
-        $roles = $account->getRole();
+        $rolesForm = $this->getSubForm(self::SUBFORM_ROLES);
 
-        $this->setSelectedRoles($roles);
+        $rolesForm->populateFromModel($account);
 
-        $adminRoleElement = $this->getElement('roleadministrator');
-
-        if (Zend_Auth::getInstance()->getIdentity() === strtolower($account->getLogin())) {
+        // current user cannot remode administrator permission
+        // TODO does it make sense?
+        $adminRoleElement = $rolesForm->getElement('administrator');
+        if (Zend_Auth::getInstance()->getIdentity() === strtolower($account->getLogin() ?? '')) {
             $adminRoleElement->setAttrib('disabled', true);
         }
     }
 
-    public function updateModel($account) {
-        $account->setLogin($this->getElementValue(self::ELEMENT_LOGIN));
+    /**
+     * @param AccountInterface $account
+     */
+    public function updateModel($account)
+    {
+        $logout = false;
+
+        if ($this->isLoginChanged()) {
+            $account->setLogin($this->getElementValue(self::ELEMENT_LOGIN));
+            $logout = true;
+        }
+
         $account->setFirstName($this->getElementValue(self::ELEMENT_FIRST_NAME));
         $account->setLastName($this->getElementValue(self::ELEMENT_LAST_NAME));
         $account->setEmail($this->getElementValue(self::ELEMENT_EMAIL));
-        $account->setPassword($this->getElementValue(self::ELEMENT_PASSWORD));
+
+        if ($this->isPasswordChanged()) {
+            $account->setPassword($this->getElementValue(self::ELEMENT_PASSWORD));
+            $logout = true;
+        }
+
+        $rolesForm = $this->getSubForm(self::SUBFORM_ROLES);
+        $rolesForm->updateModel($account);
+
+        // TODO storing of model happens in ActionCRUD controller class -> need way to move this into controller
+        // logout current user if login or password has changed
+        if ($this->isCurrentUser() && $logout) {
+            Zend_Auth::getInstance()->clearIdentity();
+        }
     }
 
+    /**
+     * @return string
+     */
+    public function getMode()
+    {
+        return $this->mode;
+    }
+
+    /**
+     * @param string $mode
+     */
+    public function setMode($mode)
+    {
+        $this->mode = $mode;
+
+        if ($mode === self::MODE_EDIT) {
+            // when editing account password isn't required
+            $this->getElement(self::ELEMENT_PASSWORD)->setRequired(false);
+            $this->getElement(self::ELEMENT_PASSWORD_CONFIRM)->setRequired(false);
+            // force validation on empty field to check identity to password
+            $this->getElement(self::ELEMENT_PASSWORD_CONFIRM)->setAllowEmpty(false);
+        } else {
+            // when creating new account password is required
+            $this->getElement(self::ELEMENT_PASSWORD)->setRequired(true);
+            $this->getElement(self::ELEMENT_PASSWORD_CONFIRM)->setRequired(true);
+            // password confirmation must not be empty
+            $this->getElement(self::ELEMENT_PASSWORD_CONFIRM)->setAllowEmpty(true);
+        }
+    }
+
+    /**
+     * @param array $values
+     * @return bool
+     * @throws Zend_Form_Exception
+     * @throws NotFoundException
+     */
+    public function isValid($values)
+    {
+        if (isset($values[self::ELEMENT_MODEL_ID])) {
+            $accountId = $values[self::ELEMENT_MODEL_ID];
+
+            if (! empty($accountId)) {
+                $this->setMode(self::MODE_EDIT);
+                $account            = Account::get($accountId);
+                $values['oldLogin'] = $account->getLogin();
+            }
+        }
+
+        $passwordChanged = false;
+
+        if (empty($values[self::ELEMENT_PASSWORD])) {
+            if ($this->getMode() === self::MODE_EDIT) {
+                $values[self::ELEMENT_PASSWORD]         = 'notchanged';
+                $values[self::ELEMENT_PASSWORD_CONFIRM] = 'notchanged';
+            }
+        } else {
+            $passwordChanged = true;
+        }
+
+        $result = parent::isValid($values);
+
+        if (! $passwordChanged) {
+            $this->getElement(self::ELEMENT_PASSWORD)->setValue(null);
+            $this->getElement(self::ELEMENT_PASSWORD_CONFIRM)->setValue(null);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return bool
+     * @throws NotFoundException
+     */
+    public function isLoginChanged()
+    {
+        $accountId = $this->getElementValue(self::ELEMENT_MODEL_ID);
+
+        if (! empty($accountId)) {
+            $account  = Account::get($accountId);
+            $oldLogin = $account->getLogin();
+        } else {
+            $oldLogin = null;
+        }
+
+        return $oldLogin !== $this->getElementValue(self::ELEMENT_LOGIN);
+    }
+
+    /**
+     * @return bool
+     * @throws NotFoundException
+     */
+    public function isCurrentUser()
+    {
+        $currentUser = Zend_Auth::getInstance()->getIdentity();
+
+        $accountId = $this->getElementValue(self::ELEMENT_MODEL_ID);
+
+        if (! empty($accountId)) {
+            $account  = Account::get($accountId);
+            $oldLogin = $account->getLogin();
+        } else {
+            $oldLogin = null;
+        }
+
+        return $currentUser === $oldLogin;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPasswordChanged()
+    {
+        return ! empty($this->getElementValue(self::ELEMENT_PASSWORD));
+    }
+
+    /**
+     * @return $this
+     */
+    public function populate(array $values)
+    {
+        parent::populate($values);
+
+        $accountId = $this->getElement(self::ELEMENT_MODEL_ID);
+
+        if (! empty($accountId)) {
+            $this->setMode(self::MODE_EDIT);
+        } else {
+            $this->setMode(self::MODE_NEW);
+        }
+
+        return $this;
+    }
+
+    /*
+    public function rest() {
+
+            // find out if administrator
+
+
+            if (!$hasAdministratorRole && $isCurrentUser) {
+                $newRoles[] = UserRole::fetchByName('administrator');
+            }
+
+            $account->setRole($newRoles);
+
+        }
+
+        return $result;
+    }*/
 }

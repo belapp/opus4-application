@@ -22,33 +22,32 @@
  * OPUS is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details. You should have received a copy of the GNU General Public License 
- * along with OPUS; if not, write to the Free Software Foundation, Inc., 51 
+ * details. You should have received a copy of the GNU General Public License
+ * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Thoralf Klein <thoralf.klein@zib.de>
  * @copyright   Copyright (c) 2011, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 // Bootstrapping
 require_once dirname(__FILE__) . '/../common/bootstrap.php';
 
-$date = new DateTime();
+use Opus\Common\Document;
+use Opus\Common\Repository;
+
+$date       = new DateTime();
 $dateString = $date->sub(new DateInterval('P2D'))->format('Y-m-d');
-$f = new Opus_DocumentFinder();
-$f->setServerState('temporary')
+$finder     = Repository::getInstance()->getDocumentFinder();
+$finder->setServerState('temporary')
   ->setServerDateModifiedBefore($dateString);
 
-foreach ($f->ids() AS $id) {
-    $d = new Opus_Document($id);
-    if ($d->getServerState() == 'temporary') {
+foreach ($finder->getIds() as $id) {
+    $doc = Document::get($id);
+    if ($doc->getServerState() === 'temporary') {
         echo "deleting document: $id\n";
-        $d->deletePermanent();
-    }
-    else {
-        echo "NOT deleting document: $id because it has server state ".$d->getServerState();
+        $doc->delete();
+    } else {
+        echo "NOT deleting document: $id because it has server state " . $doc->getServerState();
     }
 }

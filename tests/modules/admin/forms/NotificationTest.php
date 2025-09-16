@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,22 +25,25 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2018, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
-class Admin_Form_NotificationTest extends ControllerTestCase {
+use Opus\Common\Document;
 
-    public function testGetRows() {
+class Admin_Form_NotificationTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'translation';
+
+    public function testGetRows()
+    {
         $form = new Admin_Form_Notification();
 
-        $form->addPublishNotificationSelection(new Opus_Document(146));
+        $form->addPublishNotificationSelection(Document::get(146));
 
         $rows = $form->getRows();
 
         $this->assertCount(2, $rows);
     }
-
 }

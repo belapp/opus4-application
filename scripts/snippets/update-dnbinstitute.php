@@ -25,14 +25,13 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Edouard Simon (edouard.simon@zib.de)
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id: update-thesispublisher.php 11775 2013-06-25 14:28:41Z tklein $
  */
+
 /**
- * 
+ * TODO find out what it does - make command?
+ *      it adds ThesisPublisher to specified document types
  */
 if (basename(__FILE__) !== basename($argv[0])) {
     echo "script must be executed directy (not via opus-console)\n";
@@ -41,88 +40,96 @@ if (basename(__FILE__) !== basename($argv[0])) {
 
 require_once dirname(__FILE__) . '/../common/bootstrap.php';
 
+use Opus\Common\DnbInstitute;
+use Opus\Common\Document;
+use Opus\Common\Model\NotFoundException;
+use Opus\Common\Repository;
+
 //if ($argc < 3) {
 //    echo "Usage: {$argv[0]} <document type> <thesis publisher ID> (dryrun)\n";
 //    exit;
 //}
 
-$options = getopt('', array('doctype:', 'publisherid:', 'grantorid:', 'dryrun'));
+$options = getopt('', ['doctype:', 'publisherid:', 'grantorid:', 'dryrun']);
 
-if ((!isset($options['publisherid']) || empty($options['publisherid']))
-        && (!isset($options['grantorid']) || empty($options['grantorid']))) {
+if (
+    (! isset($options['publisherid']) || empty($options['publisherid']))
+        && (! isset($options['grantorid']) || empty($options['grantorid']))
+) {
     echo "Usage: {$argv[0]} [--publisherid <thesis publisher ID>] [--grantorid <thesis grantor ID>]"
         . " (--doctype <document type>) (--dryrun)\n";
     echo "publisherid and/or grantorid must be provided.\n";
     exit;
 }
 
-$documentType = @$options['doctype'] ? $options['doctype'] : false;
+$documentType      = @$options['doctype'] ? $options['doctype'] : false;
 $thesisPublisherId = @$options['publisherid'] ? : null;
-$thesisGrantorId = @$options['grantorid'] ? : null;
-$dryrun = isset($options['dryrun']);
+$thesisGrantorId   = @$options['grantorid'] ? : null;
+$dryrun            = isset($options['dryrun']);
 
 try {
-    $dnbInstitute = new Opus_DnbInstitute($thesisPublisherId);
-} catch (Opus_Model_NotFoundException $omnfe) {
-    _log("Opus_DnbInstitute with ID <$thesisPublisherId> does not exist.\nExiting...");
+    $dnbInstitute = DnbInstitute::get($thesisPublisherId);
+} catch (NotFoundException $omnfe) {
+    writeMessage("Opus_DnbInstitute with ID <$thesisPublisherId> does not exist.\nExiting...");
     exit;
 }
 if ($dryrun) {
-    _log("TEST RUN: NO DATA WILL BE MODIFIED"); 
+    writeMessage("TEST RUN: NO DATA WILL BE MODIFIED");
 }
 
-$docFinder = new Opus_DocumentFinder();
-$docIds = $docFinder
-        ->setServerState('published');
-if ($documentType != false) {
-    $docFinder->setType($documentType); 
+$docFinder = Repository::getInstance()->getDocumentFinder();
+$docFinder->setServerState('published');
+if ($documentType !== false) {
+    $docFinder->setDocumentType($documentType);
 }
-$docIds = $docFinder->ids();
 
-_log(count($docIds) . " documents " . ($documentType != false ? "of type '$documentType' " : '') . "found");
+$docIds = $docFinder->getIds();
+
+writeMessage(count($docIds) . " documents " . ($documentType !== false ? "of type '$documentType' " : '') . "found");
 
 foreach ($docIds as $docId) {
     try {
-        $doc = new Opus_Document($docId);
-        if (count($doc->getFile()) == 0) {
-            _log("Document <$docId> has no files, skipping..");
+        $doc = Document::get($docId);
+        if (count($doc->getFile()) === 0) {
+            writeMessage("Document <$docId> has no files, skipping..");
             continue;
         }
-        if (!is_null($thesisPublisherId)) {
+        if ($thesisPublisherId !== null) {
             $thesisPublisher = $doc->getThesisPublisher();
             if (empty($thesisPublisher)) {
-                if (!$dryrun) {
+                if (! $dryrun) {
                     $doc->setThesisPublisher($dnbInstitute);
                     $doc->store();
                 }
-                _log("Setting ThesisPublisher <$thesisPublisherId> on Document <$docId>");
-            }
-            else {
+                writeMessage("Setting ThesisPublisher <$thesisPublisherId> on Document <$docId>");
+            } else {
                 $existingThesisPublisherId = $thesisPublisher[0]->getId();
-                _log("ThesisPublisher <{$existingThesisPublisherId[1]}> already set for Document <$docId>");
+                writeMessage("ThesisPublisher <{$existingThesisPublisherId[1]}> already set for Document <$docId>");
             }
         }
-        if (!is_null($thesisGrantorId)) {
+        if ($thesisGrantorId !== null) {
             $thesisGrantor = $doc->getThesisGrantor();
             if (empty($thesisGrantor)) {
-                if (!$dryrun) {
+                if (! $dryrun) {
                     $doc->setThesisGrantor($dnbInstitute);
                     $doc->store();
                 }
-                _log("Setting ThesisGrantor <$thesisGrantorId> on Document <$docId>");
-            }
-            else {
+                writeMessage("Setting ThesisGrantor <$thesisGrantorId> on Document <$docId>");
+            } else {
                 $existingThesisGrantorId = $thesisGrantor[0]->getId();
-                _log("ThesisGrantor <{$existingThesisGrantorId[1]}> already set for Document <$docId>");
+                writeMessage("ThesisGrantor <{$existingThesisGrantorId[1]}> already set for Document <$docId>");
             }
         }
     } catch (Exception $exc) {
-        _log("Error processing Document with ID $docId!");
-        _log($exc->getMessage());
+        writeMessage("Error processing Document with ID $docId!");
+        writeMessage($exc->getMessage());
     }
 }
 
-function _log($message) {
+/**
+ * @param string $message
+ */
+function writeMessage($message)
+{
     echo "$message\n";
 }
-

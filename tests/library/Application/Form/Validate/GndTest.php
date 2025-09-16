@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,68 +25,104 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @author      Michael Lang <lang@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
-class Application_Form_Validate_GndTest extends ControllerTestCase {
+class Application_Form_Validate_GndTest extends TestCase
+{
+    /** @var Application_Form_Validate_Gnd */
+    private $validator;
 
-    private $_validator;
-
-    public function setUp() {
-        $this->_validator = new Application_Form_Validate_Gnd();
-
+    public function setUp(): void
+    {
         parent::setUp();
+
+        $this->validator = new Application_Form_Validate_Gnd();
     }
 
-    public function testIsValidFalseFormat() {
-        $this->assertFalse($this->_validator->isValid(''));
-        $this->assertFalse($this->_validator->isValid('Hallo'));
-        $this->assertFalse($this->_validator->isValid('12345AB--6789012'));
-        $this->assertFalse($this->_validator->isValid('123456789012'));
-        $this->assertFalse($this->_validator->isValid('009598X4798'));
-        $this->assertFalse($this->_validator->isValid('0095980479X'));
-        $this->assertFalse($this->_validator->isValid('00040303187'));
-        $this->assertArrayHasKey('notValidFormat', $this->_validator->getMessages());
-        $this->assertCount(1, $this->_validator->getMessages());
+    /**
+     * @return array[]
+     */
+    public static function invalidFormatGndProvider()
+    {
+        return [
+            [''],
+            ['Hallo'],
+            ['12345AB--6789012'],
+            ['123456789012'],
+            ['009598X4798'],
+            ['0095980479X'],
+            ['00040303187'],
+        ];
     }
 
-    public function testIsValidFalseChecksum() {
-        $this->assertFalse($this->_validator->isValid('118768582'));
-        $this->assertFalse($this->_validator->isValid('959804798'));
-        $this->assertArrayHasKey('notValidChecksum', $this->_validator->getMessages());
-        $this->assertCount(1, $this->_validator->getMessages());
+    /**
+     * @param string $value
+     * @dataProvider invalidFormatGndProvider
+     */
+    public function testIsValidFalseFormat($value)
+    {
+        $this->assertFalse($this->validator->isValid($value));
+        $this->assertArrayHasKey('notValidFormat', $this->validator->getMessages());
+        $this->assertCount(1, $this->validator->getMessages());
     }
 
-    public function testIsValidTrue() {
-        $this->assertTrue($this->_validator->isValid('118768581'));
-        $this->assertTrue($this->_validator->isValid('95980479X'));
-        $this->assertTrue($this->_validator->isValid('40303187'));
-        $this->assertTrue($this->_validator->isValid('123050421')); // Spinner, Kasper H.
-        $this->assertTrue($this->_validator->isValid('136704425')); // Süselbeck, Kirsten
+    /**
+     * @return array[]
+     */
+    public static function invalidGndProvider()
+    {
+        return [
+            ['118768582'],
+            ['959804798'],
+        ];
     }
 
-    public function testIsValidTrueForShortNumber() {
-        $this->assertTrue($this->_validator->isValid('136307396'));
-        $this->assertTrue($this->_validator->isValid('40303187'));
+    /**
+     * @param string $value
+     * @dataProvider invalidGndProvider
+     */
+    public function testIsValidFalseChecksum($value)
+    {
+        $this->assertFalse($this->validator->isValid($value));
+        $this->assertArrayHasKey('notValidChecksum', $this->validator->getMessages());
+        $this->assertCount(1, $this->validator->getMessages());
     }
 
-    public function testGenerateCheckDigit() {
-        $digit = Application_Form_Validate_Gnd::generateCheckDigit('0095980479');
+    /**
+     * @return array[]
+     */
+    public static function validGndProvider()
+    {
+        return [
+            ['118768581'],
+            ['95980479X'],
+            ['40303187'],
+            ['123050421'], // Spinner, Kasper H.
+            ['136704425'], // Süselbeck, Kirsten
+            ['136307396'],
+            ['4034724-2'],
+            ['4030318-7'],
+        ];
+    }
+
+    /**
+     * @param string $gndValue
+     * @dataProvider validGndProvider
+     */
+    public function testIsValidTrue($gndValue)
+    {
+        $this->assertTrue($this->validator->isValid($gndValue));
+    }
+
+    public function testGenerateCheckDigit()
+    {
+        $validator = new Application_Form_Validate_Gnd();
+        $digit     = $validator->generateCheckDigit('0095980479');
         $this->assertEquals('X', $digit);
 
-        $digit = Application_Form_Validate_Gnd::generateCheckDigit('4030318');
+        $digit = $validator->generateCheckDigit('4030318');
         $this->assertEquals('7', $digit);
     }
-
-    public function testNoLeadingZerosAllowed()
-    {
-        $this->assertFalse($this->_validator->isValid('00040303187'));
-        $this->assertFalse($this->_validator->isValid('0095980479X'));
-        $this->assertFalse($this->_validator->isValid('00040303187'));
-    }
-
 }

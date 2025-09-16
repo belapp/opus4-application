@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,12 +25,12 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application_Security
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\LoggingTrait;
+use Opus\Common\Security\Realm;
 
 /**
  * Erzeugt das Zend_Acl object für die Prüfung von Nutzerprivilegien.
@@ -40,23 +41,24 @@
  */
 class Application_Security_AclProvider
 {
+    use LoggingTrait;
 
     /**
      * Name der Role, die für ACL Prüfungen verwendet wird.
      *
      * Dieser Name wird anstatt des eigentlich Nutzernamens verwendet.
      */
-    const ACTIVE_ROLE = '_user';
-
-    private $_logger;
+    public const ACTIVE_ROLE = '_user';
 
     /**
      * Ressourcen, die in Datei application/configs/navigationModules.xml referenziert werden.
      *
      * TODO resources should be declared in modules and controllers (decentralising)
+     *
+     * @var array
      */
     public static $resourceNames = [
-        'admin' => [
+        'admin'  => [
             'documents',
             'accounts',
             'security',
@@ -71,20 +73,23 @@ class Application_Security_AclProvider
             'indexmaintenance',
             'job',
             'options',
-            'persons'
+            'persons',
         ],
         'review' => [
-            'reviewing'
+            'reviewing',
         ],
-        'setup' => [
+        'setup'  => [
             'helppages',
             'staticpages',
-            'translations'
+            'translations',
         ],
-        'doi' => [
-            'doi_notification'
-        ]
+        'doi'    => [
+            'doi_notification',
+        ],
     ];
+
+    /** @var Zend_Acl */
+    private static $acl;
 
     public static function init()
     {
@@ -94,16 +99,31 @@ class Application_Security_AclProvider
 
         $aclProvider->getLogger()->debug('ACL: bootrapping');
 
-        Zend_Registry::set('Opus_Acl', $acl);
+        self::$acl = $acl;
 
         Zend_View_Helper_Navigation_HelperAbstract::setDefaultAcl($acl);
         Zend_View_Helper_Navigation_HelperAbstract::setDefaultRole(
-            Application_Security_AclProvider::ACTIVE_ROLE
+            self::ACTIVE_ROLE
         );
     }
 
     /**
-    Zend_Debug::dump   * Liefert ein Zend_Acl Objekt für den aktuellen Nutzer zurück.
+     * @return Zend_Acl
+     */
+    public static function getAcl()
+    {
+        return self::$acl;
+    }
+
+    public static function clear()
+    {
+        self::$acl = null;
+    }
+
+    /**
+     * Liefert ein Zend_Acl Objekt für den aktuellen Nutzer zurück.
+     *
+     * @return Zend_Acl
      */
     public function getAcls()
     {
@@ -113,34 +133,18 @@ class Application_Security_AclProvider
 
         $this->loadResources($acl);
 
-        $realm = Opus_Security_Realm::getInstance();
-
-        if (isset($_SERVER['REMOTE_ADDR']) and preg_match('/:/', $_SERVER['REMOTE_ADDR']) === 0) {
-            $realm->setIp($_SERVER['REMOTE_ADDR']);
-        }
-
-        $user = Zend_Auth::getInstance()->getIdentity();
-
-        if (!is_null($user)) {
-            try {
-                $realm->setUser($user);
-            }
-            catch (Opus_Security_Exception $ose) {
-                // unknown user -> invalidate session (logout)
-                Zend_Auth::getInstance()->clearIdentity();
-                $user = null;
-            }
-        }
+        $realm = Realm::getInstance();
 
         $parents = $realm->getRoles();
 
         $this->loadRoles($acl, $parents);
 
         // create role for user on-the-fly with assigned roles as parents
-        if (Zend_Registry::get('LOG_LEVEL') >= Zend_LOG::DEBUG) {
-                $logger->debug(
-                    "ACL: Create role '" . $user . "' with parents " . "(" . implode(", ", $parents) . ")"
-                );
+        if ($logger->getLevel() >= Zend_LOG::DEBUG) {
+            $user = Zend_Auth::getInstance()->getIdentity();
+            $logger->debug(
+                "ACL: Create role '" . $user . "' with parents (" . implode(", ", $parents) . ")"
+            );
         }
 
         // Add role for current user
@@ -151,10 +155,12 @@ class Application_Security_AclProvider
 
     /**
      * Erzeugt die notwendigen Zend_Acl_Resource Objekte.
+     *
+     * @param Zend_Acl $acl
      */
     public function loadResources($acl)
     {
-        $modules = Application_Security_AclProvider::$resourceNames;
+        $modules = self::$resourceNames;
 
         foreach ($modules as $module => $resources) {
             $acl->addResource(new Zend_Acl_Resource($module));
@@ -166,6 +172,9 @@ class Application_Security_AclProvider
         $this->loadWorkflowResources($acl);
     }
 
+    /**
+     * @param Zend_Acl $acl
+     */
     public function loadWorkflowResources($acl)
     {
         $resources = Application_Controller_Action_Helper_Workflow::getWorkflowResources();
@@ -177,9 +186,12 @@ class Application_Security_AclProvider
         }
     }
 
+    /**
+     * @return array
+     */
     public function getAllResources()
     {
-        $modules = Application_Security_AclProvider::$resourceNames;
+        $modules = self::$resourceNames;
 
         $allResources = [];
 
@@ -194,6 +206,9 @@ class Application_Security_AclProvider
      * Lädt die konfigurierten Rollen.
      *
      * TODO load from database and from configuration files
+     *
+     * @param Zend_Acl $acl
+     * @param string[] $roles
      */
     public function loadRoles($acl, $roles)
     {
@@ -204,7 +219,7 @@ class Application_Security_AclProvider
         $acl->allow('administrator');
 
         foreach ($roles as $role) {
-            if (!$acl->hasRole($role)) {
+            if (! $acl->hasRole($role)) {
                 $acl->addRole(new Zend_Acl_Role($role));
             }
 
@@ -212,18 +227,5 @@ class Application_Security_AclProvider
 
             $roleConfig->applyPermissions($acl);
         }
-    }
-
-    public function getLogger()
-    {
-        if (is_null($this->_logger)) {
-            $this->_logger = Zend_Registry::get('Zend_Log');
-        }
-        return $this->_logger;
-    }
-
-    public function setLogger($logger)
-    {
-        $this->_logger = $logger;
     }
 }

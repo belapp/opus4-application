@@ -25,86 +25,101 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Tests
- * @author      Edouard Simon (edouard.simon@zib.de)
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_Security_AclProviderTest extends ControllerTestCase {
+use Opus\Common\Account;
+use Opus\Common\UserRole;
 
+class Application_Security_AclProviderTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'all';
+
+    /** @var int */
     private $roleId;
+
+    /** @var int */
     private $userId;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
-        $testRole = new Opus_UserRole();
+
+        $testRole = UserRole::new();
         $testRole->setName('_test');
-        
+
         $testRole->appendAccessModule('documents');
-        
+
         $this->roleId = $testRole->store();
-        
-        $userAccount = new Opus_Account();
+
+        $userAccount = Account::new();
         $userAccount->setLogin('role_tester')
-                ->setPassword('role_tester');
+            ->setPassword('role_tester');
         $userAccount->setRole($testRole);
         $this->userId = $userAccount->store();
-        
-        // fake authentication
-        Zend_Auth::getInstance()->getStorage()->write('role_tester');
 
+        $this->loginUser('role_tester', 'role_tester');
     }
 
-    public function tearDown() {
-        parent::tearDown();
-        $testRole = new Opus_UserRole($this->roleId);
+    public function tearDown(): void
+    {
+        $testRole = UserRole::get($this->roleId);
         $testRole->delete();
-        $userAccount = new Opus_Account($this->userId);
+        $userAccount = Account::get($this->userId);
         $userAccount->delete();
+        parent::tearDown();
     }
 
-    public function testGetAcls() {
+    public function testGetAcls()
+    {
         $aclProvider = new Application_Security_AclProvider();
-        $acl = $aclProvider->getAcls();
-        $this->assertTrue($acl instanceof Zend_Acl, 'Excpected instance of Zend_Acl');
-        $this->assertTrue($acl->isAllowed(Application_Security_AclProvider::ACTIVE_ROLE, 'documents'), 
-                "expectec user has access to resource 'documents'");
-        $this->assertFalse($acl->isAllowed(Application_Security_AclProvider::ACTIVE_ROLE, 'accounts'), 
-                "expectec user has no access to resource 'accounts'");
-
+        $acl         = $aclProvider->getAcls();
+        $this->assertTrue($acl instanceof Zend_Acl, 'Expected instance of Zend_Acl');
+        $this->assertTrue(
+            $acl->isAllowed(Application_Security_AclProvider::ACTIVE_ROLE, 'documents'),
+            "expected user has access to resource 'documents'"
+        );
+        $this->assertFalse(
+            $acl->isAllowed(Application_Security_AclProvider::ACTIVE_ROLE, 'accounts'),
+            "expected user has no access to resource 'accounts'"
+        );
     }
 
-    public function testRoleNameLikeUserName() {
-        $userAccount = new Opus_Account();
+    public function testRoleNameLikeUserName()
+    {
+        $userAccount = Account::new();
         $userAccount->setLogin('_test')
-                ->setPassword('role_tester');
-        $userAccount->setRole(new Opus_UserRole($this->roleId));
+            ->setPassword('role_tester');
+        $userAccount->setRole(UserRole::get($this->roleId));
         $userId = $userAccount->store();
         Zend_Auth::getInstance()->getStorage()->write('_test');
 
         $aclProvider = new Application_Security_AclProvider();
-        $acl = $aclProvider->getAcls();
+        $acl         = $aclProvider->getAcls();
         $userAccount->delete();
         $this->assertTrue($acl instanceof Zend_Acl, 'Excpected instance of Zend_Acl');
-        $this->assertTrue($acl->isAllowed(Application_Security_AclProvider::ACTIVE_ROLE, 'documents'), 
-                "expected user has access to resource 'documents'");
-        $this->assertFalse($acl->isAllowed(Application_Security_AclProvider::ACTIVE_ROLE, 'accounts'), 
-                "expected user has no access to resource 'account'");
+        $this->assertTrue(
+            $acl->isAllowed(Application_Security_AclProvider::ACTIVE_ROLE, 'documents'),
+            "expected user has access to resource 'documents'"
+        );
+        $this->assertFalse(
+            $acl->isAllowed(Application_Security_AclProvider::ACTIVE_ROLE, 'accounts'),
+            "expected user has no access to resource 'account'"
+        );
     }
-    
-    public function testGetAllResources() {
+
+    public function testGetAllResources()
+    {
         $aclResources = Application_Security_AclProvider::$resourceNames;
-        
-        $allResources = array();
-        
+
+        $allResources = [];
+
         foreach ($aclResources as $resources) {
             $allResources = array_merge($allResources, $resources);
         }
         $aclProvider = new Application_Security_AclProvider();
         $this->assertEquals($allResources, $aclProvider->getAllResources());
     }
-    
 }

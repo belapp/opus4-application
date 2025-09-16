@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,48 +25,61 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Oai
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Oai_Model_TarFile extends Oai_Model_AbstractFile {
-
-    public function __construct($docId, $filesToInclude, $filesPath, $tempPath, $logger = null) {
+class Oai_Model_TarFile extends Oai_Model_AbstractFile
+{
+    /**
+     * @param int           $docId
+     * @param array         $filesToInclude
+     * @param string        $filesPath
+     * @param string        $tempPath
+     * @param Zend_Log|null $logger
+     * @throws Oai_Model_Exception
+     */
+    public function __construct($docId, $filesToInclude, $filesPath, $tempPath, $logger = null)
+    {
         $this->setLogger($logger);
         $numberOfFiles = count($filesToInclude);
         if ($numberOfFiles < 2) {
             $this->logErrorMessage("unexpected number of files to process: $numberOfFiles");
             throw new Oai_Model_Exception('unexpected number of files to include: at least two files were expected');
         }
-        $this->_path = $this->getTar($filesToInclude, $docId, $filesPath, $tempPath);
-        $this->_mimeType = 'application/x-tar';
-        $this->_extension = '.tar';
+        $this->path      = $this->getTar($filesToInclude, $docId, $filesPath, $tempPath);
+        $this->mimeType  = 'application/x-tar';
+        $this->extension = '.tar';
     }
 
-    private function getTar($filesToInclude, $docId, $filesPath, $tempPath) {
+    /**
+     * @param array  $filesToInclude
+     * @param int    $docId
+     * @param string $filesPath
+     * @param string $tempPath
+     * @return string
+     * @throws Oai_Model_Exception
+     * @throws Zend_Exception
+     */
+    private function getTar($filesToInclude, $docId, $filesPath, $tempPath)
+    {
         $tarball = $tempPath . uniqid($docId, true) . '.tar';
-    $phar = null;
-    try {
+        $phar    = null;
+        try {
             $phar = new PharData($tarball);
-    }
-    catch(UnexpectedValueException $e) {
+        } catch (UnexpectedValueException $e) {
             $this->logErrorMessage(
                 'could not create tarball archive file ' . $tarball . ' due to insufficient file system permissions: '
                 . $e->getMessage()
             );
             throw new Oai_Model_Exception('error while creating tarball container: could not open tarball');
-    }
+        }
 
         foreach ($filesToInclude as $file) {
             $filePath = $filesPath . $docId . DIRECTORY_SEPARATOR;
             try {
                 $phar->addFile($filePath . $file->getPathName(), $file->getPathName());
-            }
-            catch (Exception $e) {
+            } catch (Exception $e) {
                 $this->logErrorMessage(
                     'could not add ' . $file->getPathName() . ' to tarball archive file: ' . $e->getMessage()
                 );
@@ -75,5 +89,4 @@ class Oai_Model_TarFile extends Oai_Model_AbstractFile {
 
         return $tarball;
     }
-    
 }

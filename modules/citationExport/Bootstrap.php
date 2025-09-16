@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,78 +25,81 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_CitationExport
- * @author      Sascha Szott <szott@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
-class CitationExport_Bootstrap extends Zend_Application_Module_Bootstrap {
+use Opus\Common\Log;
 
+class CitationExport_Bootstrap extends Zend_Application_Module_Bootstrap
+{
     /**
      * Registers export formats supported by this module.
      *
      * - BibTeX
      * - RIS
+     * @phpcs:disable PSR2.Methods.MethodDeclaration
      */
     protected function _initExport()
     {
-        if (!Zend_Registry::isRegistered('Opus_Exporter'))
-        {
-            Zend_Registry::get('Zend_Log')->err(__METHOD__ . ' exporter not found');
+        // @phpcs:enable
+        $updateInProgress = Application_Configuration::isUpdateInProgress();
+
+        if (! Zend_Registry::isRegistered('Opus_Exporter')) {
+            if (! $updateInProgress) {
+                 Log::get()->warn(__METHOD__ . ' exporter not found');
+            }
             return;
         }
 
         $exporter = Zend_Registry::get('Opus_Exporter');
 
-        if (is_null($exporter))
-        {
-            Zend_Registry::get('Zend_Log')->err(__METHOD__ . ' exporter not found');
+        if ($exporter === null) {
+            if ($updateInProgress) {
+                 Log::get()->warn(__METHOD__ . ' exporter not found');
+            }
             return;
         }
 
-        $exporter->addFormats(array(
-            'bibtex' => array(
-                'name' => 'BibTeX',
+        $exporter->addFormats([
+            'bibtex'      => [
+                'name'        => 'BibTeX',
                 'description' => 'Export BibTeX',
-                'module' => 'citationExport',
-                'controller' => 'index',
-                'action' => 'download',
-                'search' => false,
-                'params' => array(
-                    'output' => 'bibtex'
-                )
-            ),
-            'bibtex_list' => array(
-                'name' => 'BibTeX',
+                'module'      => 'citationExport',
+                'controller'  => 'index',
+                'action'      => 'download',
+                'search'      => false,
+                'params'      => [
+                    'output' => 'bibtex',
+                ],
+            ],
+            'bibtex_list' => [
+                'name'        => 'BibTeX',
                 'description' => 'Export BibTeX',
-                'module' => 'export',
-                'controller' => 'index',
-                'action' => 'bibtex',
-                'frontdoor' => false
-            ),
-            'ris' => array(
-                'name' => 'RIS',
+                'module'      => 'export',
+                'controller'  => 'index',
+                'action'      => 'bibtex',
+                'frontdoor'   => false,
+            ],
+            'ris'         => [
+                'name'        => 'RIS',
                 'description' => 'Export RIS',
-                'module' => 'citationExport',
-                'controller' => 'index',
-                'action' => 'download',
-                'search' => false,
-                'params' => array(
-                    'output' => 'ris'
-                )
-            ),
-            'ris_list' => array(
-                'name' => 'RIS',
+                'module'      => 'citationExport',
+                'controller'  => 'index',
+                'action'      => 'download',
+                'search'      => false,
+                'params'      => [
+                    'output' => 'ris',
+                ],
+            ],
+            'ris_list'    => [
+                'name'        => 'RIS',
                 'description' => 'Export RIS',
-                'module' => 'export',
-                'controller' => 'index',
-                'action' => 'ris',
-                'frontdoor' => false
-            )
-        ));
+                'module'      => 'export',
+                'controller'  => 'index',
+                'action'      => 'ris',
+                'frontdoor'   => false,
+            ],
+        ]);
     }
-
 }

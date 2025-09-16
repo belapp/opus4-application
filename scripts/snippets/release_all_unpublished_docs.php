@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,41 +25,43 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
+use Opus\Common\Date;
+use Opus\Common\Document;
+use Opus\Common\Model\NotFoundException;
+use Opus\Common\Repository;
 
 /**
  * Releases all documents in server state unpublished.
+ *
+ * TODO useful? should it be part of opus4 or opus4dev
  */
 
-$docFinder = new Opus_DocumentFinder();
+$docFinder = Repository::getInstance()->getDocumentFinder();
 $docFinder->setServerState('unpublished');
 
-foreach ($docFinder->ids() as $id) {
-
-    $d = null;
+foreach ($docFinder->getIds() as $id) {
+    $doc = null;
     try {
-        $d = new Opus_Document($id);
-    }
-    catch (Opus_Model_NotFoundException $e) {
+        $doc = Document::get($id);
+    } catch (NotFoundException $e) {
         // document with id $id does not exist
         continue;
     }
 
-    if (!is_null($d)) {
-    $date = new Opus_Date();
-    $date->setNow();
-    $d->setServerState('published');
-    $d->setServerDatePublished($date);
-    $d->store();
-    echo "publishing of document with id $id was successful\n"; 
+    if ($doc !== null) {
+        $date = new Date();
+        $date->setNow();
+        $doc->setServerState('published');
+        $doc->setServerDatePublished($date);
+        $doc->store();
+        echo "publishing of document with id $id was successful\n";
     }
 }
 
 echo "done.\n";
+
 exit();

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,15 +25,14 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Application_View_Helper_CustomFileSortingEnabledTest extends ControllerTestCase
 {
+    /** @var bool */
+    protected $configModifiable = true;
 
     public function testCustomFileSortingEnabled()
     {
@@ -40,11 +40,10 @@ class Application_View_Helper_CustomFileSortingEnabledTest extends ControllerTes
 
         $this->assertTrue($helper->customFileSortingEnabled());
 
-        Zend_Registry::get('Zend_Config')->merge(new Zend_Config(array(
-            'frontdoor' => array('files' => array('customSorting' => '0'))
-        )));
+        $this->adjustConfiguration([
+            'frontdoor' => ['files' => ['customSorting' => self::CONFIG_VALUE_FALSE]],
+        ]);
 
         $this->assertFalse($helper->customFileSortingEnabled());
     }
-
 }

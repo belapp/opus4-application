@@ -25,52 +25,60 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Publish
- * @author      Susanne Gottwald <gottwald@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Publish_View_Helper_BibliographieOverview extends Zend_View_Helper_Abstract {
 
+use Opus\Common\Config;
+use Opus\Common\Document;
+use Opus\Common\DocumentInterface;
+
+class Publish_View_Helper_BibliographieOverview extends Zend_View_Helper_Abstract
+{
+    /** @var Zend_View_Interface */
     public $view;
-    public $session;
-    public $document;
 
+    /** @var Zend_Session_Namespace */
+    public $session;
+
+    /** @var DocumentInterface */
+    public $document;
 
     /**
      * Method informs the user if the current document belongs to bibliography.
      * The view helper can be used anywhere in the publish process: on index, specific form or check page.
-     * @return String (html output)
+     *
+     * @return string (html output)
      */
-    public function bibliographieOverview() {
-        $config = Zend_Registry::get('Zend_Config');
-        if (!isset($config->form->first->bibliographie) || $config->form->first->bibliographie != 1) {
-            return;
+    public function bibliographieOverview()
+    {
+        $config = Config::get();
+        if (
+            ! isset($config->form->first->bibliographie) ||
+            (! filter_var($config->form->first->bibliographie, FILTER_VALIDATE_BOOLEAN))
+        ) {
+            return '';
         }
 
         $this->session = new Zend_Session_Namespace('Publish');
 
-        $fieldsetStart = "<fieldset><legend>" . $this->view->translate('header_bibliographie')
+        $fieldsetStart = '<fieldset><legend>' . $this->view->translate('header_bibliographie')
             . "</legend>\n\t\t\n\t\t";
-        $fieldsetEnd = "</fieldset>";
+        $fieldsetEnd   = "</fieldset>";
 
-        if ($this->session->documentId == "") {
+        if ($this->session->documentId === '') {
             return "";
         }
 
-        $this->document = new Opus_Document($this->session->documentId);
-        $bib = $this->document->getBelongsToBibliography();
+        $this->document = Document::get($this->session->documentId);
+        $bib            = $this->document->getBelongsToBibliography();
 
         if (empty($bib)) {
             return $fieldsetStart . $this->view->translate('notBelongsToBibliographie') . $fieldsetEnd;
         }
-        
+
         $overview = $this->view->translate('belongsToBibliographie');
 
         return $fieldsetStart . $overview . $fieldsetEnd;
     }
-
 }
-

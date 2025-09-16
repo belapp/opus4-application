@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,29 +25,28 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
+use Opus\Common\Document;
+use Opus\Common\Model\NotFoundException;
 
 /**
- * Removes associated Opus_File objects for all HHAR test documents (id = 1..90)
+ * Removes associated File objects for all HHAR test documents (id = 1..90)
  * since full text files do not exist in file system
+ *
+ * TODO move script (it is used for testing/development)
  */
 
 $startId = 1;
-$endId = 90;
+$endId   = 90;
 
 for ($i = $startId; $i <= $endId; $i++) {
-
     $d = null;
     try {
-        $d = new Opus_Document($i);
-    }
-    catch (Opus_Model_NotFoundException $e) {
+        $d = Document::get($i);
+    } catch (NotFoundException $e) {
         // document with id $i does not exist
         continue;
     }
@@ -54,8 +54,7 @@ for ($i = $startId; $i <= $endId; $i++) {
     foreach ($files as $file) {
         try {
             $file->doDelete($file->delete());
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             // ignore exception (is thrown since file does not exist physically)
         }
     }

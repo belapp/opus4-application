@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,53 +25,54 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Document;
+use Opus\Common\File;
+use Opus\Common\Model\NotFoundException;
 
 /**
  * Model for importing files from a specific folder.
  *
  * TODO umbenennen für allgemeinen Dateisupport
  */
-class Admin_Model_FileImport extends Application_Model_Abstract {
+class Admin_Model_FileImport extends Application_Model_Abstract
+{
+    /** @var string */
+    private $importFolder;
 
-    private $_importFolder = null;
-
-    public function __construct() {
-        $this->_importFolder = APPLICATION_PATH . '/workspace/incoming';
+    public function __construct()
+    {
+        $this->importFolder = APPLICATION_PATH . '/workspace/incoming';
     }
 
     /**
-     *
      * @param string $docId
-     * @param array $files
-     * @throws Application_Exception in case database contains no document with id $docID
+     * @param array  $files
+     * @throws Application_Exception In case database contains no document with id $docID.
      */
-    public function addFilesToDocument($docId, $files) {
+    public function addFilesToDocument($docId, $files)
+    {
         if (empty($files)) {
             throw new Application_Exception('no files for import');
         }
-        
+
         $document = null;
         try {
-            $document = new Opus_Document($docId);
-        }
-        catch (Opus_Model_NotFoundException $e) {
-            throw new Application_Exception('no document found for id ' . $docId, null, $e);
+            $document = Document::get($docId);
+        } catch (NotFoundException $e) {
+            throw new Application_Exception('no document found for id ' . $docId, 0, $e);
         }
 
-        $log = $this->getLogger();
+        $log            = $this->getLogger();
         $validFilenames = $this->getNamesOfIncomingFiles();
 
         foreach ($files as $file) {
             $log->debug('check filename ' . $file);
             if (in_array($file, $validFilenames)) {
-                $pathname = $this->_importFolder . DIRECTORY_SEPARATOR . $file;
+                $pathname = $this->importFolder . DIRECTORY_SEPARATOR . $file;
                 $log->info('import file ' . $pathname);
 
                 $docfile = $document->addFile();
@@ -80,13 +82,12 @@ class Admin_Model_FileImport extends Application_Model_Abstract {
                 try {
                     $document->store();
                     $log->info('import of file ' . $pathname . ' successful');
-                }
-                catch (Exception $e) {
+                } catch (Exception $e) {
                     $log->err('import of file ' . $pathname . ' failed: ' . $e->getMessage());
                 }
 
                 $log->info('try to delete file ' . $pathname);
-                if (!unlink($pathname)) {
+                if (! unlink($pathname)) {
                     $log->err('could not delete file ' . $pathname);
                 }
             }
@@ -95,42 +96,58 @@ class Admin_Model_FileImport extends Application_Model_Abstract {
 
     /**
      * Lists files in import folder.
+     *
+     * @return array
      */
-    public function listFiles() {
-        return Zend_Controller_Action_HelperBroker::getStaticHelper('Files')->listFiles($this->_importFolder, true);
+    public function listFiles()
+    {
+        return Zend_Controller_Action_HelperBroker::getStaticHelper('Files')->listFiles($this->importFolder, true);
     }
 
-    public function getNamesOfIncomingFiles() {
-        $incomingFilenames = array();
+    /**
+     * @return array
+     */
+    public function getNamesOfIncomingFiles()
+    {
+        $incomingFilenames = [];
         foreach ($this->listFiles() as $file) {
-            array_push($incomingFilenames, $file['name']);            
+            array_push($incomingFilenames, $file['name']);
         }
         return $incomingFilenames;
     }
 
-    public function setImportFolder($path) {
-        $this->_importFolder = $path;
+    /**
+     * @param string $path
+     */
+    public function setImportFolder($path)
+    {
+        $this->importFolder = $path;
     }
 
-    public function getImportFolder() {
-        return $this->_importFolder;
+    /**
+     * @return string
+     */
+    public function getImportFolder()
+    {
+        return $this->importFolder;
     }
 
     /**
      * Deletes a single file from a document.
-     * @param type $docId
-     * @param type $fileId
-     * @return type
+     *
+     * @param int $docId
+     * @param int $fileId
      */
-    public function deleteFile($docId, $fileId) {
-        $doc = new Opus_Document($docId);
+    public function deleteFile($docId, $fileId)
+    {
+        $doc = Document::get($docId);
 
-        $keepFiles = array();
+        $keepFiles = [];
 
         $files = $doc->getFile();
 
         foreach ($files as $index => $file) {
-            if ($file->getId() !== $fileId) {
+            if ($file->getId() !== (int) $fileId) {
                 $keepFiles[] = $file;
             }
         }
@@ -142,20 +159,19 @@ class Admin_Model_FileImport extends Application_Model_Abstract {
 
     /**
      * Checks if a file id is formally correct and file exists.
-     * @param string $fileId
-     * @return boolean True if file ID is valid
+     *
+     * @param int $fileId
+     * @return bool True if file ID is valid
      */
-    public function isValidFileId($fileId) {
-        if (empty($fileId) || !is_numeric($fileId)) {
+    public function isValidFileId($fileId)
+    {
+        if (empty($fileId) || ! is_numeric($fileId)) {
             return false;
         }
 
-        $file = null;
-
         try {
-            $file = new Opus_File($fileId);
-        }
-        catch (Opus_Model_NotFoundException $omnfe) {
+            File::get($fileId);
+        } catch (NotFoundException $omnfe) {
             return false;
         }
 
@@ -164,26 +180,27 @@ class Admin_Model_FileImport extends Application_Model_Abstract {
 
     /**
      * Checks if a file ID is linked to a document.
-     * @param int $docId
-     * @param int $fileId
-     * @return boolean True - if the file is linked to the document
+     *
+     * @param int        $docId
+     * @param int|string $fileId
+     * @return bool True - if the file is linked to the document
      */
-    public function isFileBelongsToDocument($docId, $fileId) {
-        if (empty($fileId) || !is_numeric($fileId)) {
+    public function isFileBelongsToDocument($docId, $fileId)
+    {
+        if (empty($fileId) || ! is_numeric($fileId)) {
             return false;
         }
 
-        $doc = new Opus_Document($docId);
+        $doc = Document::get($docId);
 
         $files = $doc->getFile();
 
         foreach ($files as $file) {
-            if ($file->getId() == $fileId) {
+            if ($file->getId() === (int) $fileId) {
                 return true;
             }
         }
 
         return false;
     }
-
 }

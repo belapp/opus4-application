@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,15 +25,14 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Application_View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Application_View_Helper_OptionEnabledTest extends ControllerTestCase
 {
+    /** @var bool */
+    protected $configModifiable = true;
 
     public function testOptionEnabled()
     {
@@ -41,9 +41,9 @@ class Application_View_Helper_OptionEnabledTest extends ControllerTestCase
         $this->assertTrue($helper->optionEnabled('orcid.linkAuthor.frontdoor'));
         $this->assertTrue($helper->optionEnabled('linkAuthor.frontdoor', 'orcid'));
 
-        Zend_Registry::get('Zend_Config')->merge(new Zend_Config(array(
-            'orcid' => array('linkAuthor' => array('frontdoor' => '0'))
-        )));
+        $this->adjustConfiguration([
+            'orcid' => ['linkAuthor' => ['frontdoor' => self::CONFIG_VALUE_FALSE]],
+        ]);
 
         $this->assertFalse($helper->optionEnabled('orcid.linkAuthor.frontdoor'));
         $this->assertFalse($helper->optionEnabled('linkAuthor.frontdoor', 'orcid'));
@@ -56,5 +56,4 @@ class Application_View_Helper_OptionEnabledTest extends ControllerTestCase
         $this->assertFalse($helper->optionEnabled('unknownKey'));
         $this->assertFalse($helper->optionEnabled('unknownKey', 'unknownContext'));
     }
-
 }

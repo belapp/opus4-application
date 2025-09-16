@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,35 +25,34 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Tobias Leidinger (tobias.leidinger@gmail.com
- * @author      Felix Ostrowski <ostrowski@hbz-nrw.de>
- * @author      Michael Lang <lang@zib.de>
-   @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_StatisticController extends Application_Controller_Action {
 
-    private $_statisticsModel = null;
+use Opus\Common\Date;
 
-    public function init() {
+class Admin_StatisticController extends Application_Controller_Action
+{
+    /** @var Admin_Model_Statistics */
+    private $statisticsModel;
+
+    public function init()
+    {
         parent::init();
-        $this->_statisticsModel = new Admin_Model_Statistics();
+        $this->statisticsModel = new Admin_Model_Statistics();
     }
 
-    public function indexAction() {
+    public function indexAction()
+    {
         $this->view->title = 'admin_title_statistic';
 
-        $years = $this->_statisticsModel->getYears();
+        $years = $this->statisticsModel->getYears();
 
         $highest = max($years);
 
         $selectYear = new Zend_Form_Element_Select(
             'selectedYear',
-            array("multiOptions" => $years, "value" => $highest)
+            ["multiOptions" => $years, "value" => $highest]
         );
 
         $selectYear->setRequired(true)
@@ -62,37 +62,39 @@ class Admin_StatisticController extends Application_Controller_Action {
         $submit->setLabel($this->view->translate('Submit_Button_Label'));
 
         $form = new Zend_Form();
-        $form->setAction($this->view->url(array("controller" => "statistic", "action" => "show")));
-        $form->addElements(array($selectYear, $submit));
+        $form->setAction($this->view->url(["controller" => "statistic", "action" => "show"]));
+        $form->addElements([$selectYear, $submit]);
 
         $this->view->form = $form;
     }
 
-    public function showAction() {
-        $selectedYear =  $this->getRequest()->getParam('selectedYear', null);
+    public function showAction()
+    {
+        $selectedYear = $this->getRequest()->getParam('selectedYear', null);
 
-        if (is_null($selectedYear) || !in_array($selectedYear, $this->_statisticsModel->getYears())) {
-            return $this->_helper->Redirector->redirectToAndExit('index');
+        if ($selectedYear === null || ! in_array($selectedYear, $this->statisticsModel->getYears())) {
+            $this->_helper->Redirector->redirectToAndExit('index');
+            return;
         }
 
         $this->view->languageSelectorDisabled = true;
 
-        $date = new Opus_Date();
+        $date = new Date();
         $date->setYear($selectedYear)->setMonth(12)->setDay(31);
         $this->view->dateThreshold = $this->getHelper('Dates')->getDateString($date);
 
         $this->view->selectedYear = $selectedYear;
-        $this->view->sumDocsUntil = $this->_statisticsModel->getNumDocsUntil($selectedYear);
+        $this->view->sumDocsUntil = $this->statisticsModel->getNumDocsUntil($selectedYear);
 
-        $monthStat = $this->_statisticsModel->getMonthStatistics($selectedYear);
+        $monthStat = $this->statisticsModel->getMonthStatistics($selectedYear);
 
         $this->view->totalNumber = array_sum($monthStat);
-        $this->view->title = $this->view->translate('Statistic_Controller') . ' ' . $selectedYear;
-        $this->view->monthStat = $monthStat;
+        $this->view->title       = $this->view->translate('Statistic_Controller') . ' ' . $selectedYear;
+        $this->view->monthStat   = $monthStat;
 
-        $this->view->typeStat = $this->_statisticsModel->getTypeStatistics($selectedYear);
-        $this->view->instStat = $this->_statisticsModel->getInstituteStatistics($selectedYear);
+        $this->view->typeStat = $this->statisticsModel->getTypeStatistics($selectedYear);
+        $this->view->instStat = $this->statisticsModel->getInstituteStatistics($selectedYear);
 
-        $this->_breadcrumbs->setLabelFor('admin_statistic_show', $selectedYear);
+        $this->breadcrumbs->setLabelFor('admin_statistic_show', $selectedYear);
     }
 }

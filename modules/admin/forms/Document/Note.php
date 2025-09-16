@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,72 +24,97 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2013, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Model\NotFoundException;
+use Opus\Common\Note;
+use Opus\Common\NoteInterface;
 
 /**
  * Unterformular fuer Bemerkungen/Notizen.
- * 
- * @category    Application
- * @package     Admin_Form
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_Form_Document_Note extends Admin_Form_AbstractModelSubForm {
+class Admin_Form_Document_Note extends Admin_Form_AbstractModelSubForm
+{
+    public const ELEMENT_ID         = 'Id';
+    public const ELEMENT_VISIBILITY = 'Visibility';
+    public const ELEMENT_MESSAGE    = 'Message';
 
-    const ELEMENT_ID = 'Id';
-    const ELEMENT_VISIBILITY = 'Visibility';
-    const ELEMENT_MESSAGE = 'Message';
-    
-    public function init() {
+    public function init()
+    {
         parent::init();
-        
+
         $this->addElement('hidden', self::ELEMENT_ID);
-        $this->addElement('checkbox', self::ELEMENT_VISIBILITY, array('label' => 'Opus_Note_Visibility_Value_Public'));
-        $this->addElement('textarea', self::ELEMENT_MESSAGE, array('required' => true, 'rows' => 4));
-        
+        $this->addElement('checkbox', self::ELEMENT_VISIBILITY, ['label' => 'Opus_Note_Visibility_Value_Public']);
+        $this->addElement('textarea', self::ELEMENT_MESSAGE, [
+            'required'   => true,
+            'rows'       => 4,
+            'decorators' => [
+                'ViewHelper',
+                'Errors',
+                'Description',
+                'ElementHtmlTag',
+                [['dataWrapper' => 'HtmlTagWithId'], ['tag' => 'div', 'class' => 'data-wrapper']],
+            ],
+        ]);
+
         $this->getElement(self::ELEMENT_VISIBILITY)
                 ->setViewCheckedValue('Opus_Note_Visibility_Value_Public')
                 ->setViewUncheckedValue('Opus_Note_Visibility_Value_Private');
-        
+
         $this->setRemoveEmptyCheckbox(false);
     }
-    
-    public function populateFromModel($note) {
+
+    /**
+     * @param NoteInterface $note
+     */
+    public function populateFromModel($note)
+    {
         $this->getElement(self::ELEMENT_ID)->setValue($note->getId());
         $this->getElement(self::ELEMENT_MESSAGE)->setValue($note->getMessage());
         $this->getElement(self::ELEMENT_VISIBILITY)->setChecked($note->getVisibility() === 'public');
     }
-    
-    public function updateModel($note) {
+
+    /**
+     * @param NoteInterface $note
+     */
+    public function updateModel($note)
+    {
         $note->setMessage($this->getElement(self::ELEMENT_MESSAGE)->getValue());
-        $note->setVisibility(($this->getElement(self::ELEMENT_VISIBILITY)->getValue()) ? 'public' : 'private');
+        $note->setVisibility($this->getElement(self::ELEMENT_VISIBILITY)->getValue() ? 'public' : 'private');
     }
 
-    public function getModel() {
+    /**
+     * @return NoteInterface
+     * @throws NotFoundException
+     */
+    public function getModel()
+    {
         $noteId = $this->getElement(self::ELEMENT_ID)->getValue();
-        
+
         if (empty($noteId)) {
             $noteId = null;
         }
-        
-        $note = new Opus_Note($noteId);
-        
+
+        $note = Note::get($noteId);
+
         $this->updateModel($note);
-        
+
         return $note;
     }
-    
-    public function loadDefaultDecorators() {
+
+    public function loadDefaultDecorators()
+    {
         parent::loadDefaultDecorators();
-        
+
         $this->removeDecorator('Fieldset');
     }
 
-    public function prepareRenderingAsView() {
+    public function prepareRenderingAsView()
+    {
         parent::prepareRenderingAsView();
         $this->getElement(self::ELEMENT_VISIBILITY)->removeDecorator('Label');
     }
-    
 }

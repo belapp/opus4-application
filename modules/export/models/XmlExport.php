@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,13 +25,14 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Export
- * @author      Michael Lang <lang@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Document;
+use Opus\Common\Repository;
+use Opus\Common\Security\Realm;
+use Opus\Search\Util\Query;
 
 /**
  * Export plugin for exporting documents as XML.
@@ -38,60 +40,59 @@
  * TODO reduce to basic XML export (move XSLT into different class)
  * TODO move database/cache access to documents to different layer
  */
-class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract {
-
+class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract
+{
     /**
      * Holds xml representation of document information to be processed.
      *
-     * @var DomDocument  Defaults to null.
-     *
+     * @var DOMDocument  Defaults to null.
      */
-    protected $_xml = null;
+    protected $xml;
 
     /**
      * Holds the stylesheet for the transformation.
      *
-     * @var DomDocument  Defaults to null.
+     * @var DOMDocument  Defaults to null.
      */
-    protected $_xslt = null;
+    protected $xslt;
 
     /**
      * Holds the xslt processor.
      *
      * @var XSLTProcessor  Defaults to null.
      */
-    protected $_proc = null;
+    protected $proc;
 
     /**
      * Enables/disables content-disposition attachment.
-     * @var null|boolean
+     *
+     * @var null|bool
      */
-    protected $_downloadEnabled = null;
+    protected $downloadEnabled;
 
     /**
      * Content type for response.
+     *
      * @var null|string
      */
-    protected $_contentType = null;
+    protected $contentType;
 
     /**
      * Name of attached file.
+     *
      * @var null|string
      */
-    protected $_attachmentFilename = null;
+    protected $attachmentFilename;
 
     /**
      * Deliver the (transformed) Xml content
-     *
-     * @return void
      *
      * TODO adapt
      */
     public function postDispatch()
     {
-        if (!isset($this->getView()->errorMessage))
-        {
-            $contentType = $this->getContentType();
+        if (! isset($this->getView()->errorMessage)) {
+            $contentType        = $this->getContentType();
             $attachmentFilename = $this->getAttachmentFilename();
 
             $response = $this->getResponse();
@@ -99,131 +100,132 @@ class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract {
             // Send Xml response.
             $response->setHeader('Content-Type', "$contentType; charset=UTF-8", true);
 
-            if ($this->isDownloadEnabled())
-            {
+            if ($this->isDownloadEnabled()) {
                 $response->setHeader('Content-Disposition', "attachment; filename=$attachmentFilename", true);
             }
 
-            if (false === is_null($this->_xslt))
-            {
-                $this->getResponse()->setBody($this->_proc->transformToXML($this->_xml));
-            }
-            else
-            {
-                $this->getResponse()->setBody($this->_xml->saveXml());
+            if ($this->xslt !== null) {
+                $this->getResponse()->setBody($this->proc->transformToXML($this->xml));
+            } else {
+                $this->getResponse()->setBody($this->xml->saveXml());
             }
         }
     }
 
     /**
      * Returns content type for response.
+     *
      * @return string
      */
     public function getContentType()
     {
-        if (is_null($this->_contentType))
-        {
+        if ($this->contentType === null) {
             $config = $this->getConfig();
 
-            if (isset($config->contentType))
-            {
-                $this->_contentType = $config->contentType;
-            }
-            else {
-                $this->_contentType = 'text/xml';
+            if (isset($config->contentType)) {
+                $this->contentType = $config->contentType;
+            } else {
+                $this->contentType = 'text/xml';
             }
         }
 
-        return $this->_contentType;
+        return $this->contentType;
     }
 
     /**
      * Sets mime type for response.
-     * @param $mimeType Mime type for response
+     *
+     * @param string $mimeType Mime type for response
      */
     public function setContentType($mimeType)
     {
-        $this->_contentType = $mimeType;
+        $this->contentType = $mimeType;
     }
 
+    /**
+     * @return string
+     * @throws Zend_Exception
+     */
     public function getAttachmentFilename()
     {
-        if (is_null($this->_attachmentFilename))
-        {
+        if ($this->attachmentFilename === null) {
             $config = $this->getConfig();
 
-            if (isset($config->attachmentFilename))
-            {
-                $this->_attachmentFilename = $config->attachmentFilename;
-            }
-            else {
-                $this->_attachmentFilename = 'export.xml';
+            if (isset($config->attachmentFilename)) {
+                $this->attachmentFilename = $config->attachmentFilename;
+            } else {
+                $this->attachmentFilename = 'export.xml';
             }
         }
 
-        return $this->_attachmentFilename;
+        return $this->attachmentFilename;
     }
 
+    /**
+     * @param string $filename
+     */
     public function setAttachmentFilename($filename)
     {
-        $this->_attachmentFilename = $filename;
+        $this->attachmentFilename = $filename;
     }
 
+    /**
+     * @return bool
+     */
     public function isDownloadEnabled()
     {
-        if (is_null($this->_downloadEnabled))
-        {
+        if ($this->downloadEnabled === null) {
             $appConfig = Application_Configuration::getInstance()->getConfig();
 
-            if (isset($appConfig->export->download))
-            {
-                $value = $appConfig->export->download;
-                $this->_downloadEnabled = $value !== '0' && $value !== false && $value !== '';
-            }
-            else
-            {
-                $this->_downloadEnabled = true;
-            }
+            $this->downloadEnabled = isset($appConfig->export->download) ?
+                filter_var($appConfig->export->download, FILTER_VALIDATE_BOOLEAN) : true;
         }
 
-        return $this->_downloadEnabled;
+        return $this->downloadEnabled;
     }
 
+    /**
+     * @param bool $enabled
+     */
     public function setDownloadEnabled($enabled)
     {
-        if (!is_bool($enabled) && !is_null($enabled))
-        {
+        if (! is_bool($enabled) && $enabled !== null) {
             throw new InvalidArgumentException('Argument must be boolean or null.');
         }
 
-        $this->_downloadEnabled = $enabled;
+        $this->downloadEnabled = $enabled;
     }
 
-    public function init() {
+    public function init()
+    {
         // Initialize member variables.
-        $this->_xml = new DomDocument();
-        $this->_proc = new XSLTProcessor();
+        $this->xml  = new DOMDocument();
+        $this->proc = new XSLTProcessor();
+        $this->registerPhpFunctions();
     }
 
     /**
      * Load an xslt stylesheet.
      *
-     * @return void
+     * @param string $stylesheet
      *
      * TODO adapt
      */
-    protected function loadStyleSheet($stylesheet) {
-        $this->_xslt = new DomDocument;
-        $this->_xslt->load($stylesheet);
-        $this->_proc->importStyleSheet($this->_xslt);
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $this->_proc->setParameter('', 'host', $_SERVER['HTTP_HOST']);
-        }
-        $this->_proc->setParameter('', 'server', $this->getRequest()->getBaseUrl());
+    protected function loadStyleSheet($stylesheet)
+    {
+        $this->xslt = new DOMDocument();
+        $this->xslt->load($stylesheet);
+        $this->proc->importStyleSheet($this->xslt);
+
+        $view = $this->getView();
+
+        $this->proc->setParameter('', 'opusUrl', $view->fullUrl());
     }
 
     /**
      * Performs XML export.
+     *
+     * @return int
      * @throws Application_Exception
      * @throws Application_SearchException
      * @throws Exception
@@ -232,27 +234,28 @@ class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract {
      * TODO exportParam is not needed anymore, but can be supported (exportParam = action)
      * TODO stylesheet can be configured in plugin configuration rather than a parameter
      */
-    public function execute() {
+    public function execute()
+    {
         $request = $this->getRequest();
 
         $exportParam = $request->getParam('export');
 
-        if (is_null($exportParam)) {
+        if ($exportParam === null) {
             throw new Application_Exception('export format is not specified');
         }
 
         // currently only xml is supported here
         if ($exportParam !== 'xml') {
-            throw new Application_Exception('export format is not supported' . $exportParam);
+            throw new Application_Exception('export format is not supported: ' . $exportParam);
         }
 
         // parameter stylesheet is mandatory (only administrator is able to see raw output)
         // non-administrative users can only reference user-defined stylesheets
-        if (is_null($request->getParam('stylesheet')) && !Opus_Security_Realm::getInstance()->checkModule('admin')) {
+        if ($request->getParam('stylesheet') === null && ! Realm::getInstance()->checkModule('admin')) {
             throw new Application_Exception('missing parameter stylesheet');
         }
 
-        $stylesheet = $request->getParam('stylesheet');
+        $stylesheet          = $request->getParam('stylesheet');
         $stylesheetDirectory = 'stylesheets-custom';
 
         $this->loadStyleSheet(
@@ -263,75 +266,84 @@ class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract {
         );
 
         $this->prepareXml();
+
+        return 0;
     }
 
     /**
-     * Prepares xml export for solr search results.
+     * Prepares XML export of Solr search results.
      *
      * @throws Application_SearchException
      */
-    public function prepareXml() {
+    public function prepareXml()
+    {
         $request = $this->getRequest();
 
         $searchType = $request->getParam('searchtype');
 
-        if (is_null($searchType))
-        {
+        if ($searchType === null) {
             // TODO move/handle somewhere else (cleanup)
             throw new Application_Search_QueryBuilderException('Unspecified search type: unable to create query');
         }
 
-        $resultList = null;
+        $resultIds = [];
 
-        switch ($searchType)
-        {
-        case Application_Util_Searchtypes::ID_SEARCH:
-            // TODO handle ID search like any other search
-            $resultList = $this->buildResultListForIdSearch($request);
-            break;
-        default:
-            $searchFactory = new Solrsearch_Model_Search();
-            $search = $searchFactory->getSearchPlugin($searchType);
-            $search->setExport(true);
-            $search->setMaxRows($this->getMaxRows());
-            $query = $search->buildExportQuery($request);
-            $resultList = $search->performSearch($query);
-            break;
+        switch ($searchType) {
+            case Application_Util_Searchtypes::ID_SEARCH:
+                $resultIds    = $this->getAndValidateDocId($request);
+                $numberOfHits = count($resultIds);
+                break;
+            default:
+                $searchFactory = new Solrsearch_Model_Search();
+                $search        = $searchFactory->getSearchPlugin($searchType);
+                $search->setExport(true);
+                $search->setMaxRows($this->getMaxRows());
+
+                // im Solr-Index sind auch nicht freigeschaltete Dokumente: die Einschränkung der
+                // Suche auf ausschließlich freigeschaltete Dokumente erfolgt in der Suchklasse und
+                // muss daher hier nicht vorgenommen werden
+                $query      = $search->buildExportQuery($request);
+                $resultList = $search->performSearch($query);
+                foreach ($resultList->getResults() as $result) {
+                    $resultIds[] = $result->getId();
+                }
+                $numberOfHits = $resultList->getNumberOfHits();
+                break;
         }
 
-        $this->handleResults($resultList->getResults(), $resultList->getNumberOfHits());
+        $this->handleResults($resultIds, $numberOfHits);
     }
 
     /**
      * Returns maximum number of rows for export depending on autentication.
      *
+     * IMPORTANT: maxRows must not exceed 2147483647 (java,lang.Integer.MAX_VALUE)
+     *
      * @return int
      */
     public function getMaxRows()
     {
-        $maxRows = Opus_SolrSearch_Query::MAX_ROWS;
+        $maxRows = Query::MAX_ROWS;
 
         $config = $this->getConfig();
 
-        if (!Opus_Security_Realm::getInstance()->skipSecurityChecks())
-        {
+        if (! Realm::getInstance()->skipSecurityChecks()) {
             $identity = Zend_Auth::getInstance()->getIdentity();
 
-            if (empty($identity) === true)
-            {
-                if (isset($config->maxDocumentsGuest))
-                {
+            if (empty($identity) === true) {
+                if (isset($config->maxDocumentsGuest)) {
                     $maxRows = $this->getValueIfValid($config->maxDocumentsGuest, $maxRows);
                 }
-
-            }
-            else
-            {
-                if (isset($config->maxDocumentsUser))
-                {
+            } else {
+                if (isset($config->maxDocumentsUser)) {
                     $maxRows = $this->getValueIfValid($config->maxDocumentsUser, $maxRows);
                 }
             }
+        }
+
+        // Do not allows configured values to exceed java.lang.Integer.MAX_VALUE (Solr)
+        if ($maxRows > Query::MAX_ROWS) {
+            $maxRows = Query::MAX_ROWS;
         }
 
         return $maxRows;
@@ -340,16 +352,15 @@ class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract {
     /**
      * Returns value if it is a valid number, otherwise returns default.
      *
-     * @param $value
-     * @param $default
+     * @param string $value
+     * @param string $default
      * @return string
      */
     public function getValueIfValid($value, $default)
     {
-        $value = trim($value);
+        $value = trim($value ?? '');
 
-        if (ctype_digit($value) && $value > 0)
-        {
+        if (ctype_digit($value) && $value > 0) {
             return $value;
         }
 
@@ -358,25 +369,38 @@ class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract {
 
     /**
      * Sets up an xml document out of the result list.
-     * @param array $results An array of Opus_SolrSearch_Result objects.
+     *
+     * @param array $resultIds An array of document IDs.
+     * @param int   $numOfHits total number of hits.
      */
-    private function handleResults($results, $numOfHits) {
-        $proc = $this->_proc;
-        $xml = $this->_xml;
+    private function handleResults($resultIds, $numOfHits)
+    {
+        $proc = $this->proc;
+        $xml  = $this->xml;
 
-        $proc->setParameter('', 'timestamp', str_replace('+00:00', 'Z', Zend_Date::now()->setTimeZone('UTC')->getIso()));
-        $proc->setParameter('', 'docCount', count($results));
+        $proc->setParameter(
+            '',
+            'timestamp',
+            str_replace(
+                '+00:00',
+                'Z',
+                (new DateTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339)
+            )
+        );
+
+        $proc->setParameter('', 'docCount', count($resultIds));
         $proc->setParameter('', 'queryhits', $numOfHits);
+
+        Application_Xslt::registerViewHelper($proc, [
+            'optionValue',
+            'fileUrl',
+            'frontdoorUrl',
+            'transferUrl',
+        ]);
 
         $xml->appendChild($xml->createElement('Documents'));
 
-        $resultIds = array();
-
-        foreach ($results as $result) {
-            $resultIds[] = $result->getId();
-        }
-
-        if (!empty($resultIds)) {
+        if (! empty($resultIds)) {
             $documents = $this->getDocumentsXml($resultIds);
 
             foreach ($resultIds as $docId) {
@@ -386,40 +410,61 @@ class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract {
         }
     }
 
-    public function getXml() {
-        return $this->_xml;
+    /**
+     * @return DOMDocument
+     */
+    public function getXml()
+    {
+        return $this->xml;
     }
 
     /**
-     * Returns result for ID search of a single document.
-     * @param $request HTTP request object
-     * @return Opus_SolrSearch_ResultList
+     * Checks for existence of a document with the ID given in request parameter docId.
+     * Additionally restrict search to documents with serverState published only if user does
+     * not have 'resource_documents' permission, otherwise all documents are considered.
+     *
+     * Returns an empty array, if ID is not present in request, is unknown or the corresponding
+     * document is not in serverState published. Otherwise returns a one-element array with docId.
+     *
+     * @param Zend_Controller_Request_Http $request HTTP request object
+     * @return array empty array or one-element array with docId.
      */
-    private function buildResultListForIdSearch($request) {
+    private function getAndValidateDocId($request)
+    {
         $docId = $request->getParam('docId');
-        if (is_null($docId)) {
-            throw new Application_Exception();
-        }
-        $result = array();
-        try {
-            $doc = new Opus_Document($docId);
-            // SOLR index currently only contains published documents
-            if ($doc->getServerState() == 'published') {
-                $result[] = $doc;
+
+        $result = [];
+
+        // TODO hier bessere Differenzierung zwischen unterschiedlichen Fehlerzuständen (docId Parameter
+        // TODO fehlt im Request, hat falschen Typ, zugehöriges Dokument existiert nicht bzw. ist nicht publiziert)
+        if ($docId !== null) {
+            $doc = null;
+            try {
+                $doc = Document::get($docId);
+            } catch (Exception $e) {
+                // do nothing: return empty array
+            }
+
+            if ($doc !== null) {
+                if ($doc->getServerState() !== 'published' && ! $this->isAllowExportOfUnpublishedDocs()) {
+                    // Export von nicht freigeschalteten Dokumente ist verboten
+                    throw new Application_Export_Exception('export of unpublished documents is not allowed');
+                }
+                $result[] = $doc->getId();
             }
         }
-        catch (Exception $e) {
-            // do nothing; return result with empty array
-        }
-        return new Opus_SolrSearch_ResultList($result);
+
+        return $result;
     }
 
     /**
      * Returns array with document XML nodes.
-     * @param $documentIds IDs of documents
+     *
+     * @param int[] $documentIds IDs of documents
      * @return array Map of document IDs and DOM nodes
      */
-    private function getDocumentsXml($documentIds) {
+    private function getDocumentsXml($documentIds)
+    {
         $documents = $this->getDocumentsFromCache($documentIds);
 
         $idsOfUncachedDocs = array_diff($documentIds, array_keys($documents));
@@ -431,15 +476,17 @@ class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract {
 
     /**
      * Returns a list of documents from the database.
-     * @param $resultIds ids of documents for export
+     *
+     * @param int[] $documentIds ids of documents for export
      * @return array [docId] DocumentXml
      */
-    private function getDocumentsFromDatabase($documentIds) {
-        $documents = array();
+    private function getDocumentsFromDatabase($documentIds)
+    {
+        $documents = [];
 
         foreach ($documentIds as $docId) {
-            $document = new Opus_Document($docId);
-            $documentXml = new Application_Util_Document($document);
+            $document          = Document::get($docId);
+            $documentXml       = new Application_Util_Document($document);
             $documents[$docId] = $documentXml->getNode();
         }
 
@@ -448,25 +495,26 @@ class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract {
 
     /**
      * Returns a list of documents from cache.
-     * @param $resultIds ids of documents for export
+     *
+     * @param int[] $documentIds ids of documents for export
      * @return array Map of docId to  Document XML
      */
-    private function getDocumentsFromCache($documentIds) {
-        $documents = array();
+    public function getDocumentsFromCache($documentIds)
+    {
+        $documents = [];
 
-        $documentCacheTable = new Opus_Db_DocumentXmlCache();
-        $docXmlCache = $documentCacheTable->fetchAll(
-            $documentCacheTable->select()->where(
-                'document_id IN (?)',
-                $documentIds
-            )
-        );//->find($this->document->getId(), '1')->current()->xml_data;
+        $documentCache = Repository::getInstance()->getDocumentXmlCache();
+        $documentXml   = $documentCache->getData($documentIds, '1'); // TODO what version is used?
 
-        foreach ($docXmlCache as $row) {
-            $fragment = new DomDocument();
-            $fragment->loadXML($row->xml_data);
-            $node = $fragment->getElementsByTagName('Opus_Document')->item(0);
-            $documents[$row->document_id] = $node;
+        foreach ($documentIds as $docId) {
+            if (! isset($documentXml[$docId])) {
+                continue;
+            }
+            $xml      = $documentXml[$docId];
+            $fragment = new DOMDocument();
+            $fragment->loadXML($xml);
+            $node              = $fragment->getElementsByTagName('Opus_Document')->item(0);
+            $documents[$docId] = $node;
         }
 
         return $documents;
@@ -474,27 +522,44 @@ class Export_Model_XmlExport extends Application_Export_ExportPluginAbstract {
 
     /**
      * Searches for available stylesheets and builds the path of the selected stylesheet.
+     *
+     * @param string $stylesheet
+     * @param string $path
+     * @return string
+     * @throws Application_Exception
      */
-    public function buildStylesheetPath($stylesheet, $path) {
-        if (!is_null($stylesheet)) {
-
-            $stylesheetsAvailable = array();
-            $dir = new DirectoryIterator($path);
+    public function buildStylesheetPath($stylesheet, $path)
+    {
+        if ($stylesheet !== null) {
+            $stylesheetsAvailable = [];
+            $dir                  = new DirectoryIterator($path);
             foreach ($dir as $file) {
-                if ($file->isFile() && $file->getFilename() != '.' && $file->getFilename() != '..'
-                    && $file->isReadable()) {
+                if (
+                    $file->isFile() && $file->getFilename() !== '.' && $file->getFilename() !== '..'
+                    && $file->isReadable()
+                ) {
                     array_push($stylesheetsAvailable, $file->getBasename('.xslt'));
                 }
             }
             $pos = array_search($stylesheet, $stylesheetsAvailable);
-            if ($pos !== FALSE) {
-                return $path . DIRECTORY_SEPARATOR .  $stylesheetsAvailable[$pos] . '.xslt';
+            if ($pos !== false) {
+                return $path . DIRECTORY_SEPARATOR . $stylesheetsAvailable[$pos] . '.xslt';
             }
             throw new Application_Exception('given stylesheet does not exist or is not readable');
         }
-        $pos = strrpos($path, '/');
+        $pos        = strrpos($path, '/');
         $scriptPath = substr($path, 0, ++$pos);
         return $scriptPath . 'stylesheets' . DIRECTORY_SEPARATOR . 'raw.xslt';
     }
 
+    /**
+     * TODO create test verifying expected functions are available
+     */
+    protected function registerPhpFunctions()
+    {
+        Application_Xslt::registerViewHelper($this->proc, [
+            'accessAllowed',
+            'isAuthenticated',
+        ]);
+    }
 }

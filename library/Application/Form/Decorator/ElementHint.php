@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,12 +25,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
@@ -37,18 +34,21 @@
  *
  * TODO customizable class
  */
-class Application_Form_Decorator_ElementHint extends Zend_Form_Decorator_Abstract {
-
-    public function render($content) {
+class Application_Form_Decorator_ElementHint extends Zend_Form_Decorator_Abstract
+{
+    /**
+     * @param string $content
+     * @return string
+     */
+    public function render($content)
+    {
         $element = $this->getElement();
 
-        if ($element instanceof Application_Form_IElement) {
+        if ($element instanceof Application_Form_FormElementInterface) {
             $hint = $element->getHint();
-            return (!is_null($hint)) ? $content . '<p class="datahint">' . $hint . '</p>' : $content;
-        }
-        else {
+            return $hint !== null ? $content . '<p class="datahint">' . $hint . '</p>' : $content;
+        } else {
             return $content;
         }
     }
-
 }

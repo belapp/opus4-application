@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,18 +25,19 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Collection;
+use Opus\Common\Model\NotFoundException;
 
 /**
  * script that imports collections from a text file
  * file format: each collection (name and number) on a separate line
  * collection name and number are separated by | character
  *
+ * TODO make a command for importing collections in opus4 tool
  */
 
 // ID of parent collection
@@ -45,28 +47,26 @@ $inputFile = '../workspace/tmp/test.txt';
 // visibility status of imported collections
 $visible = true;
 
-if (!file_exists($inputFile)) {
+if (! file_exists($inputFile)) {
     echo "Error: input file $inputFile does not exist\n";
     exit();
 }
 
-if (!is_readable($inputFile)) {
+if (! is_readable($inputFile)) {
     echo "Error: input file $inputFile is not readable\n";
     exit();
 }
 
 $rootCollection = null;
 try {
-    $rootCollection = new Opus_Collection($parentCollectionId);
-}
-catch (Opus_Model_NotFoundException $e) {
+    $rootCollection = Collection::get($parentCollectionId);
+} catch (NotFoundException $e) {
     echo "Error: collection with id $parentCollectionId does not exist\n";
     exit();
 }
 
-if (!is_null($rootCollection)) {
-
-    $lineCount = 0;
+if ($rootCollection !== null) {
+    $lineCount     = 0;
     $linesImported = 0;
     foreach (file($inputFile) as $line) {
         $lineCount++;
@@ -83,7 +83,7 @@ if (!is_null($rootCollection)) {
             continue;
         }
 
-        $collection = new Opus_Collection();
+        $collection = Collection::new();
         $collection->setName(trim($parts[0]));
         $collection->setNumber(trim($parts[1]));
         $collection->setVisible($visible);
@@ -94,6 +94,5 @@ if (!is_null($rootCollection)) {
 
     echo "$linesImported collections were successfully imported\n";
 }
-
 
 exit();

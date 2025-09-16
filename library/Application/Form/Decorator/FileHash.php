@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,32 +24,33 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 /**
  * Decorator fuer die Ausgabe eines Datei-Hashes (Application_Form_Element_FileHash).
  *
- * @category    Application
- * @package     Application_Form_Decorator
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
- *
  * TODO HIDDEN inputs mit Hash entfernen? Werden momentan nicht benötigt.
  */
-class Application_Form_Decorator_FileHash extends Zend_Form_Decorator_Abstract {
-
-    public function render($content) {
+class Application_Form_Decorator_FileHash extends Zend_Form_Decorator_Abstract
+{
+    /**
+     * @param string $content
+     * @return string
+     */
+    public function render($content)
+    {
         $element = $this->getElement();
 
-        if (!$element instanceof Application_Form_Element_FileHash) {
+        if (! $element instanceof Application_Form_Element_FileHash) {
             return $content;
         }
 
         $view = $element->getView();
 
-        if (!$view instanceof Zend_View_Interface) {
+        if (! $view instanceof Zend_View_Interface) {
             return $content;
         }
 
@@ -57,11 +59,10 @@ class Application_Form_Decorator_FileHash extends Zend_Form_Decorator_Abstract {
         $hash = new Admin_Model_Hash($file, $element->getValue());
 
         $hashSoll = $hash->getSoll();
-        $hashIst = $hash->getIst();
+        $hashIst  = $hash->getIst();
 
-
-        if ($hashSoll != $hashIst) {
-            $markup = '<div class="textarea hashsoll"><span class="hash-label">'
+        if ($hashSoll !== $hashIst) {
+            $markup  = '<div class="textarea hashsoll"><span class="hash-label">'
                 . $view->translate('frontdoor_fixpoint')
                 . ':</span>'
                 . htmlspecialchars($hashSoll) . '</div>';
@@ -71,21 +72,18 @@ class Application_Form_Decorator_FileHash extends Zend_Form_Decorator_Abstract {
                 . $view->translate('frontdoor_current')
                 . ':</span>';
 
-            if (strlen(trim($hashIst)) !== 0) {
+            if ($hashIst !== null && strlen(trim($hashIst)) !== 0) {
                 $markup .= htmlspecialchars($hashIst) . '</div>';
                 $markup .= $view->formHidden($element->getFullyQualifiedName() . '[Ist]', $hashIst);
-            }
-            else {
-                if ($file->exists() && !$file->canVerify()) {
+            } else {
+                if ($file->exists() && ! $file->canVerify()) {
                     $markup .= $view->translate('frontdoor_file_too_big') . '</div>';
-                }
-                else {
+                } else {
                     $markup .= $view->translate('frontdoor_checksum_not_verified') . '</div>';
                 }
             }
-        }
-        else {
-            $markup = '<div class="textarea hashsoll">' . htmlspecialchars($hashSoll) . '</div>';
+        } else {
+            $markup  = '<div class="textarea hashsoll">' . htmlspecialchars($hashSoll) . '</div>';
             $markup .= $view->formHidden($element->getFullyQualifiedName() . '[Soll]', $hashSoll);
         }
 
@@ -97,5 +95,4 @@ class Application_Form_Decorator_FileHash extends Zend_Form_Decorator_Abstract {
                 return $content . $markup;
         }
     }
-
 }

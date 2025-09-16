@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,41 +25,54 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Application_Controller_Action_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
-class Application_Controller_Action_Helper_BreadcrumbsTest extends ControllerTestCase {
 
-    private $helper = null;
+use Opus\Common\Document;
+use Opus\Common\Title;
 
-    private $navigation = null;
+class Application_Controller_Action_Helper_BreadcrumbsTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'database', 'navigation'];
 
-    public function setUp() {
+    /** @var Zend_Controller_Action_Helper_Abstract */
+    private $helper;
+
+    /** @var Zend_View_Helper_Navigation */
+    private $navigation;
+
+    public function setUp(): void
+    {
         parent::setUp();
 
-        $this->helper = Zend_Controller_Action_HelperBroker::getStaticHelper('breadcrumbs');
-        $this->navigation = Zend_Registry::get('Opus_View')->navigation();
+        $this->helper     = Zend_Controller_Action_HelperBroker::getStaticHelper('breadcrumbs');
+        $this->navigation = $this->getView()->navigation();
         $this->helper->setNavigation($this->navigation);
-        $this->helper->setView(Zend_Registry::get('Opus_View'));
+        $this->helper->setView($this->getView());
     }
 
-    private function getPage($label) {
+    /**
+     * @param string $label
+     * @return mixed
+     */
+    private function getPage($label)
+    {
         return $this->navigation->findOneBy('label', $label);
     }
 
-    public function testAvailable() {
+    public function testAvailable()
+    {
         $this->assertNotNull($this->helper);
         $this->assertInstanceOf('Application_Controller_Action_Helper_Breadcrumbs', $this->helper);
     }
 
-    public function testDirect() {
+    public function testDirect()
+    {
         $this->assertEquals($this->helper, $this->helper->direct());
 
-        $this->helper->setParameters('admin_filemanager_index', array('id' => 146, 'test' => 'true'));
+        $this->helper->setParameters('admin_filemanager_index', ['id' => 146, 'test' => 'true']);
 
         $page = $this->getPage('admin_filemanager_index');
 
@@ -67,8 +81,9 @@ class Application_Controller_Action_Helper_BreadcrumbsTest extends ControllerTes
         $this->assertEquals('true', $page->getParam('test'));
     }
 
-    public function testSetDocumentBreadcrumb() {
-        $document = new Opus_Document(146);
+    public function testSetDocumentBreadcrumb()
+    {
+        $document = Document::get(146);
 
         // Seite zuerst holen, da das Label nach dem Aufruf von setDocumentBreadcrumb nicht mehr stimmt
         $page = $this->getPage('admin_document_index');
@@ -79,8 +94,9 @@ class Application_Controller_Action_Helper_BreadcrumbsTest extends ControllerTes
         $this->assertEquals(146, $page->getParam('id'));
     }
 
-    public function testSetParameters() {
-        $this->helper->setParameters('admin_filemanager_index', array('id' => 146, 'test' => 'true'));
+    public function testSetParameters()
+    {
+        $this->helper->setParameters('admin_filemanager_index', ['id' => 146, 'test' => 'true']);
 
         $page = $this->getPage('admin_filemanager_index');
 
@@ -89,15 +105,17 @@ class Application_Controller_Action_Helper_BreadcrumbsTest extends ControllerTes
         $this->assertEquals('true', $page->getParam('test'));
     }
 
-    public function testSetGetNavigation() {
+    public function testSetGetNavigation()
+    {
         $navigation = new Zend_Navigation();
 
         $this->helper->setNavigation($navigation);
         $this->assertEquals($navigation, $this->helper->getNavigation());
     }
 
-    public function testSetDocumentBreadcrumbNoDocument() {
-        $logger  = new MockLogger();
+    public function testSetDocumentBreadcrumbNoDocument()
+    {
+        $logger = new MockLogger();
 
         $this->helper->setLogger($logger);
         $this->helper->setDocumentBreadcrumb(null);
@@ -108,11 +126,12 @@ class Application_Controller_Action_Helper_BreadcrumbsTest extends ControllerTes
         $this->assertContains('No document provided.', $messages[0]);
     }
 
-    public function testSetParametersPageNotFound() {
-        $logger  = new MockLogger();
+    public function testSetParametersPageNotFound()
+    {
+        $logger = new MockLogger();
 
         $this->helper->setLogger($logger);
-        $this->helper->setParameters('admin_filemanager_index2', array());
+        $this->helper->setParameters('admin_filemanager_index2', []);
 
         $messages = $logger->getMessages();
 
@@ -120,24 +139,46 @@ class Application_Controller_Action_Helper_BreadcrumbsTest extends ControllerTes
         $this->assertContains('Page with label \'admin_filemanager_index2\' not found.', $messages[0]);
     }
 
-    public function testGetDocumentTitle() {
+    public function testGetDocumentTitle()
+    {
         $document = $this->createTestDocument();
 
         $document->setLanguage('deu');
 
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setLanguage('deu');
         $title->setValue('01234567890123456789012345678901234567890123456789'); // 50 Zeichen lang
 
         $document->addTitleMain($title);
 
-        $this->assertEquals('0123456789012345678901234567890123456789 ...', $this->helper->getDocumentTitle($document));
+        $title = $this->helper->getDocumentTitle($document);
+
+        $this->assertTrue(ctype_print($title));
+        $this->assertEquals('0123456789012345678901234567890123456789 ...', $title);
+    }
+
+    public function testGetDocumentTitleWithMultiByteChars()
+    {
+        $document = $this->createTestDocument();
+        $document->setLanguage('deu');
+
+        $title = Title::new();
+        $title->setLanguage('deu');
+        $title->setValue('012345678901234567890123456789012345678ü123'); // 50 Zeichen lang
+
+        $document->addTitleMain($title);
+
+        $title = $this->helper->getDocumentTitle($document);
+
+        $this->assertTrue(mb_check_encoding($title));
+        $this->assertEquals('012345678901234567890123456789012345678ü ...', $title);
     }
 
     /**
      * Testet die Funktion Application_Controller_Action_Helper_Breadcrumbs::setLabelFor().
      */
-    public function testSetLabelFor() {
+    public function testSetLabelFor()
+    {
         $page = $this->getPage('admin_doctype_show');
         $this->assertEquals('admin_doctype_show', $page->getLabel());
 
@@ -146,5 +187,4 @@ class Application_Controller_Action_Helper_BreadcrumbsTest extends ControllerTes
         $this->assertNotNull($page);
         $this->assertEquals('hallo', $page->getLabel());
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,12 +25,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2015, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
@@ -37,66 +34,79 @@
  *
  * TODO better way to get ACL?
  */
-class Application_View_Helper_AdminMenu extends Zend_View_Helper_Abstract {
-
+class Application_View_Helper_AdminMenu extends Zend_View_Helper_Abstract
+{
     /**
      * Returns current instance.
-     * @return View_Helper_Security
+     *
+     * @return $this
      */
-    public function adminMenu() {
+    public function adminMenu()
+    {
         return $this;
     }
 
     /**
      * Determines if page should be rendered as accessible (with link).
-     * @param $page
+     *
+     * @param Zend_Navigation_Page $page
      * @return bool
      */
-    public function isRenderActive($page) {
+    public function isRenderActive($page)
+    {
         $acl = $this->getAcl();
 
-        if ((is_null($acl)
-            || $acl->isAllowed(Application_Security_AclProvider::ACTIVE_ROLE, $page->getResource(),
-                $page->getPrivilege())
-            || !$acl->has($page->getResource()))
-            && $this->hasAllowedChildren($page)) {
+        if (
+            ($acl === null
+            || $acl->isAllowed(
+                Application_Security_AclProvider::ACTIVE_ROLE,
+                $page->getResource(),
+                $page->getPrivilege()
+            )
+            || ! $acl->has($page->getResource()))
+            && $this->hasAllowedChildren($page)
+        ) {
             return true;
-        }
-        else {
-            false;
+        } else {
+            return false;
         }
     }
 
     /**
      * Get parent page.
-     * @return null
+     *
+     * @return array|null
      */
-    public function getParent() {
+    public function getParent()
+    {
         $activePages = $this->view->navigation()->findActive($this->view->container, 0, 1);
 
-        if (!is_null($activePages) && isset($activePages['page'])) {
+        if ($activePages !== null && isset($activePages['page'])) {
             return $activePages['page'];
-        }
-        else {
+        } else {
             return null;
         }
     }
 
     /**
      * Returns ACL object for application.
-     * @return mixed Zend_Acl
+     *
+     * @return Zend_Acl
      */
-    public function getAcl() {
+    public function getAcl()
+    {
         return $this->view->navigation()->getAcl();
     }
 
     /**
      * Determines if description for page can be rendered.
-     * @param $page
+     *
+     * @param Zend_Navigation_Page $page
      * @return bool
      */
-    public function isRenderDescription($page) {
-        return !is_null($page->description)
+    public function isRenderDescription($page)
+    {
+        return $page->description !== null
             && $this->view->translate()->getTranslator()->isTranslated($page->description);
     }
 
@@ -109,18 +119,24 @@ class Application_View_Helper_AdminMenu extends Zend_View_Helper_Abstract {
      *
      * Some child pages are not tied to resources. Access to those pages is granted.
      *
-     * @param $page
+     * @param Zend_Navigation_Page $page
      * @return bool
      */
-    public function hasAllowedChildren($page) {
+    public function hasAllowedChildren($page)
+    {
         $pages = $page->getPages();
 
         $acl = $this->getAcl();
 
-        if (!is_null($pages) && (count($pages) > 0) && !is_null($acl)) {
+        if ($pages !== null && (count($pages) > 0) && $acl !== null) {
             foreach ($pages as $childPage) {
-                if ($acl->isAllowed(Application_Security_AclProvider::ACTIVE_ROLE, $childPage->getResource(),
-                        $childPage->getPrivilege()) || is_null($childPage->getResource())) {
+                if (
+                    $acl->isAllowed(
+                        Application_Security_AclProvider::ACTIVE_ROLE,
+                        $childPage->getResource(),
+                        $childPage->getPrivilege()
+                    ) || $childPage->getResource() === null
+                ) {
                     return true;
                 }
             }
@@ -130,5 +146,4 @@ class Application_View_Helper_AdminMenu extends Zend_View_Helper_Abstract {
 
         return true;
     }
-
 }

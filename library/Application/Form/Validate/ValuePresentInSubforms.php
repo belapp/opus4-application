@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,44 +25,44 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Form_Validate
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Log;
 
 /**
  * Prüft ob ein Wertfür ein Feld in Unterformularen mindestens einmal vorkommt.
  *
  * Wird für die Prüfung verwendet, ob ein TitleMain in der Dokumentensprache vorliegt.
  */
-class Application_Form_Validate_ValuePresentInSubforms extends Zend_Validate_Abstract {
-
+class Application_Form_Validate_ValuePresentInSubforms extends Zend_Validate_Abstract
+{
     /**
      * Error constant for language ID that does not exist.
      */
-    const NOT_VALID = 'notValid';
+    public const NOT_VALID = 'notValid';
+
+    /** @var string Name des Formularelements das geprüft werden soll. */
+    private $elementName;
 
     /**
-     * Name des Formularelements das geprüft werden soll.
+     * @var array Error messages.
+     * @phpcs:disable
      */
-    private $_elementName;
-
-    /**
-     * Error messages.
-     */
-    protected $_messageTemplates = array(
+    protected $_messageTemplates = [
         self::NOT_VALID => 'admin_validate_error_value_duplicated',
-    );
+    ];
+    // @phpcs:enable
 
     /**
      * Konstruiert Instanz des Validators.
+     *
      * @param string $elementName
      */
-    public function __construct($elementName) {
-        $this->_elementName = $elementName;
+    public function __construct($elementName)
+    {
+        $this->elementName = $elementName;
     }
 
     /**
@@ -70,23 +71,23 @@ class Application_Form_Validate_ValuePresentInSubforms extends Zend_Validate_Abs
      * Wenn kein Name für das Element ($this->elementName) spezifiziert wurde oder kein Kontext ($context) übergeben
      * wurde, schlägt die Validierung fehl, da nicht geprüft werden, daß der Wert in den Unterformularen vorkommt.
      *
-     * @param array $value
-     * @param array $context
-     * @return boolean TRUE - wenn der Wert in den Unterformularen vorkommt; FALSE - wenn er nicht vorkommt
+     * @param array|string $value
+     * @param null|array   $context
+     * @return bool TRUE - wenn der Wert in den Unterformularen vorkommt; FALSE - wenn er nicht vorkommt
      */
-    public function isValid($value, $context = null) {
+    public function isValid($value, $context = null)
+    {
         $value = (string) $value;
         $this->_setValue($value);
 
-        if (!is_null($context) && count(trim($this->_elementName)) !== 0) {
+        if ($context !== null && $this->elementName !== null && strlen(trim($this->elementName)) !== 0) {
             foreach ($context as $index => $entry) {
-                if (isset($entry[$this->_elementName]) && $entry[$this->_elementName] == $value) {
+                if (isset($entry[$this->elementName]) && $entry[$this->elementName] === $value) {
                     return true;
                 }
             }
-        }
-        else {
-            Zend_Registry::get('Zend_Log')->err(__CLASS__ . '::' . __METHOD__ . ' mit $context = null aufgerufen.');
+        } else {
+             Log::get()->err(__CLASS__ . '::' . __METHOD__ . ' mit $context = null aufgerufen.');
         }
 
         $this->_error(self::NOT_VALID);
@@ -95,10 +96,11 @@ class Application_Form_Validate_ValuePresentInSubforms extends Zend_Validate_Abs
 
     /**
      * Liefert den Namen des Elements, dass geprüft werden soll.
+     *
      * @return string
      */
-    public function getElementName() {
-        return $this->_elementName;
+    public function getElementName()
+    {
+        return $this->elementName;
     }
-
 }

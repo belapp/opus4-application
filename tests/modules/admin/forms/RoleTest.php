@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,25 +25,115 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Admin_Form_RoleTest extends ControllerTestCase {
+use Opus\Common\UserRole;
 
-    public function testCreateForm() {
+class Admin_Form_RoleTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database'];
+
+    public function testCreateForm()
+    {
         $form = new Admin_Form_Role();
         $this->assertNotNull($form);
     }
 
-    public function testPopulateFromRole() {
-        $role = Opus_UserRole::fetchByName('guest');
+    public function testContructWithRole()
+    {
+        $role = UserRole::fetchByName('guest');
         $form = new Admin_Form_Role($role->getId());
-        $this->assertEquals('guest', $form->getElement('name')->getValue());
+        $this->assertEquals('guest', $form->getElementValue(Admin_Form_Role::ELEMENT_NAME));
     }
 
-}
+    public function testPopulateFromModel()
+    {
+        $role = UserRole::fetchByName('administrator');
+        $form = new Admin_Form_Role();
 
+        $form->populateFromModel($role);
+        $this->assertEquals('administrator', $form->getElementValue(Admin_Form_Role::ELEMENT_NAME));
+    }
+
+    /**
+     * @return array[]
+     */
+    public function validRoleNameDataProvider()
+    {
+        return [
+            ['abc'],
+            ['abcd'],
+            ['t17'],
+            ['ABc'],
+        ];
+    }
+
+    /**
+     * @param string $validName Role name
+     * @dataProvider validRoleNameDataProvider
+     */
+    public function testValidRoleName($validName)
+    {
+        $form = new Admin_Form_Role();
+        $this->assertTrue($form->isValid([Admin_Form_Role::ELEMENT_NAME => $validName]), $validName);
+    }
+
+    /**
+     * @return array[]
+     */
+    public function invalidRoleNameDataProvider()
+    {
+        return [
+            [''],
+            ['123'],
+            ['ab'],
+            ['12'],
+            ['1234'],
+            ['guest'], // already exists
+            ['1ab'],
+            ['a-b'],
+        ];
+    }
+
+    /**
+     * @param string $invalidName Role name
+     * @dataProvider invalidRoleNameDataProvider
+     */
+    public function testInvalidRoleName($invalidName)
+    {
+        $form = new Admin_Form_Role();
+        $this->assertFalse($form->isValid([Admin_Form_Role::ELEMENT_NAME => $invalidName]), $invalidName);
+    }
+
+    public function testValidationTranslated()
+    {
+        $this->application->bootstrap('translation');
+
+        $form = new Admin_Form_Role();
+
+        $name = $form->getElement(Admin_Form_Role::ELEMENT_NAME);
+
+        $this->useEnglish();
+        $name->isValid('');
+        $messages = $name->getMessages();
+
+        $this->assertArrayHasKey('regexNotMatch', $messages);
+        $this->assertContains('letters and numbers', $messages['regexNotMatch']);
+
+        $this->assertArrayHasKey('stringLengthTooShort', $messages);
+        $this->assertContains('less than 3 characters', $messages['stringLengthTooShort']);
+
+        $this->useGerman();
+        $name->isValid('');
+        $messages = $name->getMessages();
+
+        $this->assertArrayHasKey('regexNotMatch', $messages);
+        $this->assertContains('Buchstaben und Zahlen', $messages['regexNotMatch']);
+
+        $this->assertArrayHasKey('stringLengthTooShort', $messages);
+        $this->assertContains('weniger als 3 Zeichen', $messages['stringLengthTooShort']);
+    }
+}

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,115 +25,161 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Tests
- * @author      Sascha Szott
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2016-2017
+ * @copyright   Copyright (c) 2016, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
-class DepositTestHelper extends PHPUnit_Framework_Assert {
 
-    const USER_AGENT = 'PHPUnit';      
-    
-    const CONTENT_TYPE_ZIP = 'application/zip';
-    
-    const CONTENT_TYPE_TAR = 'application/tar';
-    
-    private $collectionId = null;
-    
+use Opus\Common\Collection;
+use Opus\Common\CollectionRole;
+use Opus\Common\Config;
+use Opus\Common\Document;
+use Opus\Common\DocumentInterface;
+use Opus\Common\Model\NotFoundException;
+use Opus\Common\TitleInterface;
+use Opus\Import\AdditionalEnrichments;
+use PHPUnit\Framework\Assert;
+
+class DepositTestHelper extends Assert
+{
+    public const USER_AGENT = 'PHPUnit';
+
+    public const CONTENT_TYPE_ZIP = 'application/zip';
+
+    public const CONTENT_TYPE_TAR = 'application/tar';
+
+    /** @var int */
+    private $collectionId;
+
+    /** @var string */
     private $collectionName;
-    
+
+    /** @var string */
     private $collectionNumber;
 
-    private $configBackup;
-    
+    /** @var string */
     private $frontdoorUrl;
 
-    public function getCollectionId() {
+    /**
+     * @return int
+     */
+    public function getCollectionId()
+    {
         return $this->collectionId;
     }
-    
-    public function getCollectionName() {
+
+    /**
+     * @return string
+     */
+    public function getCollectionName()
+    {
         return $this->collectionName;
     }
-    
-    public function getCollectionNumber() {
+
+    /**
+     * @return string
+     */
+    public function getCollectionNumber()
+    {
         return $this->collectionNumber;
     }
-    
-    public function getFrontdoorUrl() {
+
+    /**
+     * @return string
+     */
+    public function getFrontdoorUrl()
+    {
         return $this->frontdoorUrl;
     }
 
-    public function disableExceptionConversion() {
-        PHPUnit_Framework_Error_Warning::$enabled = false;
-        PHPUnit_Framework_Error_Notice::$enabled = false;
-        PHPUnit_Framework_Error_Deprecated::$enabled = false;        
+    public function disableExceptionConversion()
+    {
+        /* TODO BUG this does not work with PHPUnit 8.5 anymore
+        Warning::$enabled    = false;
+        Notice::$enabled     = false;
+        Deprecated::$enabled = false;
+        */
     }
-    
-    public function setValidAuthorizationHeader($request, $userAgent) {
+
+    /**
+     * @param Zend_Controller_Request_Http $request
+     * @param string                       $userAgent
+     */
+    public function setValidAuthorizationHeader($request, $userAgent)
+    {
         $authString = base64_encode('sworduser:sworduserpwd');
-        $request->setHeader('Authorization','Basic ' . $authString);        
+        $request->setHeader('Authorization', 'Basic ' . $authString);
         $request->setHeader('User-Agent', $userAgent);
     }
-    
-    public function uploadFile($request, $fileName, $checksum = null) {
-        $archive = APPLICATION_PATH . '/tests/resources/sword-packages/' . $fileName;
-        $handle = fopen($archive, 'rb');
+
+    /**
+     * @param Zend_Controller_Request_Http $request
+     * @param string                       $fileName
+     * @param string|null                  $checksum
+     * @return string
+     */
+    public function uploadFile($request, $fileName, $checksum = null)
+    {
+        $archive  = APPLICATION_PATH . '/tests/resources/sword-packages/' . $fileName;
+        $handle   = fopen($archive, 'rb');
         $contents = fread($handle, filesize($archive));
-        $request->setRawBody($contents);        
+        $request->setRawBody($contents);
         fclose($handle);
-        
-        if (is_null($checksum)) {
+
+        if ($checksum === null) {
             // used to set an invalid checksum value
             $checksum = md5_file($archive);
-        }        
+        }
         $request->setHeader('Content-MD5', $checksum);
         return $checksum;
     }
-    
-    public function addImportCollection() {
-        if (is_null($this->collectionId)) {
-            $collectionRole = Opus_CollectionRole::fetchByName('Import');
-            $this->assertFalse(
-                is_null($collectionRole), 'Collection Role "Import" is part of standard distribution since OPUS 4.5'
+
+    public function addImportCollection()
+    {
+        if ($this->collectionId === null) {
+            $collectionRole = CollectionRole::fetchByName('Import');
+            $this->assertNotNull(
+                $collectionRole,
+                'Collection Role "Import" is part of standard distribution since OPUS 4.5'
             );
             $rootCollection = $collectionRole->getRootCollection();
 
             // create temporary collection
-            $collection = new Opus_Collection();     
-            $timestamp = time();
+            $collection             = Collection::new();
+            $timestamp              = time();
             $this->collectionNumber = 'sword-test-number-' . $timestamp;
             $collection->setNumber($this->collectionNumber);
             $this->collectionName = 'sword-test-name-' . $timestamp;
             $collection->setName($this->collectionName);
             $rootCollection->addLastChild($collection);
-            $this->collectionId = $collection->store();
+            $this->collectionId = (int) $collection->store();
 
-            $this->configBackup = Zend_Registry::get('Zend_Config');
-            $config = Zend_Registry::get('Zend_Config');
-            $config->sword->collection->default->number = $this->collectionNumber;
-            $config->sword->collection->default->abstract = 'sword.collection.default.abstract';
+            $config                                               = Config::get();
+            $config->sword->collection->default->number           = $this->collectionNumber;
+            $config->sword->collection->default->abstract         = 'sword.collection.default.abstract';
             $config->sword->collection->default->collectionPolicy = 'sword.collection.default.collectionPolicy';
-            $config->sword->collection->default->treatment = 'sword.collection.default.treatment';
-            $config->sword->collection->default->acceptPackaging = 'sword.collection.default.acceptPackaging';
-            Zend_Registry::set('Zend_Config', $config);            
+            $config->sword->collection->default->treatment        = 'sword.collection.default.treatment';
+            $config->sword->collection->default->acceptPackaging  = 'sword.collection.default.acceptPackaging';
         }
-    }    
-        
-    public function removeImportCollection() {
-        if (!is_null($this->collectionId)) {
-            $collection = new Opus_Collection($this->collectionId);
+    }
+
+    public function removeImportCollection()
+    {
+        if ($this->collectionId !== null) {
+            $collection = Collection::get($this->collectionId);
             $collection->delete();
             $this->collectionId = null;
-            Zend_Registry::set('Zend_Config', $this->configBackup);
-        }        
-    }    
-    
-    public function assertTitleValues($title, $value, $language) {
+        }
+    }
+
+    /**
+     * @param TitleInterface $title
+     * @param string         $value
+     * @param string         $language
+     */
+    public function assertTitleValues($title, $value, $language)
+    {
         $this->assertEquals($value, $title->getValue());
-        $this->assertEquals($language, $title->getLanguage());        
+        $this->assertEquals($language, $title->getLanguage());
     }
 
     /**
@@ -143,9 +190,8 @@ class DepositTestHelper extends PHPUnit_Framework_Assert {
     public function setupTmpDir()
     {
         $appConfig = Application_Configuration::getInstance();
-        $tempPath = $appConfig->getTempPath() . 'sword';
-        if (!file_exists($tempPath))
-        {
+        $tempPath  = $appConfig->getTempPath() . 'sword';
+        if (! file_exists($tempPath)) {
             mkdir($tempPath);
         }
         $appConfig->setTempPath($tempPath);
@@ -156,69 +202,101 @@ class DepositTestHelper extends PHPUnit_Framework_Assert {
      *
      * @throws Zend_Exception
      */
-    public function assertEmptyTmpDir() {
+    public function assertEmptyTmpDir()
+    {
         $dirName = Application_Configuration::getInstance()->getTempPath();
-        $files = scandir($dirName);
+        $files   = scandir($dirName);
         foreach ($files as $file) {
-            $this->assertTrue(in_array($file, array( '.', '..', '.gitignore', 'resumption')), $dirName);
+            $this->assertTrue(in_array($file, ['.', '..', '.gitignore', 'resumption']), $dirName);
         }
     }
 
-    public function assertNodeProperties($index, $root, $nodeName, $nodeValue) {
+    /**
+     * @param int    $index
+     * @param mixed  $root
+     * @param string $nodeName
+     * @param string $nodeValue
+     */
+    public function assertNodeProperties($index, $root, $nodeName, $nodeValue)
+    {
         $domNode = $root->item($index);
         $this->assertEquals($nodeName, $domNode->nodeName);
         $this->assertEquals($nodeValue, $domNode->nodeValue);
     }
-    
-    public function assertImportEnrichments($doc, $fileName, $checksum, $expectedNumOfEnrichments) {
+
+    /**
+     * @param DocumentInterface $doc
+     * @param string            $fileName
+     * @param string            $checksum
+     * @param int               $expectedNumOfEnrichments
+     * @throws Exception
+     */
+    public function assertImportEnrichments($doc, $fileName, $checksum, $expectedNumOfEnrichments)
+    {
         $enrichments = $doc->getEnrichment();
         $this->assertEquals($expectedNumOfEnrichments, count($enrichments));
-        
+
         foreach ($enrichments as $enrichment) {
             switch ($enrichment->getKeyName()) {
-                case Application_Import_AdditionalEnrichments::OPUS_IMPORT_CHECKSUM:
+                case AdditionalEnrichments::OPUS_IMPORT_CHECKSUM:
                     $this->assertEquals($checksum, $enrichment->getValue());
                     break;
-                case Application_Import_AdditionalEnrichments::OPUS_IMPORT_DATE:
+                case AdditionalEnrichments::OPUS_IMPORT_DATE:
                     $dateStr = $enrichment->getValue();
                     $this->assertTrue(trim($dateStr) !== '');
                     $date = new DateTime($dateStr, new DateTimeZone('GMT'));
                     $this->assertTrue($date <= new DateTime());
                     break;
-                case Application_Import_AdditionalEnrichments::OPUS_IMPORT_FILE:
+                case AdditionalEnrichments::OPUS_IMPORT_FILE:
                     $this->assertEquals($fileName, $enrichment->getValue());
                     break;
-                case Application_Import_AdditionalEnrichments::OPUS_IMPORT_USER:
+                case AdditionalEnrichments::OPUS_IMPORT_USER:
                     $this->assertEquals('sworduser', $enrichment->getValue());
                     break;
+                case AdditionalEnrichments::OPUS_SOURCE:
+                    $this->assertEquals('sword', $enrichment->getValue());
+                    break;
                 default:
-                    if ($expectedNumOfEnrichments == 4) {
+                    if ($expectedNumOfEnrichments === 5) {
                         throw new Exception('unexpected enrichment key ' . $enrichment->getKeyName());
                     }
             }
-        }        
+        }
     }
-    
+
+    /**
+     * @param mixed  $root
+     * @param string $fileName
+     * @param string $checksum
+     * @param bool   $abstractExist
+     * @param int    $numOfEnrichments
+     * @param int    $numOfCollections
+     * @return DocumentInterface
+     * @throws NotFoundException
+     */
     public function checkAtomEntryDocument(
-        $root, $fileName, $checksum, $abstractExist = true, $numOfEnrichments = 4, $numOfCollections = 1
-    )
-    {
+        $root,
+        $fileName,
+        $checksum,
+        $abstractExist = true,
+        $numOfEnrichments = 5,
+        $numOfCollections = 1
+    ) {
         $this->assertEquals('entry', $root->nodeName);
         $attributes = $root->attributes;
-        $this->assertEquals(0, $attributes->length);        
+        $this->assertEquals(0, $attributes->length);
 
         $entryChildren = $root->childNodes;
         if ($abstractExist) {
             $this->assertEquals(12, $entryChildren->length);
-        }
-        else {
+        } else {
             $this->assertEquals(11, $entryChildren->length);
         }
 
         $idNode = $entryChildren->item(0);
         $this->assertEquals('id', $idNode->nodeName);
         $docId = $idNode->nodeValue;
-        $doc = new Opus_Document($docId);
+        $doc   = Document::get($docId);
 
         $this->assertNodeProperties(1, $entryChildren, 'updated', $doc->getServerDateCreated());
         $this->assertNodeProperties(2, $entryChildren, 'title', $doc->getTitleMain(0)->getValue());
@@ -235,7 +313,7 @@ class DepositTestHelper extends PHPUnit_Framework_Assert {
         if ($abstractExist) {
             $this->assertNodeProperties(4, $entryChildren, 'summary', $doc->getTitleAbstract(0)->getValue());
             $offset = 1;
-        }                
+        }
 
         $contentNode = $entryChildren->item(4 + $offset);
         $this->assertEquals('content', $contentNode->nodeName);
@@ -251,7 +329,7 @@ class DepositTestHelper extends PHPUnit_Framework_Assert {
         $this->frontdoorUrl = 'http:///frontdoor/index/index/docId/' . $docId;
         $this->assertEquals($this->frontdoorUrl, $attribute->nodeValue);
 
-        $config = Zend_Registry::get('Zend_Config');
+        $config         = Config::get();
         $generatorValue = $config->sword->generator;
         $this->assertNodeProperties(5 + $offset, $entryChildren, 'generator', $generatorValue);
 
@@ -259,25 +337,31 @@ class DepositTestHelper extends PHPUnit_Framework_Assert {
 
         $treatmentValue = $config->sword->treatment;
         $this->assertNodeProperties(7 + $offset, $entryChildren, 'sword:treatment', $treatmentValue);
-        
+
         $this->assertNodeProperties(
-            8 + $offset, $entryChildren, 'sword:packaging', 'sword.collection.default.acceptPackaging'
+            8 + $offset,
+            $entryChildren,
+            'sword:packaging',
+            'sword.collection.default.acceptPackaging'
         );
         $this->assertNodeProperties(9 + $offset, $entryChildren, 'sword:verboseDescription', '');
         $this->assertNodeProperties(10 + $offset, $entryChildren, 'sword:noOp', 'false');
 
         $this->assertImportEnrichments($doc, $fileName, $checksum, $numOfEnrichments);
-        $this->assertImportCollection($doc, $numOfCollections);      
-        
+        $this->assertImportCollection($doc, $numOfCollections);
+
         return $doc;
     }
-            
-    private function assertImportCollection($doc, $numOfCollections = 1) {
+
+    /**
+     * @param DocumentInterface $doc
+     * @param int               $numOfCollections
+     */
+    private function assertImportCollection($doc, $numOfCollections = 1)
+    {
         $collections = $doc->getCollection();
         $this->assertEquals($numOfCollections, count($collections));
         $collection = $collections[$numOfCollections - 1];
-        $this->assertEquals($this->collectionId, $collection->getId());        
+        $this->assertEquals($this->collectionId, (int) $collection->getId());
     }
-
-    
 }

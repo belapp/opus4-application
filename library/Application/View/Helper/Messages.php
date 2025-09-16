@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,9 +25,6 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application_View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2018, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
@@ -36,31 +34,33 @@
  */
 class Application_View_Helper_Messages extends Application_View_Helper_Abstract
 {
-
     /**
      * Returns HTML for messages.
+     *
+     * @param string[]|null $messages
+     * @return string
      */
     public function messages($messages = null)
     {
-        if (!is_array($messages)) {
+        if (! is_array($messages)) {
             $messages = $this->getMessages();
         }
 
         $output = '';
 
-        if (!empty($messages)) {
+        if (! empty($messages)) {
             $output .= '<div class="messages">' . PHP_EOL;
 
-            foreach ($messages as $message) {
-                if (is_array($message) && array_key_exists('message', $message)) {
-                    $translated = htmlspecialchars($this->view->translate($message['message']));
-                    $level = array_key_exists('level', $message) ? $message['level'] : '';
+            foreach ($messages as $entry) {
+                if (is_array($entry) && array_key_exists('message', $entry)) {
+                    $message = $this->prepareMessage($entry['message']);
 
-                    $output .= "  <div class=\"$level\">$translated</div>" . PHP_EOL;
-                }
-                else {
-                    $translated = htmlspecialchars($this->view->translate($message));
-                    $output .= "  <div>$translated</div>" . PHP_EOL;
+                    $level = array_key_exists('level', $entry) ? $entry['level'] : '';
+
+                    $output .= "  <div class=\"$level\">$message</div>" . PHP_EOL;
+                } else {
+                    $message = $this->prepareMessage($entry);
+                    $output .= "  <div>$message</div>" . PHP_EOL;
                 }
             }
 
@@ -70,8 +70,26 @@ class Application_View_Helper_Messages extends Application_View_Helper_Abstract
         return $output;
     }
 
+    /**
+     * @param string $message
+     * @return string
+     */
+    protected function prepareMessage($message)
+    {
+        $translator = $this->view->translate()->getTranslator();
+
+        if ($translator->isTranslated($message)) {
+            $message = $this->view->translate($message);
+        }
+
+        return htmlspecialchars($message);
+    }
+
+    /**
+     * @return null|string[]
+     */
     public function getMessages()
     {
-        return !is_null($this->view->flashMessenger) ? $this->view->flashMessenger->getMessages() : null;
+        return $this->view->flashMessenger !== null ? $this->view->flashMessenger->getMessages() : null;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,34 +25,39 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Application_View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
-class Application_View_Helper_ViewFormMultiCheckboxTest extends ControllerTestCase {
 
-    public function testViewFormMultiCheckbox() {
+class Application_View_Helper_ViewFormMultiCheckboxTest extends ControllerTestCase
+{
+    public function testViewFormMultiCheckbox()
+    {
         $helper = new Application_View_Helper_ViewFormMultiCheckbox();
         $helper->setView(new Zend_View());
 
         $markup = $helper->viewFormMultiCheckbox(
-            'testName', array('Value1', 'Value2'), null, array('Value1', 'Value2', 'Value3')
+            'testName',
+            ['Value1', 'Value2'],
+            null,
+            ['Value1', 'Value2', 'Value3']
         );
 
         $this->assertEquals('<div id="testName" class="field">Value1, Value2</div>', $markup);
     }
 
-    public function testViewFormMultiCheckboxEscaping() {
+    public function testViewFormMultiCheckboxEscaping()
+    {
         $helper = new Application_View_Helper_ViewFormMultiCheckbox();
         $helper->setView(new Zend_View());
 
         $markup = $helper->viewFormMultiCheckbox(
-            'testName', '<h1>Value2</h1>', null, array('Value1', '<h1>Value2</h1>', 'Value3')
+            'testName',
+            '<h1>Value2</h1>',
+            null,
+            ['Value1', '<h1>Value2</h1>', 'Value3']
         );
 
         $this->assertEquals('<div id="testName" class="field">&lt;h1&gt;Value2&lt;/h1&gt;</div>', $markup);
     }
-
 }

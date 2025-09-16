@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,111 +25,121 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Export
- * @author      Michael Lang <lang@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
+use Opus\Common\Repository;
+use Opus\Common\Title;
+use Opus\Search\Util\Query;
+
 /**
- * Class Export_Model_XmlExportTest
- *
  * @covers \Export_Model_XmlExport
  */
-class Export_Model_XmlExportTest extends ControllerTestCase {
+class Export_Model_XmlExportTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database'];
 
-    /**
-     * @var \Export_Model_XmlExport
-     */
+    /** @var Export_Model_XmlExport */
     private $plugin;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
 
         $plugin = new Export_Model_XmlExport();
         $plugin->setRequest($this->getRequest());
         $plugin->setResponse($this->getResponse());
         $plugin->init();
-        $plugin->setConfig(new Zend_Config(array(
-            'class' => 'Export_Model_XmlExport',
-            'maxDocumentsGuest' => 100,
-            'maxDocumentsUser' => 500,
-        )));
+        $plugin->setConfig(new Zend_Config([
+            'class'             => 'Export_Model_XmlExport',
+            'maxDocumentsGuest' => '100',
+            'maxDocumentsUser'  => '500',
+        ]));
 
         $this->plugin = $plugin;
     }
 
-    public function testXmlPreparation() {
+    public function testXmlPreparation()
+    {
         $doc = $this->createTestDocument();
         $doc->setServerState('published');
-        $title = new Opus_Title();
-        $title->setLanguage('deu');
-        $title->setValue('Deutscher Titel');
-        $doc->setTitleMain($title);
-        $doc->store();
-
-        $this->_request->setMethod('POST')->setPost(array(
-            'searchtype' => 'all'
-        ));
-
-        $this->plugin->prepareXml();
-
-        $xpath = new DOMXPath($this->plugin->getXml());
-        $result = $xpath->query('//Opus_Document');
-
-        // in OPUSVIER-3336 wurde die Sortierreihenfolge geändert, dh es wird nicht mehr aufsteigend nach id sortiert
-        $this->assertEquals('Deutscher Titel', $result->item(0)->childNodes->item(3)->attributes->item(2)->nodeValue);
-    }
-
-    public function testXmlPreparationForFrontdoor() {
-        $doc = $this->createTestDocument();
-        $doc->setServerState('published');
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setLanguage('deu');
         $title->setValue('Deutscher Titel');
         $doc->setTitleMain($title);
         $docId = $doc->store();
 
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'docId' => $docId,
-            'searchtype' => 'id'
-        ));
+        $this->_request->setMethod('POST')->setPost([
+            'searchtype' => 'all',
+        ]);
 
         $this->plugin->prepareXml();
 
-        $xpath = new DOMXPath($this->plugin->getXml());
+        $xml   = $this->plugin->getXml();
+        $xpath = new DOMXPath($xml);
+
+        $result = $xpath->query("//Opus_Document[@Id=\"$docId\"]");
+
+        $this->assertEquals(1, $result->length);
+
+        $this->assertEquals(
+            'Deutscher Titel',
+            $xpath->query("//Opus_Document[@Id=\"$docId\"]/TitleMain/@Value")->item(0)->nodeValue
+        );
+    }
+
+    public function testXmlPreparationForFrontdoor()
+    {
+        $doc = $this->createTestDocument();
+        $doc->setServerState('published');
+        $title = Title::new();
+        $title->setLanguage('deu');
+        $title->setValue('Deutscher Titel');
+        $doc->setTitleMain($title);
+        $docId = $doc->store();
+
+        $this->getRequest()->setMethod('POST')->setPost([
+            'docId'      => $docId,
+            'searchtype' => 'id',
+        ]);
+
+        $this->plugin->prepareXml();
+
+        $xpath  = new DOMXPath($this->plugin->getXml());
         $result = $xpath->query('//Opus_Document');
-        $count = $result->length;
+        $count  = $result->length;
 
         $this->assertEquals('Deutscher Titel', $result->item(--$count)->childNodes->item(3)->attributes->item(2)->nodeValue);
     }
 
-    public function testXmlPreparationForFrontdoorWithWrongId() {
-        $docId = 199293;
-
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'docId' => ++$docId,
-            'searchtype' => 'id'
-        ));
+    public function testXmlPreparationForFrontdoorWithWrongDocId()
+    {
+        $this->getRequest()->setMethod('POST')->setPost([
+            'docId'      => 'docId',
+            'searchtype' => 'id',
+        ]);
 
         $this->plugin->prepareXml();
-        $xpath = new DOMXPath($this->plugin->getXml());
+        $xpath  = new DOMXPath($this->plugin->getXml());
         $result = $xpath->query('//Opus_Document');
         $this->assertEquals(0, $result->length);
     }
 
-    public function testXmlPreparationForFrontdoorWithoutId() {
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'searchtype' => 'id'
-        ));
-
-        $this->setExpectedException('Application_Exception');
+    public function testXmlPreparationForFrontdoorWithMissingDocId()
+    {
+        $this->getRequest()->setMethod('POST')->setPost([
+            'searchtype' => 'id',
+        ]);
         $this->plugin->prepareXml();
+        $xpath  = new DOMXPath($this->plugin->getXml());
+        $result = $xpath->query('//Opus_Document');
+        $this->assertEquals(0, $result->length);
     }
 
-    public function testXmlSortOrder() {
+    public function testXmlSortOrder()
+    {
         $firstDoc = $this->createTestDocument();
         $firstDoc->setPublishedYear(9999);
         $firstDoc->setServerState('published');
@@ -150,20 +161,20 @@ class Export_Model_XmlExportTest extends ControllerTestCase {
         $thirdDocId = $thirdDoc->store();
 
         // Dokument aus dem Cache löschen
-        $documentCacheTable = new Opus_Db_DocumentXmlCache();
-        $documentCacheTable->delete('document_id = ' . $secondDocId);
-        $documentCacheTable->delete('document_id = ' . $firstDocId);
+        $documentCache = Repository::getInstance()->getDocumentXmlCache();
+        $documentCache->remove($secondDocId);
+        $documentCache->remove($firstDocId);
 
-        $this->getRequest()->setMethod('POST')->setPost(array(
+        $this->getRequest()->setMethod('POST')->setPost([
             'searchtype' => 'all',
-            'sortfield' => 'year',
-            'sortorder' => 'desc',
-            'rows' => '10' // die ersten 10 Dokumente reichen
-        ));
+            'sortfield'  => 'year',
+            'sortorder'  => 'desc',
+            'rows'       => '10', // die ersten 10 Dokumente reichen
+        ]);
 
         $this->plugin->prepareXml();
 
-        $xpath = new DOMXPath($this->plugin->getXml());
+        $xpath  = new DOMXPath($this->plugin->getXml());
         $result = $xpath->query('//Opus_Document');
 
         $this->assertEquals(10, $result->length);
@@ -178,47 +189,56 @@ class Export_Model_XmlExportTest extends ControllerTestCase {
      * If only one document is exported, searchtype 'id' is used. It is not necessary the invoke solr search, because
      * the document can be constructed in XmlExport.
      */
-    public function testXmlExportForSearchtypeId() {
+    public function testXmlExportForSearchtypeId()
+    {
+        parent::setUpWithEnv('production');
+        $this->enableSecurity();
+        $this->assertSecurityConfigured();
+
         $doc = $this->createTestDocument();
         $doc->setServerState('published');
         $docId = $doc->store();
 
-        $this->getRequest()->setMethod('POST')->setPost(array(
+        $this->getRequest()->setMethod('POST')->setPost([
             'searchtype' => 'id',
-            'docId' => $docId
-        ));
+            'docId'      => $docId,
+        ]);
 
         $this->plugin->prepareXml();
 
-        $xpath = new DOMXPath($this->plugin->getXml());
+        $xpath  = new DOMXPath($this->plugin->getXml());
         $result = $xpath->query('//Opus_Document');
 
+        $this->restoreSecuritySetting();
         $this->assertEquals($docId, $result->item(0)->attributes->item(0)->nodeValue);
     }
 
     /**
      * Only published documents should be exported.
      */
-    public function testXmlExportForSearchtypeIdWithUnpublishedDocument() {
-        $doc = $this->createTestDocument();
+    public function testXmlExportForSearchtypeIdWithUnpublishedDocument()
+    {
+        parent::setUpWithEnv('production');
+        $this->enableSecurity();
+        $this->assertSecurityConfigured();
+
+        $doc   = $this->createTestDocument();
         $docId = $doc->store();
 
-        $this->getRequest()->setMethod('POST')->setPost(array(
+        $this->getRequest()->setMethod('POST')->setPost([
             'searchtype' => 'id',
-            'docId' => $docId
-        ));
+            'docId'      => $docId,
+        ]);
 
+        $this->expectException(Application_Export_Exception::class);
         $this->plugin->prepareXml();
 
-        $xpath = new DOMXPath($this->plugin->getXml());
-        $result = $xpath->query('//Opus_Document');
-
-        $this->assertEquals(0, $result->length);
+        $this->restoreSecuritySetting();
     }
 
     public function testGetMaxRows()
     {
-        $this->assertEquals(Opus_SolrSearch_Query::MAX_ROWS, $this->plugin->getMaxRows());
+        $this->assertEquals(Query::MAX_ROWS, $this->plugin->getMaxRows());
 
         $this->enableSecurity();
 
@@ -230,7 +250,7 @@ class Export_Model_XmlExportTest extends ControllerTestCase {
 
         $this->loginUser('admin', 'adminadmin');
 
-        $this->assertEquals(Opus_SolrSearch_Query::MAX_ROWS, $this->plugin->getMaxRows());
+        $this->assertEquals(Query::MAX_ROWS, $this->plugin->getMaxRows());
     }
 
     public function testGetValueIfValid()
@@ -256,28 +276,32 @@ class Export_Model_XmlExportTest extends ControllerTestCase {
 
         $plugin->setDownloadEnabled(null);
 
-        Zend_Registry::get('Zend_Config')->merge(new Zend_Config(array(
-            'export' => array('download' => '0')
-        )));
+        $this->adjustConfiguration([
+            'export' => ['download' => self::CONFIG_VALUE_FALSE],
+        ]);
 
         $this->assertFalse($plugin->isDownloadEnabled());
     }
 
+    /**
+     * @return array
+     */
     public function setDownloadEnabledInvalidArgumentProvider()
     {
         return [
             ['on'],
             [123],
-            [1]
+            [1],
         ];
     }
 
     /**
-     * @expectedException InvalidArgumentException
      * @dataProvider setDownloadEnabledInvalidArgumentProvider
+     * @param mixed $argument
      */
     public function testSetDownloadEnabledInvalidArgument($argument)
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->plugin->setDownloadEnabled($argument);
     }
 
@@ -287,14 +311,13 @@ class Export_Model_XmlExportTest extends ControllerTestCase {
 
         $this->assertEquals('text/xml', $plugin->getContentType());
 
-        $config = new Zend_Config(array('contentType' => 'text/plain'));
+        $config = new Zend_Config(['contentType' => 'text/plain']);
 
         $plugin->setContentType(null); // clear cached content type
 
         $plugin->setConfig($config);
 
         $this->assertEquals('text/plain', $plugin->getContentType());
-
     }
 
     public function testGetContentTypeFallback()
@@ -303,7 +326,7 @@ class Export_Model_XmlExportTest extends ControllerTestCase {
 
         $plugin->setContentType(null);
 
-        $plugin->setConfig(new Zend_Config(array()));
+        $plugin->setConfig(new Zend_Config([]));
 
         $this->assertEquals('text/xml', $plugin->getContentType());
     }
@@ -325,7 +348,7 @@ class Export_Model_XmlExportTest extends ControllerTestCase {
 
         $plugin->setAttachmentFilename(null); // clear cached name
 
-        $plugin->setConfig(new Zend_Config(array('attachmentFilename' => 'article.pdf')));
+        $plugin->setConfig(new Zend_Config(['attachmentFilename' => 'article.pdf']));
 
         $this->assertEquals('article.pdf', $plugin->getAttachmentFilename());
     }
@@ -339,5 +362,13 @@ class Export_Model_XmlExportTest extends ControllerTestCase {
         $this->assertEquals('fulltext.pdf', $plugin->getAttachmentFilename());
     }
 
+    public function testGetDocumentsFromCache()
+    {
+        $plugin = $this->plugin;
+
+        $xml = $plugin->getDocumentsFromCache([146, 89, 90]);
+
+        $this->assertCount(3, $xml);
+        $this->assertEquals([146, 89, 90], array_keys($xml)); // order is preserved
+    }
 }
- 

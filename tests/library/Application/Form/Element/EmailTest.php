@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,20 +25,20 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Tests
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Unit Tests for SELECT Element für die Rolle einer Person.
  */
-class Application_Form_Element_EmailTest extends ControllerTestCase {
+class Application_Form_Element_EmailTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'translation';
 
-    public function testConstruct() {
+    public function testConstruct()
+    {
         $element = new Application_Form_Element_Email('Email');
 
         $this->assertEquals('Email', $element->getName());
@@ -46,8 +47,10 @@ class Application_Form_Element_EmailTest extends ControllerTestCase {
         $this->assertNotNull($element->getAttrib('placeholder'));
 
         // Funktioniert evtl. nicht, wenn die Übersetzungsressource in Modul liegt (nicht 'default')
-        $this->assertNotEquals('email_format', $element->getAttrib('placeholder'),
-                'Der Schlüssel \'email_format\' wurde nicht übersetzt.');
+        $this->assertNotEquals(
+            'email_format',
+            $element->getAttrib('placeholder'),
+            'Der Schlüssel \'email_format\' wurde nicht übersetzt.'
+        );
     }
-
 }

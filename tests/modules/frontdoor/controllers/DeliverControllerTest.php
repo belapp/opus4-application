@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,31 +25,38 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Frontdoor
- * @author      Thoralf Klein <thoralf.klein@zib.de>
- * @copyright   Copyright (c) 2012-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2012, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 /**
- * Class Frontdoor_DeliverControllerTest.
- *
  * @covers Frontdoor_DeliverController
  */
-class Frontdoor_DeliverControllerTest extends ControllerTestCase {
+class Frontdoor_DeliverControllerTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'view', 'mainMenu', 'translation'];
+
+    public function setUp(): void
+    {
+        parent::setUpWithEnv('production');
+        $this->assertSecurityConfigured();
+    }
 
     /**
      * Use this test to trigger class loader on 'Frontdoor_DeliverController'.
      */
-    public function testClassLoaded() {
+    public function testClassLoaded()
+    {
         $this->dispatch('/frontdoor/deliver/index');
         $this->assertController('deliver');
         $this->assertAction('index');
 
         // Use this assertion to trigger autoloader
-        $this->assertTrue(class_exists('Frontdoor_DeliverController'),
-                'could not load tested class');
+        $this->assertTrue(
+            class_exists('Frontdoor_DeliverController'),
+            'could not load tested class'
+        );
     }
 
     /**
@@ -56,16 +64,17 @@ class Frontdoor_DeliverControllerTest extends ControllerTestCase {
      *
      * @depends testClassLoaded
      */
-    public function testQuoteAsciiFileName() {
-        $testcase = array(
+    public function testQuoteAsciiFileName()
+    {
+        $testcase = [
             'my-file.txt' => 'my-file.txt',
             'my file.txt' => 'my file.txt',
             'my,file.txt' => 'my,file.txt',
-        );
+        ];
 
-        foreach ($testcase AS $string => $expected_output) {
+        foreach ($testcase as $string => $expectedOutput) {
             $output = Frontdoor_DeliverController::quoteFileName($string);
-            $this->assertEquals($expected_output, $output);
+            $this->assertEquals($expectedOutput, $output);
         }
     }
 
@@ -74,16 +83,45 @@ class Frontdoor_DeliverControllerTest extends ControllerTestCase {
      *
      * @depends testClassLoaded
      */
-    public function testQuoteUnicodeFileName() {
-        $testcase = array(
+    public function testQuoteUnicodeFileName()
+    {
+        $testcase = [
             'schrödinger-equation.pdf' => '=?UTF-8?B?c2NocsO2ZGluZ2VyLWVxdWF0aW9uLnBkZg==?=',
             'with "weird" chars.pdf'   => '=?UTF-8?B?d2l0aCAid2VpcmQiIGNoYXJzLnBkZg==?=',
-        );
+        ];
 
-        foreach ($testcase AS $string => $expected_output) {
+        foreach ($testcase as $string => $expectedOutput) {
             $output = Frontdoor_DeliverController::quoteFileName($string);
-            $this->assertEquals($expected_output, $output);
+            $this->assertEquals($expectedOutput, $output);
         }
     }
 
+    public function testHttpResponseCodeSetForUnpublished()
+    {
+        $doc  = $this->createTestDocument();
+        $file = $this->createOpusTestFile('test.pdf');
+        $doc->addFile($file);
+        $doc->setServerState('unpublished');
+        $docId = $doc->store();
+
+        $this->dispatch("/frontdoor/deliver/index/docId/$docId/file/test.pdf");
+
+        // denied because document not published
+        $this->assertResponseCode(403);
+    }
+
+    public function testHttpResponseCodeSetForProtectedFile()
+    {
+        $doc  = $this->createTestDocument();
+        $file = $this->createOpusTestFile('test.pdf');
+        $file->setVisibleInFrontdoor(0);
+        $doc->addFile($file);
+        $doc->setServerState('published');
+        $docId = $doc->store();
+
+        $this->dispatch("/frontdoor/deliver/index/docId/$docId/file/test.pdf");
+
+        // denied because document not published
+        $this->assertResponseCode(403);
+    }
 }

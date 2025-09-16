@@ -162,6 +162,13 @@
             </tuv>
         </tu>
 
+        <tu tuid="admin_role_name_regexNotMatch">
+            <tuv xml:lang="en">
+                <seg>Role names must only contains letters and numbers and start with a letter.</seg>
+            </tuv>
+            <tuv xml:lang="de">
+                <seg>Namen für Rollen dürfen nur Buchstaben und Zahlen enthalten und müssen mit einem Buchstaben anfangen.</seg>
+            </tuv>
+        </tu>
     </body>
-
 </tmx>

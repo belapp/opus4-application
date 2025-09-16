@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,19 +25,22 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Document;
 
 /**
  * Unit Tests fuer Admin_Form_Document_General.
  */
-class Admin_Form_Document_GeneralTest extends ControllerTestCase {
+class Admin_Form_Document_GeneralTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
 
-    public function testCreateForm() {
+    public function testCreateForm()
+    {
         $form = new Admin_Form_Document_General();
 
         $this->assertEquals(7, count($form->getElements()));
@@ -51,12 +55,13 @@ class Admin_Form_Document_GeneralTest extends ControllerTestCase {
     }
 
     /**
-     * TODO use temporary Opus_Document instead of doc from test data
+     * TODO use temporary Document instead of doc from test data
      */
-    public function testPopulateFromModel() {
+    public function testPopulateFromModel()
+    {
         $this->useEnglish();
 
-        $document = new Opus_Document(146);
+        $document = Document::get(146);
 
         $form = new Admin_Form_Document_General();
 
@@ -71,7 +76,8 @@ class Admin_Form_Document_GeneralTest extends ControllerTestCase {
         $this->assertEquals('1984/06/05', $form->getElement('EmbargoDate')->getValue());
     }
 
-    public function testUpdateModel() {
+    public function testUpdateModel()
+    {
         $this->useEnglish();
 
         $form = new Admin_Form_Document_General();
@@ -92,31 +98,32 @@ class Admin_Form_Document_GeneralTest extends ControllerTestCase {
         $this->assertEquals('masterthesis', $document->getType());
 
         $this->assertNotNull($document->getPublishedDate());
-        $this->assertEquals('2005/06/17', date('Y/m/d', $document->getPublishedDate()->getZendDate()->get()));
+        $this->assertEquals('2005/06/17', date('Y/m/d', $document->getPublishedDate()->getTimestamp()));
         $this->assertEquals('2006', $document->getPublishedYear());
 
         $this->assertNotNull($document->getCompletedDate());
-        $this->assertEquals('2006/07/03', date('Y/m/d', $document->getCompletedDate()->getZendDate()->get()));
+        $this->assertEquals('2006/07/03', date('Y/m/d', $document->getCompletedDate()->getTimestamp()));
         $this->assertEquals('2007', $document->getCompletedYear());
 
         $this->assertNotNull($document->getEmbargoDate());
-        $this->assertEquals('1986/03/29', date('Y/m/d', $document->getEmbargoDate()->getZendDate()->get()));
+        $this->assertEquals('1986/03/29', date('Y/m/d', $document->getEmbargoDate()->getTimestamp()));
     }
 
-    public function testValidation() {
+    public function testValidation()
+    {
         $this->useEnglish();
 
         $form = new Admin_Form_Document_General();
 
-        $post = array(
-            'Language' => '',
-            'Type' => '',
+        $post = [
+            'Language'      => '',
+            'Type'          => '',
             'PublishedDate' => 'date1', // muss Datum sein
             'PublishedYear' => 'year1', // muss Integer sein
             'CompletedDate' => '2008/02/31', // muss korrektes Datum sein
             'CompletedYear' => '-1', // muss groesser als 0 sein
-            'EmbargoDate' => '2008/02/31', // muss korrektes Datum sein
-        );
+            'EmbargoDate'   => '2008/02/31', // muss korrektes Datum sein
+        ];
 
         $this->assertFalse($form->isValid($post));
 
@@ -129,24 +136,25 @@ class Admin_Form_Document_GeneralTest extends ControllerTestCase {
         $this->assertContains('dateInvalidDate', $form->getErrors('EmbargoDate'));
     }
 
-    public function testValidationGerman() {
+    public function testValidationGerman()
+    {
         $this->useGerman();
 
         $form = new Admin_Form_Document_General();
 
-        $post = array(
-            'Language' => 'deu',
-            'Type' => 'demo',
+        $post = [
+            'Language'      => 'deu',
+            'Type'          => 'demo',
             'CompletedDate' => '30.01.2010', // korrektes Datum
-        );
+        ];
 
         $this->assertTrue($form->isValid($post));
 
-        $post = array(
-            'Language' => 'bla', // ungültige Sprache
-            'Type' => 'unknown', // ungültiger Typ
+        $post = [
+            'Language'      => 'bla', // ungültige Sprache
+            'Type'          => 'unknown', // ungültiger Typ
             'CompletedDate' => '30.02.2010', // ungültiges Datum
-        );
+        ];
 
         $this->assertFalse($form->isValid($post));
         $this->assertContains('notInArray', $form->getErrors('Language'));
@@ -154,7 +162,8 @@ class Admin_Form_Document_GeneralTest extends ControllerTestCase {
         $this->assertContains('dateInvalidDate', $form->getErrors('CompletedDate'));
     }
 
-    public function testTranslationOfLabels() {
+    public function testTranslationOfLabels()
+    {
         $this->useGerman();
 
         $form = new Admin_Form_Document_General();
@@ -168,6 +177,4 @@ class Admin_Form_Document_GeneralTest extends ControllerTestCase {
         $element = $form->getElement(Admin_Form_Document_General::ELEMENT_TYPE);
         $this->assertEquals("Dokumentart", $element->getLabel());
     }
-
 }
-

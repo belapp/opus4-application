@@ -1,5 +1,6 @@
 <?PHP
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,53 +25,57 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Angepasste Klasse für SELECT Formularelemente.
+ *
+ * TODO IMPORTANT use setElementDecorators in form classes instead of adding decorators in element classes
  */
-class Application_Form_Element_Select extends Zend_Form_Element_Select implements Application_Form_IElement {
+class Application_Form_Element_Select extends Zend_Form_Element_Select implements Application_Form_FormElementInterface
+{
+    /** @var string */
+    private $hint;
 
     /**
      * Initialisiert das Formularelement.
      *
      * Fügt PrefixPath für angepasste OPUS Dekoratoren hinzu.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->addPrefixPath('Application_Form_Decorator', 'Application/Form/Decorator', Zend_Form::DECORATOR);
     }
 
-    public function loadDefaultDecorators() {
-        if (!$this->loadDefaultDecoratorsIsDisabled() && count($this->getDecorators()) == 0) {
+    public function loadDefaultDecorators()
+    {
+        if (! $this->loadDefaultDecoratorsIsDisabled() && count($this->getDecorators()) === 0) {
             $this->setDecorators(
-                array(
-                'ViewHelper',
-                'Errors',
-                'Description',
-                'ElementHtmlTag',
-                array('LabelNotEmpty', array('tag' => 'div', 'tagClass' => 'label', 'placement' => 'prepend')),
-                array(array('dataWrapper' => 'HtmlTagWithId'), array('tag' => 'div', 'class' => 'data-wrapper'))
-                )
+                [
+                    'ViewHelper',
+                    'Errors',
+                    'Description',
+                    'ElementHint',
+                    'ElementHtmlTag',
+                    ['LabelNotEmpty', ['tag' => 'div', 'tagClass' => 'label', 'placement' => 'prepend']],
+                    [['dataWrapper' => 'HtmlTagWithId'], ['tag' => 'div', 'class' => 'data-wrapper']],
+                ]
             );
         }
     }
 
     /**
-     * Sorgt dafür, daß nur der Text ausgeben wird und kein INPUT-Tag.
+     * Setzt den Hinweis für das Formularelement.
+     *
+     * @param string $hint Hinweis
      */
-    public function prepareRenderingAsView() {
-        $viewHelper = $this->getDecorator('ViewHelper');
-        if ($viewHelper instanceof Application_Form_Decorator_ViewHelper) {
-            $viewHelper->setViewOnlyEnabled(true);
-        }
+    public function setHint($hint)
+    {
+        $this->hint = $hint;
     }
 
     /**
@@ -81,12 +86,27 @@ class Application_Form_Element_Select extends Zend_Form_Element_Select implement
      *
      * @return string
      */
-    public function getHint() {
-        return null; // TODO: Implement getHint() method.
+    public function getHint()
+    {
+        return $this->hint;
     }
 
-    public function getStaticViewHelper() {
+    /**
+     * Sorgt dafür, daß nur der Text ausgeben wird und kein INPUT-Tag.
+     */
+    public function prepareRenderingAsView()
+    {
+        $viewHelper = $this->getDecorator('ViewHelper');
+        if ($viewHelper instanceof Application_Form_Decorator_ViewHelper) {
+            $viewHelper->setViewOnlyEnabled(true);
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getStaticViewHelper()
+    {
         return 'viewFormSelect';
     }
-
 }

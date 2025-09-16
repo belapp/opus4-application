@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,51 +25,52 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
- **/
+ */
 
-class Admin_Form_Document_PersonMovesTest extends ControllerTestCase {
-    
-    public function testConstructForm() {
+class Admin_Form_Document_PersonMovesTest extends ControllerTestCase
+{
+    public function testConstructForm()
+    {
         $form = new Admin_Form_Document_PersonMoves();
-        
-        $this->assertEquals(4, count($form->getElements()));
-        
+
+        $this->assertCount(4, $form->getElements());
+
         $this->assertNotNull($form->getElement('First'));
         $this->assertNotNull($form->getElement('Up'));
         $this->assertNotNull($form->getElement('Down'));
         $this->assertNotNull($form->getElement('Last'));
     }
-    
-    public function testConstructFormPositionFirst() {
+
+    public function testConstructFormPositionFirst()
+    {
         $form = new Admin_Form_Document_PersonMoves(Admin_Form_Document_PersonMoves::POSITION_FIRST);
-        
-        $this->assertEquals(2, count($form->getElements()));
-        
+
+        $this->assertCount(2, $form->getElements());
+
         $this->assertNotNull($form->getElement('Down'));
         $this->assertNotNull($form->getElement('Last'));
     }
-    
-    public function testConstructFormPositionLast() {
+
+    public function testConstructFormPositionLast()
+    {
         $form = new Admin_Form_Document_PersonMoves(Admin_Form_Document_PersonMoves::POSITION_LAST);
-        
-        $this->assertEquals(2, count($form->getElements()));
-        
+
+        $this->assertCount(2, $form->getElements());
+
         $this->assertNotNull($form->getElement('First'));
         $this->assertNotNull($form->getElement('Up'));
     }
-    
-    public function testProcessPost() {
+
+    public function testProcessPost()
+    {
         $form = new Admin_Form_Document_PersonMoves();
-        
-        $post = array(
-            'First' => 'Erster'
-        );
-        
+
+        $post = [
+            'First' => 'Erster',
+        ];
+
         $result = $form->processPost($post, null);
 
         $this->assertNotNull($result);
@@ -77,33 +79,34 @@ class Admin_Form_Document_PersonMovesTest extends ControllerTestCase {
         $this->assertArrayHasKey('move', $result);
         $this->assertEquals('First', $result['move']);
     }
-    
-    public function testChangePosition() {
+
+    public function testChangePosition()
+    {
         $form = new Admin_Form_Document_PersonMoves();
-        
-        $this->assertEquals(4, count($form->getElements()));
-        
+
+        $this->assertCount(4, $form->getElements());
+
         $form->changePosition(Admin_Form_Document_PersonMoves::POSITION_FIRST);
-        
-        $this->assertEquals(2, count($form->getElements()));
+
+        $this->assertCount(2, $form->getElements());
         $this->assertNotNull($form->getElement('Down'));
         $this->assertNotNull($form->getElement('Last'));
-        
+
         $form->changePosition(Admin_Form_Document_PersonMoves::POSITION_LAST);
-       
-        $this->assertEquals(2, count($form->getElements()));
+
+        $this->assertCount(2, $form->getElements());
         $this->assertNotNull($form->getElement('First'));
         $this->assertNotNull($form->getElement('Up'));
-        
+
         $form->changePosition(Admin_Form_Document_PersonMoves::POSITION_DEFAULT);
-       
-        $this->assertEquals(4, count($form->getElements()));
+
+        $this->assertCount(4, $form->getElements());
     }
-        
-    public function testProcessPostEmpty() {
+
+    public function testProcessPostEmpty()
+    {
         $form = new Admin_Form_Document_PersonMoves();
-        
-        $this->assertNull($form->processPost(array(), null));
+
+        $this->assertNull($form->processPost([], null));
     }
-    
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,78 +25,87 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Application_View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
-class Application_View_Helper_AdminMenuTest extends ControllerTestCase {
+class Application_View_Helper_AdminMenuTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'view', 'navigation', 'translation'];
 
-    private $_helper;
+    /** @var Application_View_Helper_AdminMenu */
+    private $helper;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUpWithEnv('production');
         $this->assertSecurityConfigured();
-        $this->_helper = new Application_View_Helper_AdminMenu();
-        $this->_helper->setView(Zend_Registry::get('Opus_View'));
+        $this->helper = new Application_View_Helper_AdminMenu();
+        $this->helper->setView($this->getView());
     }
 
-    private function getPageByLabel($label) {
-        return $this->_helper->view->navigation()->findByLabel($label);
+    /**
+     * @param string $label
+     * @return Zend_Navigation_Page
+     */
+    private function getPageByLabel($label)
+    {
+        return $this->helper->view->navigation()->findByLabel($label);
     }
 
-    public function testAdminMenu() {
-        $this->assertSame($this->_helper, $this->_helper->adminMenu());
+    public function testAdminMenu()
+    {
+        $this->assertSame($this->helper, $this->helper->adminMenu());
     }
 
-    public function testGetAcl() {
-        $this->assertSame(Zend_Registry::get('Opus_Acl'), $this->_helper->getAcl());
+    public function testGetAcl()
+    {
+        $this->assertSame(Application_Security_AclProvider::getAcl(), $this->helper->getAcl());
     }
 
-    public function testHasAllowedChildren() {
+    public function testHasAllowedChildren()
+    {
         $this->loginUser('security8', 'security8pwd');
 
         $page = $this->getPageByLabel('admin_title_info');
-        $this->assertTrue($this->_helper->hasAllowedChildren($page));
+        $this->assertTrue($this->helper->hasAllowedChildren($page));
 
         $page = $this->getPageByLabel('admin_title_documents');
-        $this->assertTrue($this->_helper->hasAllowedChildren($page));
+        $this->assertTrue($this->helper->hasAllowedChildren($page));
 
         $page = $this->getPageByLabel('admin_title_collections');
-        $this->assertTrue($this->_helper->hasAllowedChildren($page));
+        $this->assertTrue($this->helper->hasAllowedChildren($page));
 
         $page = $this->getPageByLabel('admin_title_setup');
-        $this->assertFalse($this->_helper->hasAllowedChildren($page));
+        $this->assertFalse($this->helper->hasAllowedChildren($page));
 
         // activate sub entry below 'admin_title_setup'
-        $acl = Zend_Registry::get('Opus_Acl');
+        $acl = Application_Security_AclProvider::getAcl();
         $acl->allow(Application_Security_AclProvider::ACTIVE_ROLE, 'options');
 
         $page = $this->getPageByLabel('admin_title_config');
-        $this->assertTrue($this->_helper->hasAllowedChildren($page));
+        $this->assertTrue($this->helper->hasAllowedChildren($page));
     }
 
-    public function testIsRenderDescription() {
-        Zend_Registry::get('Zend_Translate')->loadModule('admin');
-
+    public function testIsRenderDescription()
+    {
         // show description if attribute is set and translation exists
         $page = $this->getPageByLabel('admin_title_documents');
-        $this->assertTrue($this->_helper->isRenderDescription($page));
+        $this->assertTrue($this->helper->isRenderDescription($page));
 
         // only show description if translation exits,even if description is set
         $page = $this->getPageByLabel('admin_title_setup');
-        $this->assertFalse($this->_helper->isRenderDescription($page));
+        $this->assertFalse($this->helper->isRenderDescription($page));
         $this->assertNotNull($page->description);
     }
 
-    public function testOaiLinkRendered() {
+    public function testOaiLinkRendered()
+    {
         $this->loginUser('security19', 'security19pwd');
 
         $page = $this->getPageByLabel('admin_title_oailink');
-        $this->assertTrue($this->_helper->hasAllowedChildren($page));
-        $this->assertTrue($this->_helper->isRenderActive($page));
+        $this->assertTrue($this->helper->hasAllowedChildren($page));
+        $this->assertTrue($this->helper->isRenderActive($page));
     }
-
 }

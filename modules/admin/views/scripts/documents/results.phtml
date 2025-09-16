@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -25,19 +26,17 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
 ?>
 
 <table class="documents">
     <tr>
         <th>ID</th>
         <th><?= $this->translate('admin_documents_table_column_title') ?></th>
-        <?PHP if (!empty($this->series)) : ?>
+        <?PHP if (! empty($this->series)) : ?>
         <th>&nbsp;</th>
         <?PHP endif; ?>
         <th><?= $this->translate('admin_documents_table_column_type') ?></th>
@@ -50,26 +49,26 @@
 
     <?PHP $index = 0; foreach ($this->paginator as $docId) : ?>
         <?PHP $document = new Application_Util_DocumentAdapter($this, $docId); ?>
-        <tr class="<?= ($index++ % 2) ? 'even' : 'odd' ?> <?= $document->getState() ?>">
+        <tr class="<?= $index++ % 2 ? 'even' : 'odd' ?> <?= $document->getState() ?>">
             <td class="id"><?= $docId ?></td>
             <td class="info">
                 <?PHP $authorsCount = count($document->getAuthors()) - 1; ?>
-                <?PHP foreach($document->getAuthors() as $count => $author) : ?>
+                <?PHP foreach ($document->getAuthors() as $count => $author) : ?>
                     <span class="author">
-                <?PHP if ($this->linkToAuthorSearch) : ?>
+                    <?PHP if ($this->linkToAuthorSearch) : ?>
                     <a href="<?= $author['url'] ?>"><?= $author['name'] ?></a>
-                <?PHP else : ?>
-                    <?= $author['name'] ?>
-                <?PHP endif; ?>
+                    <?PHP else : ?>
+                        <?= $author['name'] ?>
+                    <?PHP endif; ?>
             </span>
-                    <?= ($count < $authorsCount) ? '; ' : ': '?>
+                    <?= $count < $authorsCount ? '; ' : ': '?>
                 <?PHP endforeach; ?>
                 <span class="title"><a href="<?=$this->documentUrl()->adminShow($docId) ?>"
                                        title="<?= $this->translate('admin_documents_tooltip_show') ?>"
                     ><?= htmlspecialchars($document->getDocTitle()) ?></a></span>
                 (<span class="pubDate"><?= $document->getYear() ?></span>)
             </td>
-            <?PHP if (!empty($this->series)) : ?>
+            <?PHP if (! empty($this->series)) : ?>
                 <td>
                     <span><?= $this->seriesNumber($document->getDocument(), $this->series) ?></span>
                 </td>
@@ -86,11 +85,11 @@
             <td class="bibliography">
                 <?PHP if ($document->isBelongsToBibliography()) : ?>
                 <span class="bibliography" title="<?= htmlspecialchars($this->translate('admin_documents_tooltip_belongsToBibliography_true')) ?>">
-                <?= htmlspecialchars($this->translate('Bibliography_Value_True')) ?>
+                    <?= htmlspecialchars($this->translate('Bibliography_Value_True')) ?>
                 </span>
                 <?PHP else : ?>
                 <span class="bibliography" title="<?= htmlspecialchars($this->translate('admin_documents_tooltip_belongsToBibliography_false')) ?>">
-                <?= htmlspecialchars($this->translate('Bibliography_Value_False')) ?>
+                    <?= htmlspecialchars($this->translate('Bibliography_Value_False')) ?>
                 </span>
                 <?PHP endif; ?>
             </td>

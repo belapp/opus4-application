@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,53 +25,47 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_SearchException extends Application_Exception {
+use Opus\Search\SearchException;
 
+class Application_SearchException extends Application_Exception
+{
     /**
-     *
-     * @param Opus_SolrSearch_Exception $exception
-     * @param boolean $usePlainMessage set to true if exception message should not be translated
+     * @param SearchException $exception
+     * @param bool            $usePlainMessage set to true if exception message should not be translated
      */
-    public function __construct($exception, $usePlainMessage = false) {
-        parent::__construct($exception->getMessage(), $exception->getCode(), $exception->getPrevious());        
+    public function __construct($exception, $usePlainMessage = false)
+    {
+        parent::__construct($exception->getMessage(), $exception->getCode(), $exception->getPrevious());
 
         if ($exception->isServerUnreachable()) {
             if ($usePlainMessage) {
                 $this->message = 'search server is not responding -- try again later';
-            }
-            else {
+            } else {
                 $this->message = 'error_search_unavailable';
             }
             $this->setHttpResponseCode(503);
             return;
         }
-        
+
         if ($exception->isInvalidQuery()) {
             if ($usePlainMessage) {
                 $this->message = 'search query is invalid -- check syntax';
-            }
-            else {
-                $this->message = 'error_search_invalidquery';                
+            } else {
+                $this->message = 'error_search_invalidquery';
             }
             $this->setHttpResponseCode(500);
             return;
         }
-        
+
         if ($usePlainMessage) {
             $this->message = 'unknown error while executing search query';
-        }
-        else {
+        } else {
             $this->message = 'error_search_unknown';
         }
         $this->setHttpResponseCode(500);
     }
-
 }

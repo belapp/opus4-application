@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,74 +24,87 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright Copyright (c) 2008, OPUS 4 development team
+ * @license   http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\File;
+use Opus\Common\FileInterface;
+use Opus\Common\Model\NotFoundException;
 
 /**
- * Formularelement für die Anzeige eines Download Links für ein Opus_File Objekt.
+ * Formularelement für die Anzeige eines Download Links für ein File Objekt.
  *
- * Das Formularelement kann nur mit gültigen IDs für Opus_File verwendet werden.
- *
- * @category    Application
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
+ * Das Formularelement kann nur mit gültigen IDs für File verwendet werden.
  */
-class Application_Form_Element_FileLink extends Application_Form_Element_Text {
-
-    public function loadDefaultDecorators() {
+class Application_Form_Element_FileLink extends Application_Form_Element_Text
+{
+    public function loadDefaultDecorators()
+    {
         parent::loadDefaultDecorators();
 
         $label = $this->getDecorator('LabelNotEmpty');
 
-        if ($label !== FALSE) {
+        if ($label !== false) {
             $label->setOption('disableFor', true);
         }
     }
 
-    public function getStaticViewHelper() {
+    /**
+     * @return string
+     */
+    public function getStaticViewHelper()
+    {
         return 'fileLink';
     }
 
-    public function setValue($file) {
-        if (is_null($file)) {
+    /**
+     * @param string|FileInterface $file
+     * @return $this
+     * @throws Application_Exception
+     */
+    public function setValue($file)
+    {
+        if ($file === null) {
             throw new Application_Exception(__METHOD__ . " Value must not be null.");
         }
 
-        if (!$file instanceof Opus_File) {
+        if (! $file instanceof FileInterface) {
             try {
-                $file = new Opus_File($file);
-            }
-            catch (Opus_Model_NotFoundException $omnfe) {
+                $file = File::get($file);
+            } catch (NotFoundException $omnfe) {
                 throw new Application_Exception("File with ID = $file not found.");
             }
         }
 
-        if (!$file->exists()) {
+        parent::setValue($file);
+
+        if (! $file->exists()) {
             $this->addError('admin_filemanager_file_does_not_exist');
         }
-        parent::setValue($file);
+
+        return $this;
     }
 
     /**
-     * Validierung ist erfolgreich, wenn Opus_File mit ID existiert.
+     * Validierung ist erfolgreich, wenn File mit ID existiert.
      *
      * Wenn die ID nicht existiert wird in setValue eine Application_Exception geworfen.
      *
-     * @param mixed $value
+     * @param mixed      $value
+     * @param null|array $context
      * @return bool
      */
-    public function isValid($value) {
+    public function isValid($value, $context = null)
+    {
         $this->setValue($value);
         $file = $this->getValue();
 
-        if ($file instanceof Opus_File) {
+        if ($file instanceof FileInterface) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
-
 }

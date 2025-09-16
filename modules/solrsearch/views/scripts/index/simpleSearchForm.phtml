@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,13 +25,10 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Solrsearch
- * @author      Julian Heise <heise@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
 ?>
 
 <?php
@@ -42,27 +40,27 @@ if ($this->jQueryEnabled()) {
 ?>
 
 <div class="form-wrapper">
-    <form id="form-search" action="<?= $this->url(array('module' => 'solrsearch', 'controller' => 'dispatch', 'action' => 'index'), null, true); ?>" method="post">
+    <form id="form-search" action="<?= $this->url(['module' => 'solrsearch', 'controller' => 'dispatch', 'action' => 'index'], null, true); ?>" method="post">
         <div id="fieldset-search" class="fieldset-wrapper">
             <fieldset>
                 <div id="edit-search-wrapper" class="form-item">
-                    <input type="text" size="30" name="query" id="edit-search" class="form-text" value="<?= htmlspecialchars($this->q) ?>" />
+                    <input type="text" size="30" name="query" id="edit-search" class="form-text" value="<?= $this->q !== null ? htmlspecialchars($this->q) : '' ?>" />
                 </div>
                 <div id="edit-submit-search-wrapper" class="form-item">
                     <span class="form-submit-wrapper"><input type="submit" id="edit-submit-search" class="form-submit" value="<?= $this->translate('solrsearch_searchaction'); ?>" /></span>
                 </div>
             </fieldset>
             <p class="footer-link">
-                <a class="link" href="<?= $this->url(array('module' => 'solrsearch', 'controller' => 'index', 'action' => 'advanced'),null,true); ?>"><?= $this->translate('solrsearch_title_advanced'); ?></a>
+                <a class="link" href="<?= $this->url(['module' => 'solrsearch', 'controller' => 'index', 'action' => 'advanced'], null, true); ?>"><?= $this->translate('solrsearch_title_advanced'); ?></a>
                 <?php
                     $searchAllDocsText = $this->translate('solrsearch_title_alldocs');
-                    if (isset($this->totalNumOfDocs)) {
-                        $searchAllDocsText .= '&nbsp;(<span id="solrsearch-totalnumofdocs">' . $this->totalNumOfDocs . '</span>)';
-                    }
+                if (isset($this->totalNumOfDocs)) {
+                    $searchAllDocsText .= '&nbsp;(<span id="solrsearch-totalnumofdocs">' . $this->totalNumOfDocs . '</span>)';
+                }
                 ?>
-                <a id="link-solrsearch-all-documents" class="link" href="<?= $this->url(array('module' => 'solrsearch', 'controller' => 'index', 'action' => 'search', 'searchtype' => 'all'),null,true); ?>"><?= $searchAllDocsText; ?></a>
-                <a class="link" href="<?= $this->url(array('module' => 'solrsearch', 'controller' => 'index', 'action' => 'search', 'searchtype' => 'latest'),null,true); ?>"><?= $this->translate('solrsearch_title_latest'); ?></a>
-                <a href="<?= $this->url(array('module' => 'rss', 'controller' => 'index', 'action' => 'index'), null, true) ?>" class="rss" type="application/rss+xml">
+                <a id="link-solrsearch-all-documents" class="link" href="<?= $this->url(['module' => 'solrsearch', 'controller' => 'index', 'action' => 'search', 'searchtype' => 'all'], null, true); ?>"><?= $searchAllDocsText; ?></a>
+                <a class="link" href="<?= $this->url(['module' => 'solrsearch', 'controller' => 'index', 'action' => 'search', 'searchtype' => 'latest'], null, true); ?>"><?= $this->translate('solrsearch_title_latest'); ?></a>
+                <a href="<?= $this->url(['module' => 'rss', 'controller' => 'index', 'action' => 'index'], null, true) ?>" class="rss" type="application/rss+xml">
                     <img src="<?= $this->layoutPath() ?>/img/feed_small.png" width="12" height="12" alt="<?= $this->translate('rss_icon') ?>" title="<?= $this->translate('rss_title') ?>" />
                 </a>
             </p>

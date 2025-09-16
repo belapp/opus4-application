@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -25,39 +26,32 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Julian Heise <heise@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
+use Opus\Common\UserRole;
+use Opus\Common\UserRoleInterface;
+
 /**
  * Controller for managing permissions for roles including module access.
- *
- *
  */
 class Admin_AccessController extends Application_Controller_Action
 {
-
-    /**
-     *
-     */
     public function listroleAction()
     {
-        $id = $this->getRequest()->getParam('docid');
-        $roles = Opus_UserRole::getAll();
-        $this->view->docId = $id;
-        $this->view->roles = $roles;
+        $id                       = $this->getRequest()->getParam('docid');
+        $roles                    = UserRole::getAll();
+        $this->view->docId        = $id;
+        $this->view->roles        = $roles;
         $this->view->checkedRoles = $this->getCheckedRoles($id, $roles);
     }
 
     /**
      * Returns list of selected roles.
      *
-     * @param type $id
-     * @param type $roles
+     * @param int                 $id
+     * @param UserRoleInterface[] $roles
      * @return array
      */
     private function getCheckedRoles($id, $roles)
@@ -84,25 +78,24 @@ class Admin_AccessController extends Application_Controller_Action
 
         $id = $this->getRequest()->getParam('roleid');
 
-        if ($id == null) {
+        if ($id === null) {
             throw new Exception('Role ID missing');
         }
 
-        $role = new Opus_UserRole($id);
+        $role        = UserRole::get($id);
         $roleModules = $role->listAccessModules();
 
         if ($role->getName() !== 'guest') {
-            $guest = Opus_UserRole::fetchByName('guest');
+            $guest        = UserRole::fetchByName('guest');
             $guestModules = $guest->listAccessModules();
             // Role 'guest' has always access to 'default' module
-            if (!in_array('default', $guestModules)) {
+            if (! in_array('default', $guestModules)) {
                 $guestModules[] = 'default';
             }
             $this->view->guestModules = $guestModules;
-        }
-        else {
+        } else {
             // Role 'guest' has alreays access to 'default' module
-            if (!in_array('default', $roleModules)) {
+            if (! in_array('default', $roleModules)) {
                 $roleModules[] = 'default';
             }
         }
@@ -111,13 +104,16 @@ class Admin_AccessController extends Application_Controller_Action
 
         $this->view->loginNames = $role->getAllAccountNames();
 
-        $this->view->roleId = $role->getId();
+        $this->view->roleId   = $role->getId();
         $this->view->roleName = $role->getName();
-        $this->view->modules = $roleModules;
+        $this->view->modules  = $roleModules;
 
-        $this->view->allModules = array_keys(Application_Modules::getInstance()->getModules());
+        $modules = array_keys(Application_Modules::getInstance()->getModules());
+        unset($modules['default']);
+
+        $this->view->allModules   = $modules;
         $this->view->allResources = $security->getAllResources();
-        $this->view->allWorkflow = $transitions;
+        $this->view->allWorkflow  = $transitions;
     }
 
     /**
@@ -125,27 +121,27 @@ class Admin_AccessController extends Application_Controller_Action
      */
     public function storeAction()
     {
-        $save = $this->getRequest()->getParam('save_button');
-        $id = $this->getRequest()->getParam('roleid');
+        $save  = $this->getRequest()->getParam('save_button');
+        $id    = $this->getRequest()->getParam('roleid');
         $docId = $this->getRequest()->getParam('docid');
 
-        if (!empty($id)) {
+        if (! empty($id)) {
             $accessMode = $this->getRequest()->getParam('access_mode');
 
             $this->storeModules($this->getRequest());
 
-            $this->view->redirect = ['module'=>'admin','controller'=>'role','action'=>'show','id'=>$id];
-        } elseif (!empty($docId)) {
+            $this->view->redirect = ['module' => 'admin', 'controller' => 'role', 'action' => 'index'];
+        } elseif (! empty($docId)) {
             $this->storeRoles($this->getRequest());
 
-            $this->view->redirect = ['module'=>'admin','controller'=>'document','action'=>'index','id'=>$docId];
+            $this->view->redirect = ['module' => 'admin', 'controller' => 'document', 'action' => 'index', 'id' => $docId];
         }
 
-        if ($save != null) {
-            $this->view->submit = 'access_submit_save';
+        if ($save !== null) {
+            $this->view->submit  = 'access_submit_save';
             $this->view->message = 'access_save_message';
         } else {
-            $this->view->submit = 'access_submit_cancel';
+            $this->view->submit  = 'access_submit_cancel';
             $this->view->message = 'access_cancel_message';
         }
     }
@@ -153,7 +149,7 @@ class Admin_AccessController extends Application_Controller_Action
     /**
      * Stores selected permissions in database.
      *
-     * @param type $request
+     * @param Zend_Controller_Request_Http $request
      *
      * TODO secure against missing parameters
      */
@@ -161,18 +157,18 @@ class Admin_AccessController extends Application_Controller_Action
     {
         $id = $request->getParam('roleid');
 
-        $role = new Opus_UserRole($id);
+        $role        = UserRole::get($id);
         $roleModules = $role->listAccessModules();
 
         foreach ($roleModules as $module) {
-            if ($request->getParam('set_'.$module, 'NULL') === 'NULL') {
+            if ($request->getParam('set_' . $module, 'NULL') === 'NULL') {
                 $role->removeAccessModule($module);
             }
         }
 
         $params = $request->getParams();
 
-        foreach ($params as $name=>$value) {
+        foreach ($params as $name => $value) {
             $startsWith = 'set_';
             if (substr($name, 0, strlen($startsWith)) === $startsWith) {
                 $module = explode("_", $name, 2);
@@ -187,7 +183,7 @@ class Admin_AccessController extends Application_Controller_Action
     /**
      * Stores roles for document.
      *
-     * @param <type> $request
+     * @param Zend_Controller_Request_Http $request
      *
      * TODO Is it a problem if document is append twice?
      */
@@ -195,20 +191,18 @@ class Admin_AccessController extends Application_Controller_Action
     {
         $docId = $request->getParam('docid');
 
-        $roles = Opus_UserRole::getAll();
+        $roles = UserRole::getAll();
 
         foreach ($roles as $role) {
             $roleName = $role->getName();
-            $checked = $request->getParam($roleName);
+            $checked  = $request->getParam($roleName);
             if ($checked) {
                 $role->appendAccessDocument($docId);
                 $role->store();
-            }
-            else {
+            } else {
                 $role->removeAccessDocument($docId);
                 $role->store();
             }
         }
     }
 }
-

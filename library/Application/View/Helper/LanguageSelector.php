@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -25,59 +26,57 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category   Application
- * @package    View
- * @author     Felix Ostrowski <ostrowski@hbz-nrw.de>
- * @author     Sascha Szott <szott@zib.de>
  * @copyright  Copyright (c) 2009, OPUS 4 development team
  * @license    http://www.gnu.org/licenses/gpl.html General Public License
- * @version    $Id$
  */
 
 /**
  * Builds the language selection form.
- *
  */
-class Application_View_Helper_LanguageSelector extends Zend_View_Helper_Abstract {
-
+class Application_View_Helper_LanguageSelector extends Zend_View_Helper_Abstract
+{
     /**
      * Get an instance of the view helper.
      *
-     * @return Application_View_Helper_LanguageSelector
+     * @return array|null
      */
-    public function languageSelector() {
+    public function languageSelector()
+    {
         if (isset($this->view->languageSelectorDisabled) && $this->view->languageSelectorDisabled === true) {
             return null;
         }
         $returnParams = Zend_Controller_Action_HelperBroker::getStaticHelper('ReturnParams');
 
-        $currentLocale = new Zend_Locale(Zend_Registry::get('Zend_Translate')->getLocale());
+        $currentLocale = new Zend_Locale(Application_Translate::getInstance()->getLocale());
 
         $configHelper = new Application_Configuration();
 
         // only show languages that are present in resources and activated in configuration
-        $translations = Zend_Registry::get('Zend_Translate')->getList();
-        $supportedLang = $configHelper->getSupportedLanguages();
-        $translations = array_intersect($translations, $supportedLang);
+        $translations  = Application_Translate::getInstance()->getList();
+        $supportedLang = $configHelper->getActivatedLanguages();
+        $translations  = array_intersect($translations, $supportedLang);
 
-        $result = array();
+        $result = [];
         foreach ($translations as $translation) {
             if ($currentLocale->getLanguage() !== $translation) {
                 $languageName = $currentLocale->getTranslation($translation, 'language', $translation);
-                $languageUrl = $this->view->url(
+                $languageUrl  = $this->view->url(
                     array_merge(
-                        array(
-                        'action' => 'language',
-                        'controller' => 'index',
-                        'module' => 'home',
-                        'language' => $translation), $returnParams->getReturnParameters()
-                    ), null, true
+                        [
+                            'action'     => 'language',
+                            'controller' => 'index',
+                            'module'     => 'home',
+                            'language'   => $translation,
+                        ],
+                        $returnParams->getReturnParameters()
+                    ),
+                    null,
+                    true
                 );
-                array_push($result, array('name' => htmlspecialchars($languageName), 'url' => $languageUrl));
+                array_push($result, ['name' => htmlspecialchars($languageName), 'url' => $languageUrl]);
             }
         }
 
         return $result;
     }
-
 }

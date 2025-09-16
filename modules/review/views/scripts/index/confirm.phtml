@@ -1,5 +1,6 @@
 <?PHP
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,13 +25,10 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application  - Module Review
- * @author      Thoralf Klein <thoralf.klein@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
 ?>
 
 <h2><?= $this->translate($this->title) ?>
@@ -46,7 +44,7 @@
     </div>
 
     <div class="instruction">
-        <?= $this->translate( $this->instruction ) ?>
+        <?= $this->translate($this->instruction) ?>
     </div>
 
     <table style="margin-left: 2em;">
@@ -62,7 +60,7 @@
     <h3><?= $this->translate('review_selected_documents_list') ?></h3>
 
     <table style="margin-left: 2em">
-    <?PHP foreach( $this->selected as $index => $docId ) : ?>
+    <?PHP foreach ($this->selected as $index => $docId) : ?>
         <tr>
         <?PHP $document = new Application_Util_DocumentAdapter($this, $docId); ?>
         <td style="vertical-align: top; padding-right: 1em"><?= $docId ?></td>
@@ -70,9 +68,9 @@
             <div class="title" style="font-weight: bold"><?= htmlspecialchars($document->getDocTitle()) ?></div>
             <div class="authors">
                 <?PHP $authorsCount = count($document->getAuthors()) - 1; ?>
-                <?PHP foreach($document->getAuthors() as $count => $author) : ?>
+                <?PHP foreach ($document->getAuthors() as $count => $author) : ?>
                     <?= $author['name'] ?>
-                    <?= ($count < $authorsCount) ? ';' : ''?>
+                    <?= $count < $authorsCount ? ';' : ''?>
                 <?PHP endforeach; ?>
             </div>
             <input type="hidden" name="selected[]" value="<?= $document->getDocId() ?>" />

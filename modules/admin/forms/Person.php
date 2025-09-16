@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,163 +25,184 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
+use Opus\Common\Person;
+use Opus\Common\PersonInterface;
+
 /**
- * Formular zum Editieren einer Person (Opus_Person).
+ * Formular zum Editieren einer Person (Person).
  *
  * Dieses Formular beruecksichtigt nicht die Felder, die bei der Verknuepfung einer Person mit einem Dokument in dem
  * Link Objekt hinzukommen.
  */
-class Admin_Form_Person extends Admin_Form_AbstractDocumentSubForm {
-
+class Admin_Form_Person extends Admin_Form_AbstractDocumentSubForm
+{
     /**
-     * Name fuer Formularelement fuer Feld ID von Opus_Person.
+     * Name fuer Formularelement fuer Feld ID von Person.
      */
-    const ELEMENT_PERSON_ID = 'PersonId';
+    public const ELEMENT_PERSON_ID = 'PersonId';
 
     /**
      * Name fuer Formularelement fuer Feld AcademicTitle.
      */
-    const ELEMENT_ACADEMIC_TITLE = 'AcademicTitle';
+    public const ELEMENT_ACADEMIC_TITLE = 'AcademicTitle';
 
     /**
      * Name fuer Formularelement fuer Feld LastName.
      */
-    const ELEMENT_LAST_NAME = 'LastName';
+    public const ELEMENT_LAST_NAME = 'LastName';
 
     /**
      * Name fuer Formularelement fuer Feld FirstName.
      */
-    const ELEMENT_FIRST_NAME = 'FirstName';
+    public const ELEMENT_FIRST_NAME = 'FirstName';
 
     /**
      * Name fuer Formularelement fuer Feld Email.
      */
-    const ELEMENT_EMAIL = 'Email';
+    public const ELEMENT_EMAIL = 'Email';
 
     /**
      * Name fuer Formularelement fuer Feld PlaceOfBirth.
      */
-    const ELEMENT_PLACE_OF_BIRTH = 'PlaceOfBirth';
+    public const ELEMENT_PLACE_OF_BIRTH = 'PlaceOfBirth';
 
     /**
      * Name fuer Formularelement fuer Feld DateOfBirth.
      */
-    const ELEMENT_DATE_OF_BIRTH = 'DateOfBirth';
+    public const ELEMENT_DATE_OF_BIRTH = 'DateOfBirth';
 
     /**
      * Name fuer Button zum Speichern.
      */
-    const ELEMENT_SAVE = 'Save';
+    public const ELEMENT_SAVE = 'Save';
 
     /**
      * Name fuer Button zum Abbrechen.
      */
-    const ELEMENT_CANCEL = 'Cancel';
+    public const ELEMENT_CANCEL = 'Cancel';
 
     /**
      * Konstante fuer POST Ergebnis 'abspeichern'.
      */
-    const RESULT_SAVE = 'save';
+    public const RESULT_SAVE = 'save';
 
     /**
      * Konstante fuer POST Ergebnis 'abbrechen'.
      */
-    const RESULT_CANCEL = 'cancel';
+    public const RESULT_CANCEL = 'cancel';
 
     /**
      * Konstante für Identifier Gnd
      */
-    const ELEMENT_IDENTIFIER_GND = 'IdentifierGnd';
+    public const ELEMENT_IDENTIFIER_GND = 'IdentifierGnd';
 
     /**
      * Konstante für Identifier OrcId
      */
-    const ELEMENT_IDENTIFIER_ORCID = 'IdentifierOrcid';
+    public const ELEMENT_IDENTIFIER_ORCID = 'IdentifierOrcid';
 
     /**
      * Konstante für Identifier Misc
      */
-    const ELEMENT_IDENTIFIER_MISC = 'IdentifierMisc';
+    public const ELEMENT_IDENTIFIER_MISC = 'IdentifierMisc';
 
     /**
      * Erzeugt die Formularelemente.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->setDecorators(
-            array(
-            'FormElements',
-            'Fieldset',
-            array(array('divWrapper' => 'HtmlTag'), array('tag' => 'div', 'class' => 'subform')),
-            'Form'
-            )
+            [
+                'FormElements',
+                'Fieldset',
+                [['divWrapper' => 'HtmlTag'], ['tag' => 'div', 'class' => 'subform']],
+                'Form',
+            ]
         );
 
-        $this->addElement('hidden', self::ELEMENT_PERSON_ID, array('size' => '40'));
-        $this->addElement('text', self::ELEMENT_ACADEMIC_TITLE, array('label' => 'AcademicTitle'));
+        $fieldLastName = Person::describeField(Person::FIELD_LAST_NAME);
+
+        $this->addElement('hidden', self::ELEMENT_PERSON_ID, ['size' => '40']);
+        $this->addElement('text', self::ELEMENT_ACADEMIC_TITLE, ['label' => 'AcademicTitle']);
         $this->addElement(
-            'text', self::ELEMENT_LAST_NAME, array('label' => 'LastName', 'required' => true,
-            'size' => 50)
+            'text',
+            self::ELEMENT_LAST_NAME,
+            [
+                'label'     => 'LastName',
+                'required'  => true,
+                'size'      => 50,
+                'maxlength' => $fieldLastName->getMaxSize(),
+            ]
         );
-        $this->addElement('text', self::ELEMENT_FIRST_NAME, array('label' => 'FirstName', 'size' => 50));
-        $this->addElement('Email', self::ELEMENT_EMAIL, array('label' => 'Email'));
-        $this->addElement('text', self::ELEMENT_PLACE_OF_BIRTH, array('label' => 'PlaceOfBirth', 'size' => 40));
-        $this->addElement('date', self::ELEMENT_DATE_OF_BIRTH, array('label' => 'DateOfBirth'));
-        $this->addElement('text', self::ELEMENT_IDENTIFIER_GND, array('label' => 'IdentifierGnd', 'size' => 40));
-        $this->addElement('text', self::ELEMENT_IDENTIFIER_ORCID, array('label' => 'IdentifierOrcid', 'size' => 40));
-        $this->addElement('text', self::ELEMENT_IDENTIFIER_MISC, array('label' => 'IdentifierMisc', 'size' => 40));
+        $this->addElement('text', self::ELEMENT_FIRST_NAME, ['label' => 'FirstName', 'size' => 50]);
+        $this->addElement('Email', self::ELEMENT_EMAIL, ['label' => 'Email']);
+        $this->addElement('text', self::ELEMENT_PLACE_OF_BIRTH, ['label' => 'PlaceOfBirth', 'size' => 40]);
+        $this->addElement('date', self::ELEMENT_DATE_OF_BIRTH, ['label' => 'DateOfBirth']);
+        $this->addElement('text', self::ELEMENT_IDENTIFIER_GND, ['label' => 'IdentifierGnd', 'size' => 40]);
+        $this->addElement('text', self::ELEMENT_IDENTIFIER_ORCID, ['label' => 'IdentifierOrcid', 'size' => 40]);
+        $this->addElement('text', self::ELEMENT_IDENTIFIER_MISC, ['label' => 'IdentifierMisc', 'size' => 40]);
 
         $this->getElement(self::ELEMENT_IDENTIFIER_GND)->addValidator(new Application_Form_Validate_Gnd());
         $this->getElement(self::ELEMENT_IDENTIFIER_ORCID)->addValidator(new Application_Form_Validate_Orcid());
 
         $this->addDisplayGroup(
-            $this->getElements(), 'fields', array(
-            'decorators' => array(
-                'FormElements',
-                array(array('fieldsWrapper' => 'HtmlTag'), array('tag' => 'div', 'class' => 'fields-wrapper')),
-            )
-            )
+            $this->getElements(),
+            'fields',
+            [
+                'decorators' => [
+                    'FormElements',
+                    [['fieldsWrapper' => 'HtmlTag'], ['tag' => 'div', 'class' => 'fields-wrapper']],
+                ],
+            ]
         );
 
         $this->addElement(
-            'submit', self::ELEMENT_SAVE, array('decorators' => array(
-            'ViewHelper',
-            array(array('liWrapper' => 'HtmlTag'), array('tag' => 'li', 'class' => 'save-element')),
-            ))
+            'submit',
+            self::ELEMENT_SAVE,
+            [
+                'decorators' => [
+                    'ViewHelper',
+                    [['liWrapper' => 'HtmlTag'], ['tag' => 'li', 'class' => 'save-element']],
+                ],
+            ]
         );
         $this->addElement(
-            'submit', self::ELEMENT_CANCEL, array('decorators' => array(
-            'ViewHelper',
-            array(array('liWrapper' => 'HtmlTag'), array('tag' => 'li', 'class' => 'cancel-element')),
-            ))
+            'submit',
+            self::ELEMENT_CANCEL,
+            [
+                'decorators' => [
+                    'ViewHelper',
+                    [['liWrapper' => 'HtmlTag'], ['tag' => 'li', 'class' => 'cancel-element']],
+                ],
+            ]
         );
         $this->addDisplayGroup(
-            array(self::ELEMENT_SAVE, self::ELEMENT_CANCEL), 'actions', array(
-            'order' => 100,
-            'decorators' => array(
-                'FormElements',
-                array(array('ulWrapper' => 'HtmlTag'), array('tag' => 'ul', 'class' => 'form-action')),
-                array(array('divWrapper' => 'HtmlTag'), array('id' => 'form-action'))
-            )
-            )
+            [self::ELEMENT_SAVE, self::ELEMENT_CANCEL],
+            'actions',
+            [
+                'order'      => 100,
+                'decorators' => [
+                    'FormElements',
+                    [['ulWrapper' => 'HtmlTag'], ['tag' => 'ul', 'class' => 'form-action']],
+                    [['divWrapper' => 'HtmlTag'], ['id' => 'form-action']],
+                ],
+            ]
         );
     }
 
     /**
-     * Setzt die Werte der Formularelmente entsprechend der uebergebenen Opus_Person Instanz.
-     * @param Opus_Person $model
+     * Setzt die Werte der Formularelmente entsprechend der uebergebenen Person Instanz.
+     *
+     * @param PersonInterface $person
      */
-    public function populateFromModel($person) {
+    public function populateFromModel($person)
+    {
         $datesHelper = $this->getDatesHelper();
 
         $this->getElement(self::ELEMENT_PERSON_ID)->setValue($person->getId());
@@ -198,15 +220,16 @@ class Admin_Form_Person extends Admin_Form_AbstractDocumentSubForm {
 
     /**
      * Ermittelt bei einem Post welcher Button geklickt wurde, also welche Aktion gewünscht ist.
+     *
      * @param array $post
      * @param array $context
-     * @return string String fuer gewuenschte Operation
+     * @return string|null String fuer gewuenschte Operation
      */
-    public function processPost($post, $context) {
+    public function processPost($post, $context)
+    {
         if (array_key_exists(self::ELEMENT_SAVE, $post)) {
             return self::RESULT_SAVE;
-        }
-        else if (array_key_exists(self::ELEMENT_CANCEL, $post)) {
+        } elseif (array_key_exists(self::ELEMENT_CANCEL, $post)) {
             return self::RESULT_CANCEL;
         }
 
@@ -214,11 +237,13 @@ class Admin_Form_Person extends Admin_Form_AbstractDocumentSubForm {
     }
 
     /**
-     * Setzt die Felder einer Opus_Person Instanz entsprechend dem Formularinhalt.
-     * @param Opus_Person $model
+     * Setzt die Felder einer Person Instanz entsprechend dem Formularinhalt.
+     *
+     * @param PersonInterface $model
      */
-    public function updateModel($model) {
-        if ($model instanceof Opus_Person) {
+    public function updateModel($model)
+    {
+        if ($model instanceof PersonInterface) {
             $model->setAcademicTitle($this->getElementValue(self::ELEMENT_ACADEMIC_TITLE));
             $model->setLastName($this->getElementValue(self::ELEMENT_LAST_NAME));
             $model->setFirstName($this->getElementValue(self::ELEMENT_FIRST_NAME));
@@ -229,29 +254,28 @@ class Admin_Form_Person extends Admin_Form_AbstractDocumentSubForm {
             $model->setIdentifierMisc($this->getElementValue(self::ELEMENT_IDENTIFIER_MISC));
             $datesHelper = $this->getDatesHelper();
             $model->setDateOfBirth($datesHelper->getOpusDate($this->getElementValue(self::ELEMENT_DATE_OF_BIRTH)));
-        }
-        else {
-            $this->getLog()->err(__METHOD__ . ' called with object that is not instance of Opus_Person');
+        } else {
+            $this->getLogger()->err(__METHOD__ . ' called with object that is not instance of PersonInterface');
         }
     }
 
     /**
-     * Liefert Instanz von Opus_Person zurueck.
-     * @return \Opus_Person
+     * Liefert Instanz von Person zurueck.
+     *
+     * @return PersonInterface
      */
-    public function getModel() {
-       $personId = $this->getElementValue(self::ELEMENT_PERSON_ID);
+    public function getModel()
+    {
+        $personId = $this->getElementValue(self::ELEMENT_PERSON_ID);
 
-       if (is_numeric($personId)) {
-           $person = new Opus_Person($personId);
-       }
-       else {
-           $person = new Opus_Person();
-       }
+        if (is_numeric($personId)) {
+            $person = Person::get($personId);
+        } else {
+            $person = Person::new();
+        }
 
-       $this->updateModel($person);
+        $this->updateModel($person);
 
-       return $person;
+        return $person;
     }
-
 }

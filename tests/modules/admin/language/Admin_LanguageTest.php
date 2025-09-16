@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,26 +25,24 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Unit Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
 /**
  * Description of Admin_LanguageTest
- *
- * @author Jens Schwidder <schwidder(at)zib.de>
  */
-class Admin_LanguageTest extends ControllerTestCase {
-
-    public function setUp() {
+class Admin_LanguageTest extends ControllerTestCase
+{
+    public function setUp(): void
+    {
         parent::setUp();
         $this->verifyCommandAvailable('xmllint');
     }
-    
-    public function testTmxFilesValid() {
-        $dir = APPLICATION_PATH . '/modules/admin/language';
+
+    public function testTmxFilesValid()
+    {
+        $dir       = APPLICATION_PATH . '/modules/admin/language';
         $filesIter = new DirectoryIterator($dir);
         foreach ($filesIter as $fileInfo) {
             $filename = $fileInfo->getFilename();
@@ -54,7 +53,4 @@ class Admin_LanguageTest extends ControllerTestCase {
             }
         }
     }
-
 }
-
-?>

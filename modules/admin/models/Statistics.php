@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,29 +25,38 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_Model_Statistics {
 
-    private $_documents = null;
+use Opus\Common\CollectionRole;
+use Opus\Common\Repository;
+use Opus\Db\Documents;
 
-    public function __construct() {
-        $this->_documents = new Opus_Db_Documents();
+class Admin_Model_Statistics
+{
+    /** @var Documents */
+    private $documents;
+
+    public function __construct()
+    {
+        $this->documents = new Documents();
     }
 
     /**
      * Helper-function (builds up the result array for the statistic-functions).
+     *
+     * @param Zend_Db_Statement_Interface $select
+     * @param string                      $name
+     * @return array
      */
-    private function fillResultArray($select, $name) {
-        $statistics = array();
-        $result = $select->fetchAll();
+    private function fillResultArray($select, $name)
+    {
+        $statistics = [];
+        $result     = $select->fetchAll();
         foreach ($result as $row) {
-            if ($row[$name] != '') {
-                if ($name == 'mon' || ($name != 'mon' && $row['c'])) {
+            if ($row[$name] !== '') {
+                if ($name === 'mon' || ($name !== 'mon' && $row['c'])) {
                     // only in month stats rows with zero documents should be depicted.
                     $statistics[$row[$name]] = $row['c'];
                 }
@@ -57,10 +67,14 @@ class Admin_Model_Statistics {
 
     /**
      * Builds month statistics (returns sum of published documents sorted by month).
+     *
+     * @param string|int $selectedYear TODO should be just int
+     * @return array
      */
-    public function getMonthStatistics($selectedYear) {
+    public function getMonthStatistics($selectedYear)
+    {
         // TODO: use tokens to reduce redundancy of inserting year twice
-        $select = $this->_documents->getAdapter()->query(
+        $select = $this->documents->getAdapter()->query(
             "SELECT months.m as mon, count(d.id) as c
             FROM
                 (SELECT id, MONTH(`server_date_published`) as m
@@ -73,13 +87,13 @@ class Admin_Model_Statistics {
                 months
             WHERE months.m = d.m
             GROUP BY months.m",
-            array($selectedYear, $selectedYear)
+            [$selectedYear, $selectedYear]
         );
 
         $monthStat = $this->fillResultArray($select, 'mon');
 
-        for ($i = 1; $i<13; $i++) {
-            if (isset($monthStat[$i]) === FALSE) {
+        for ($i = 1; $i < 13; $i++) {
+            if (isset($monthStat[$i]) === false) {
                 $monthStat[$i] = 0;
             }
         }
@@ -91,16 +105,21 @@ class Admin_Model_Statistics {
      * Builds type statistics.
      *
      * Returns sum of published documents sorted by document types.
+     *
+     * @param string|int $selectedYear TODO should not be string, just int
+     * @return array
      */
-    public function getTypeStatistics($selectedYear) {
+    public function getTypeStatistics($selectedYear)
+    {
         // get document type overview from database
-        $select = $this->_documents->getAdapter()->query(
+        $select = $this->documents->getAdapter()->query(
             "SELECT t.type as ty, count(d.id) as c
           FROM (SELECT DISTINCT type FROM documents) t
           LEFT OUTER JOIN
           (SELECT id, type FROM documents WHERE YEAR(server_date_published) = ? AND server_state = 'published') d
           ON t.type = d.type
-          GROUP BY t.type", $selectedYear
+          GROUP BY t.type",
+            $selectedYear
         );
         return $this->fillResultArray($select, 'ty');
     }
@@ -109,10 +128,14 @@ class Admin_Model_Statistics {
      * Builds institute statistics.
      *
      * Returns sum of published documents sorted by institutes.
+     *
+     * @param string|int $selectedYear TODO should not be string, just int
+     * @return array
      */
-    public function getInstituteStatistics($selectedYear) {
-        $role = Opus_CollectionRole::fetchByName('institutes');
-        $instStat = array();
+    public function getInstituteStatistics($selectedYear)
+    {
+        $role     = CollectionRole::fetchByName('institutes');
+        $instStat = [];
         if (isset($role)) {
             $query = "SELECT c.name name, COUNT(DISTINCT(d.id)) entries
                  FROM documents d
@@ -120,8 +143,8 @@ class Admin_Model_Statistics {
                  LEFT JOIN collections c ON ldc.collection_id=c.id
                  WHERE c.role_id=? AND YEAR(server_date_published)=? AND server_state='published'
                 group by name";
-            $db = Zend_Registry::get('db_adapter');
-            $res = $db->query($query, array($role->getId(), $selectedYear))->fetchAll();
+            $db    = Zend_Db_Table::getDefaultAdapter();
+            $res   = $db->query($query, [$role->getId(), $selectedYear])->fetchAll();
 
             foreach ($res as $result) {
                 $instStat[$result['name']] = $result['entries'];
@@ -133,15 +156,18 @@ class Admin_Model_Statistics {
     /**
      * Returns all years in which documents were published.
      * TODO show that there are published documents without publication date?
+     *
+     * @return array
      */
-    public function getYears() {
-        $documents = new Opus_Db_Documents();
-        $select = $documents->select()->from('documents', array('year' => 'YEAR(server_date_published)'))
+    public function getYears()
+    {
+        $documents = new Documents();
+        $select    = $documents->select()->from('documents', ['year' => 'YEAR(server_date_published)'])
             ->where('server_state = ?', 'published')
             ->where('server_date_published IS NOT NULL')
             ->distinct()
             ->order('year');
-        $result = $documents->fetchAll($select);
+        $result    = $documents->fetchAll($select);
         foreach ($result as $row) {
             $years[$row->year] = $row->year;
         }
@@ -150,12 +176,15 @@ class Admin_Model_Statistics {
 
     /**
      * Returns sum of all documents published before the $thresholdYear.
+     *
+     * @param int $thresholdYear
+     * @return int
      */
-    public function getNumDocsUntil($thresholdYear) {
-        $finder = new Opus_DocumentFinder();
+    public function getNumDocsUntil($thresholdYear)
+    {
+        $finder = Repository::getInstance()->getDocumentFinder();
         $finder->setServerState('published');
-        $finder->setServerDatePublishedBefore($thresholdYear+1);
-        return $finder->count();
+        $finder->setServerDatePublishedBefore($thresholdYear + 1);
+        return $finder->getCount();
     }
-
 }

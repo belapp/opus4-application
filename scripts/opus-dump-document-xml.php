@@ -22,19 +22,20 @@
  * OPUS is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details. You should have received a copy of the GNU General Public License 
- * along with OPUS; if not, write to the Free Software Foundation, Inc., 51 
+ * details. You should have received a copy of the GNU General Public License
+ * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Thoralf Klein <thoralf.klein@zib.de>
  * @copyright   Copyright (c) 2010, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 // Bootstrapping
 require_once dirname(__FILE__) . '/common/bootstrap.php';
+
+use Opus\Common\Document;
+use Opus\Model\Xml;
+use Opus\Model\Xml\Version1;
 
 // Remove first argument
 array_shift($argv);
@@ -42,18 +43,17 @@ array_shift($argv);
 // Dump given documents
 error_log("dumping document(s): " . implode(", ", $argv));
 
-foreach ($argv AS $docId) {
-   error_log("<!-- dumping document-id $docId: -->");
+foreach ($argv as $docId) {
+    error_log("<!-- dumping document-id $docId: -->");
 
-   $d = new Opus_Document($docId);
+    $d = Document::get($docId);
 
-   $xmlModel = new Opus_Model_Xml();
-   $xmlModel->setModel($d);
-   $xmlModel->excludeEmptyFields();
-   $xmlModel->setStrategy(new Opus_Model_Xml_Version1);
-   // $xmlModel->setXmlCache(new Opus_Model_Xml_Cache);
+    $xmlModel = new Xml();
+    $xmlModel->setModel($d);
+    $xmlModel->excludeEmptyFields();
+    $xmlModel->setStrategy(new Version1());
 
-   $docXml = $xmlModel->getDomDocument();
-   $docXml->formatOutput = true;
-   echo $docXml->saveXml();
+    $docXml               = $xmlModel->getDomDocument();
+    $docXml->formatOutput = true;
+    echo $docXml->saveXml();
 }

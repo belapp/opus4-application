@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -25,13 +26,13 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Sascha Szott <szott@zib.de>
  * @copyright   Copyright (c) 2018, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 require_once dirname(__FILE__) . '/../common/bootstrap.php';
+
+use Opus\Doi\DoiManager;
 
 /*
  * Dieses Script sucht nach Dokumenten, die lokale DOIs im Status 'registered'
@@ -53,18 +54,17 @@ $delayInHours = 24;
 $printErrors = false;
 
 $beforeDate = null;
-if (!is_null($delayInHours)) {
-    $dateTime = new DateTime();
+if ($delayInHours !== null) {
+    $dateTime   = new DateTime();
     $beforeDate = date("Y-m-d H:i:s", strtotime("- $delayInHours hours"));
 }
 
-$doiManager = new Opus_Doi_DoiManager();
-$status = $doiManager->verifyRegisteredBefore($beforeDate);
+$doiManager = new DoiManager();
+$status     = $doiManager->verifyRegisteredBefore($beforeDate);
 
 if ($status->isNoDocsToProcess()) {
     echo "could not find matching documents for DOI verification\n";
-}
-else {
+} else {
     echo count($status->getDocsWithDoiStatus()) . " documents have been processed\n";
 
     if ($printErrors) {

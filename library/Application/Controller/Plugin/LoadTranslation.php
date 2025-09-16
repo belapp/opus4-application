@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,35 +25,28 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Controller
- * @author      Ralf Claussnitzer (ralf.claussnitzer@slub-dresden.de)
- * @author      Thoralf Klein <thoralf.klein@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Loads languages from modules.  When registered as FrontController plugin
  * it hooks into dispatchLoopStartup().
  */
-class Application_Controller_Plugin_LoadTranslation extends Zend_Controller_Plugin_Abstract {
-
+class Application_Controller_Plugin_LoadTranslation extends Zend_Controller_Plugin_Abstract
+{
     /**
      * Hooks into preDispatch to setup include path for every request.
      *
      * @param Zend_Controller_Request_Abstract $request The request passed to the FrontController.
-     * @return void
      */
-    public function preDispatch(Zend_Controller_Request_Abstract $request) {
+    public function preDispatch(Zend_Controller_Request_Abstract $request)
+    {
         $currentModule = $request->getModuleName();
 
         // Add translation
-        if ($currentModule !== 'default' && Zend_Registry::isRegistered(Application_Translate::REGISTRY_KEY)) {
-            Zend_Registry::get(Application_Translate::REGISTRY_KEY)->loadModule($currentModule);
+        if ($currentModule !== 'default' && Application_Translate::getInstance() !== null) {
+            Application_Translate::getInstance()->loadModule($currentModule);
         }
     }
-
 }

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,12 +25,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
@@ -42,39 +39,42 @@
  *
  * Der Typ eines Titels kann später nicht mehr geändert werden. Die Felder fuer die verschiedenen Titeltypen setzen
  * den Wert vom Feld 'Type' eines Titels automatisch.
- *
- * @category    Application
- * @package     Module_Admin
  */
-class Admin_Form_Document_Titles extends Admin_Form_Document_Section {
-
+class Admin_Form_Document_Titles extends Admin_Form_Document_Section
+{
     /**
      * Initialisiert das Formular und erzeugt die Unterformulare für die Titeltypen.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->setLegend('admin_document_section_titles');
 
         $this->addSubForm(new Admin_Form_Document_TitlesMain(), 'Main');
         $this->addSubForm(
-            new Admin_Form_Document_MultiSubForm(
-                'Admin_Form_Document_Title', 'TitleAdditional',
+            new Admin_Form_Document_DefaultMultiSubForm(
+                'Admin_Form_Document_Title',
+                'TitleAdditional',
                 new Application_Form_Validate_MultiSubForm_RepeatedLanguages()
-            ), 'Additional'
+            ),
+            'Additional'
         );
         $this->addSubForm(
-            new Admin_Form_Document_MultiSubForm(
-                'Admin_Form_Document_Title', 'TitleParent',
+            new Admin_Form_Document_DefaultMultiSubForm(
+                'Admin_Form_Document_Title',
+                'TitleParent',
                 new Application_Form_Validate_MultiSubForm_RepeatedLanguages()
-            ), 'Parent'
+            ),
+            'Parent'
         );
         $this->addSubForm(
-            new Admin_Form_Document_MultiSubForm(
-                'Admin_Form_Document_Title', 'TitleSub',
+            new Admin_Form_Document_DefaultMultiSubForm(
+                'Admin_Form_Document_Title',
+                'TitleSub',
                 new Application_Form_Validate_MultiSubForm_RepeatedLanguages()
-            ), 'Sub'
+            ),
+            'Sub'
         );
     }
-
 }

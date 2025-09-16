@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,35 +25,38 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Admin_Form_File
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_Form_File_HashesTest extends ControllerTestCase {
 
-    public function testPopulateFromModel() {
+use Opus\Common\File;
+
+class Admin_Form_File_HashesTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'translation'];
+
+    public function testPopulateFromModel()
+    {
         $form = new Admin_Form_File_Hashes();
 
-        $file = new Opus_File(116); // MD5 und SHA512
+        $file = File::get(116); // MD5 und SHA512
 
         $form->populateFromModel($file);
 
-        $this->assertEquals(2, count($form->getElements()));
+        $this->assertCount(2, $form->getElements());
         $this->assertNotNull($form->getElement('Hash0'));
         $this->assertNotNull($form->getElement('Hash1'));
     }
 
-    public function testPopulateFromModelNoHashes() {
+    public function testPopulateFromModelNoHashes()
+    {
         $form = new Admin_Form_File_Hashes();
 
-        $file = new Opus_File(121); // keine Hashes
+        $file = File::get(121); // keine Hashes
 
         $form->populateFromModel($file);
 
-        $this->assertEquals(0, count($form->getElements()));
+        $this->assertCount(0, $form->getElements());
     }
-
 }

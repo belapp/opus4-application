@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,62 +25,66 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
+use Opus\Common\Document;
+use Opus\Common\DocumentInterface;
+use Opus\Common\Person;
+
 class Admin_Form_WorkflowNotificationTest extends ControllerTestCase
 {
+    /** @var string[] */
+    protected $additionalResources = ['database'];
 
+    /** @var DocumentInterface */
     private $doc;
 
     protected function setUpTestDocument()
     {
         $doc = $this->createTestDocument();
 
-        $author = new Opus_Person();
+        $author = Person::new();
         $author->setFirstName('John');
         $author->setLastName('Tester');
         $author->setEmail('john@example.org');
         $doc->addPersonAuthor($author);
 
-        $author = new Opus_Person();
+        $author = Person::new();
         $author->setFirstName('Jane');
         $author->setLastName('Doe');
         $author->setEmail('jane@example.org');
         $doc->addPersonAuthor($author);
 
         // This email is used twice for different authors (John & Anton)
-        $author = new Opus_Person();
+        $author = Person::new();
         $author->setFirstName('Anton');
         $author->setLastName('Other');
         $author->setEmail('john@example.org');
         $doc->addPersonAuthor($author);
 
         // Jim doesn't have an email address and won't be a recipient
-        $author = new Opus_Person();
+        $author = Person::new();
         $author->setFirstName('Jim');
         $author->setLastName('Busy');
         $doc->addPersonAuthor($author);
 
         // Jane is author and submitter
-        $submitter = new Opus_Person();
+        $submitter = Person::new();
         $submitter->setFirstName('Jane');
         $submitter->setLastName('Doe');
         $submitter->setEmail('jane@example.org');
         $doc->addPersonSubmitter($submitter);
 
         // Bob is just submitter
-        $submitter = new Opus_Person();
+        $submitter = Person::new();
         $submitter->setFirstName('Bob');
         $submitter->setLastName('Writer');
         $submitter->setEmail('bob@example.org');
         $doc->addPersonSubmitter($submitter);
 
-        $this->doc = new Opus_Document($doc->store());
+        $this->doc = Document::get($doc->store());
     }
 
     public function testGetRecipients()
@@ -94,36 +99,37 @@ class Admin_Form_WorkflowNotificationTest extends ControllerTestCase
             'john@example.org' => [
                 'name' => [
                     'Tester, John',
-                    'Other, Anton'
+                    'Other, Anton',
                 ],
-                'role' => 'author'
+                'role' => 'author',
             ],
             'jane@example.org' => [
                 'name' => 'Doe, Jane',
                 'role' => [
                     'author',
-                    'submitter'
-                ]
+                    'submitter',
+                ],
             ],
-            'bob@example.org' => [
+            'bob@example.org'  => [
                 'name' => 'Writer, Bob',
-                'role' => 'submitter'
-            ]
+                'role' => 'submitter',
+            ],
         ], $recipients);
     }
 
-    public function testGetSelectedRecipients() {
+    public function testGetSelectedRecipients()
+    {
         $this->setUpTestDocument();
 
         $form = new Admin_Form_WorkflowNotification('published');
 
         $post = [
-            'sureyes' => 'Yes',
-            'id' => 150,
+            'sureyes'   => 'Yes',
+            'id'        => 150,
             'submitter' => '1',
-            'author_0' => '1',
-            'author_1' => '1',
-            'author_2' => '1'
+            'author_0'  => '1',
+            'author_1'  => '1',
+            'author_2'  => '1',
         ];
 
         $recipients = $form->getSelectedRecipients($this->doc, $post);
@@ -140,7 +146,7 @@ class Admin_Form_WorkflowNotificationTest extends ControllerTestCase
      * Add a checkbox for each PersonSubmitter and PersonAuthor (used to select
      * recipients for publish notification email)
      *
-     * @param Opus_Document $document
+     * @param DocumentInterface $document
     protected function addPublishNotificationSelection($document)
     {
         $translator = $this->getTranslator();
@@ -156,11 +162,11 @@ class Admin_Form_WorkflowNotificationTest extends ControllerTestCase
         /**
         $submitters = $document->getPersonSubmitter();
 
-        if (!is_null($submitters) && count($submitters) > 0) {
+        if ($submitters !== null && count($submitters) > 0) {
         $label = $translator->translate('admin_workflow_notification_submitter') . ' '
         . trim($submitters[0]->getLastName()) . ", " . trim($submitters[0]->getFirstName());
         $element = null;
-        if (trim($submitters[0]->getEmail()) == '') {
+        if (trim($submitters[0]->getEmail()) === '') {
         // email notification is not possible since no email address is specified for submitter
         $label .= ' (' . $translator->translate('admin_workflow_notification_noemail') . ')';
         $element = new Zend_Form_Element_Checkbox(
@@ -180,14 +186,14 @@ class Admin_Form_WorkflowNotificationTest extends ControllerTestCase
 
         $authors = $document->getPersonAuthor();
 
-        if (!is_null($authors)) {
+        if ($authors !== null) {
         $index = 1;
         foreach ($authors as $author) {
         $id = 'author_' . $index;
         $label = $index . '. ' . $translator->translate('admin_workflow_notification_author') . ' '
         . trim($author->getLastName()) . ", " . trim($author->getFirstName());
         $element = null;
-        if (trim($author->getEmail()) == '') {
+        if (trim($author->getEmail()) === '') {
         // email notification is not possible since no email address is specified for author
         $label .= ' (' . $translator->translate('admin_workflow_notification_noemail') . ')';
         $element = new Zend_Form_Element_Checkbox(

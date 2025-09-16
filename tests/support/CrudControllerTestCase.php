@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,41 +25,54 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Test_Support
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-abstract class CrudControllerTestCase extends ControllerTestCase {
+use Opus\Common\Model\ModelInterface;
+use Opus\Common\Model\NotFoundException;
 
+abstract class CrudControllerTestCase extends ControllerTestCase
+{
+    /** @var int[] */
     private $oldModelIds;
 
+    /** @var string */
     private $module = 'admin';
 
-    private $controller = null;
+    /** @var string */
+    private $controller;
 
+    /** @var string */
     private $controllerPath;
 
+    /** @var bool */
     protected $createsModels;
 
-    public function setModule($value) {
+    /**
+     * @param string $value
+     */
+    public function setModule($value)
+    {
         $this->module = $value;
     }
 
-    public function setController($value) {
+    /**
+     * @param string $value
+     */
+    public function setController($value)
+    {
         $this->controller = $value;
     }
 
-    public function setUp() {
+    public function setUp(): void
+    {
         $this->controllerPath = '/' . $this->module . '/' . $this->controller;
         parent::setUp();
 
         $this->createsModels = false;
 
-        $this->licences = array();
+        $this->licences = [];
 
         $models = $this->getModels();
 
@@ -67,44 +81,50 @@ abstract class CrudControllerTestCase extends ControllerTestCase {
         }
     }
 
-    public function getControllerPath() {
+    /**
+     * @return string
+     */
+    public function getControllerPath()
+    {
         return $this->controllerPath;
     }
 
-    public function tearDown() {
+    public function tearDown(): void
+    {
         if ($this->createsModels) {
             $this->deleteNewModels();
         }
         parent::tearDown();
     }
 
-    private function deleteNewModels() {
+    private function deleteNewModels()
+    {
         $models = $this->getModels();
-        if (is_array($models))
-        {
-            foreach ($models as $model)
-            {
-                if (empty($this->oldModelIds) || !in_array($model->getId(), $this->oldModelIds))
-                {
+        if (is_array($models)) {
+            foreach ($models as $model) {
+                if (empty($this->oldModelIds) || ! in_array($model->getId(), $this->oldModelIds)) {
                     $model->delete();
                 }
             }
         }
     }
 
-    abstract function getModels();
+    /**
+     * @return mixed
+     */
+    abstract public function getModels();
 
-    public function testIndexAction() {
+    public function testIndexAction()
+    {
         $this->dispatch($this->controllerPath);
         $this->assertResponseCode(200);
         $this->assertController($this->controller);
         $this->assertAction('index');
 
-        $models = $this->getModels();;
+        $models = $this->getModels();
 
         $this->assertQuery('a.add', 'Kein Add Button gefunden.');
-        if (count($models) > 0)
-        {
+        if (count($models) > 0) {
             $this->assertQuery('td.edit', count($models));
         }
 
@@ -113,19 +133,22 @@ abstract class CrudControllerTestCase extends ControllerTestCase {
         }
     }
 
-    public function testShowActionBadId() {
+    public function testShowActionBadId()
+    {
         $this->dispatch($this->controllerPath . '/show/id/bla');
         $this->assertRedirectTo($this->controllerPath);
         $this->verifyFlashMessage('controller_crud_invalid_id');
     }
 
-    public function testShowActionBadUnknownId() {
+    public function testShowActionBadUnknownId()
+    {
         $this->dispatch($this->controllerPath . '/show/id/1000');
         $this->assertRedirectTo($this->controllerPath);
         $this->verifyFlashMessage('controller_crud_invalid_id');
     }
 
-    public function testShowActionNoId() {
+    public function testShowActionNoId()
+    {
         $this->dispatch($this->controllerPath . '/show');
         $this->assertRedirectTo($this->controllerPath);
         $this->verifyFlashMessage('controller_crud_invalid_id');
@@ -134,7 +157,8 @@ abstract class CrudControllerTestCase extends ControllerTestCase {
     /**
      * Tests 'new' action.
      */
-    public function testNewActionShowForm() {
+    public function testNewActionShowForm()
+    {
         $this->dispatch($this->controllerPath . '/new');
         $this->assertResponseCode(200);
         $this->assertController($this->controller);
@@ -145,25 +169,29 @@ abstract class CrudControllerTestCase extends ControllerTestCase {
         $this->assertQueryCount('input#Id', 1);
     }
 
-    public function testEditActionBadId() {
+    public function testEditActionBadId()
+    {
         $this->dispatch($this->controllerPath . '/edit/id/notanid');
         $this->assertRedirectTo($this->controllerPath);
         $this->verifyFlashMessage('controller_crud_invalid_id');
     }
 
-    public function testEditActionUnknownId() {
+    public function testEditActionUnknownId()
+    {
         $this->dispatch($this->controllerPath . '/edit/id/1000');
         $this->assertRedirectTo($this->controllerPath);
         $this->verifyFlashMessage('controller_crud_invalid_id');
     }
 
-    public function testEditActionNoId() {
+    public function testEditActionNoId()
+    {
         $this->dispatch($this->controllerPath . '/edit');
         $this->assertRedirectTo($this->controllerPath);
         $this->verifyFlashMessage('controller_crud_invalid_id');
     }
 
-    public function testBreadcrumbsDefined() {
+    public function testBreadcrumbsDefined()
+    {
         $this->verifyBreadcrumbDefined($this->controllerPath . '/index');
         $this->verifyBreadcrumbDefined($this->controllerPath . '/show');
         $this->verifyBreadcrumbDefined($this->controllerPath . '/new');
@@ -171,44 +199,54 @@ abstract class CrudControllerTestCase extends ControllerTestCase {
         $this->verifyBreadcrumbDefined($this->controllerPath . '/delete');
     }
 
-    public function testDeleteActionBadId() {
+    public function testDeleteActionBadId()
+    {
         $this->dispatch($this->controllerPath . '/delete/id/notanid');
         $this->assertRedirectTo($this->controllerPath);
         $this->verifyFlashMessage('controller_crud_invalid_id');
     }
 
-    public function testDeleteActionUnknownId() {
+    public function testDeleteActionUnknownId()
+    {
         $this->dispatch($this->controllerPath . '/delete/id/1000');
         $this->assertRedirectTo($this->controllerPath);
         $this->verifyFlashMessage('controller_crud_invalid_id');
     }
 
-    public function testDeleteActionNoId() {
+    public function testDeleteActionNoId()
+    {
         $this->dispatch($this->controllerPath . '/delete');
         $this->assertRedirectTo($this->controllerPath);
         $this->verifyFlashMessage('controller_crud_invalid_id');
     }
 
-    abstract function createNewModel();
+    /**
+     * @return mixed
+     */
+    abstract public function createNewModel();
 
-    abstract function getModel($identifier);
+    /**
+     * @param int|string $identifier
+     * @return ModelInterface
+     */
+    abstract public function getModel($identifier);
 
-    public function testDeleteActionYes() {
+    public function testDeleteActionYes()
+    {
         $this->createsModels = true;
 
         $modelId = $this->createNewModel();
 
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'Id' => $modelId,
-            'ConfirmYes' => 'Ja'
-        ));
+        $this->getRequest()->setMethod('POST')->setPost([
+            'Id'         => $modelId,
+            'ConfirmYes' => 'Ja',
+        ]);
 
         $this->dispatch($this->controllerPath . '/delete');
 
         try {
             $this->getModel($modelId);
-        }
-        catch (Opus_Model_NotFoundException $omnfe) {
+        } catch (NotFoundException $omnfe) {
             // alles gut, Modell wurde geloescht
         }
 
@@ -216,16 +254,17 @@ abstract class CrudControllerTestCase extends ControllerTestCase {
         $this->verifyFlashMessage('controller_crud_delete_success', self::MESSAGE_LEVEL_NOTICE);
     }
 
-    public function testDeleteActionNo() {
+    public function testDeleteActionNo()
+    {
         $this->createsModels = true;
         $this->useEnglish();
 
         $modelId = $this->createNewModel();
 
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'Id' => $modelId,
-            'ConfirmNo' => 'Nein'
-        ));
+        $this->getRequest()->setMethod('POST')->setPost([
+            'Id'        => $modelId,
+            'ConfirmNo' => 'Nein',
+        ]);
 
         $this->dispatch($this->controllerPath . '/delete/id/' . $modelId);
 
@@ -233,5 +272,4 @@ abstract class CrudControllerTestCase extends ControllerTestCase {
 
         $this->assertRedirectTo($this->controllerPath);
     }
-
 }

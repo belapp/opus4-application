@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,71 +25,93 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Model\NotFoundException;
+use Opus\Common\TitleAbstract;
+use Opus\Common\TitleAbstractInterface;
 
 /**
  * Unterformular zum Editieren einer Zusammenfassung (abstract).
  *
- * @category    Application
- * @package     Module_Admin
+ * TODO LAMINAS rename class - cannot be 'Abstract' with PHP namespaces
  */
-class Admin_Form_Document_Abstract extends Admin_Form_AbstractModelSubForm {
-    
-    const ELEMENT_ID = 'Id';
-    
-    const ELEMENT_LANGUAGE = 'Language';
-    
-    const ELEMENT_VALUE = 'Value';
+class Admin_Form_Document_Abstract extends Admin_Form_AbstractModelSubForm
+{
+    public const ELEMENT_ID = 'Id';
 
-    public function init() {
+    public const ELEMENT_LANGUAGE = 'Language';
+
+    public const ELEMENT_VALUE = 'Value';
+
+    public function init()
+    {
         parent::init();
-        
+
         $this->addElement('Hidden', self::ELEMENT_ID);
-        $this->addElement('Language', self::ELEMENT_LANGUAGE); 
-        $this->addElement('Textarea', self::ELEMENT_VALUE, array('required' => true, 'rows' => 12));
+        $this->addElement('Language', self::ELEMENT_LANGUAGE);
+        $this->addElement('Textarea', self::ELEMENT_VALUE, [
+            'required'   => true,
+            'rows'       => 12,
+            'decorators' => [
+                'ViewHelper',
+                'Errors',
+                'Description',
+                'ElementHtmlTag',
+                [['dataWrapper' => 'HtmlTagWithId'], ['tag' => 'div', 'class' => 'data-wrapper']],
+            ],
+        ]);
     }
-    
-    public function populateFromModel($abstract) {
+
+    /**
+     * @param TitleAbstractInterface $abstract
+     */
+    public function populateFromModel($abstract)
+    {
         $this->getElement(self::ELEMENT_ID)->setValue($abstract->getId());
         $this->getElement(self::ELEMENT_LANGUAGE)->setValue($abstract->getLanguage());
         $this->getElement(self::ELEMENT_VALUE)->setValue($abstract->getValue());
     }
-    
-    public function updateModel($abstract) {
+
+    /**
+     * @param TitleAbstractInterface $abstract
+     */
+    public function updateModel($abstract)
+    {
         $abstract->setLanguage($this->getElementValue(self::ELEMENT_LANGUAGE));
         $abstract->setValue($this->getElementValue(self::ELEMENT_VALUE));
     }
 
-    public function getModel() {
+    /**
+     * @return TitleAbstractInterface
+     * @throws Zend_Exception
+     */
+    public function getModel()
+    {
         $abstractId = $this->getElement(self::ELEMENT_ID)->getValue();
-        
-        if (empty($abstractId) || !is_numeric($abstractId)) {
+
+        if (empty($abstractId) || ! is_numeric($abstractId)) {
             $abstractId = null;
         }
 
         try {
-            $abstract = new Opus_TitleAbstract($abstractId);
-        }
-        catch (Opus_Model_NotFoundException $omnfe) {
+            $abstract = TitleAbstract::get($abstractId);
+        } catch (NotFoundException $omnfe) {
             $this->getLogger()->err(__METHOD__ . " Unknown ID = '$abstractId' (" . $omnfe->getMessage() . ').');
-            $abstract = new Opus_TitleAbstract();
+            $abstract = TitleAbstract::new();
         }
-        
+
         $this->updateModel($abstract);
-        
+
         return $abstract;
     }
-    
-    public function loadDefaultDecorators() {
+
+    public function loadDefaultDecorators()
+    {
         parent::loadDefaultDecorators();
-        
+
         $this->removeDecorator('Fieldset');
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,38 +25,35 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Oai
- * @author      Thoralf Klein <thoralf.klein@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Oai_Model_Error {
 
+class Oai_Model_Error
+{
     /**
      * Define all valid error codes.
      */
-    const BADVERB = 1010;
-    const BADARGUMENT = 1011;
-    const CANNOTDISSEMINATEFORMAT = 1012;
-    const BADRESUMPTIONTOKEN = 1013;
-    const NORECORDSMATCH = 1014;
-    const IDDOESNOTEXIST = 1015;
+    public const BADVERB                 = 1010;
+    public const BADARGUMENT             = 1011;
+    public const CANNOTDISSEMINATEFORMAT = 1012;
+    public const BADRESUMPTIONTOKEN      = 1013;
+    public const NORECORDSMATCH          = 1014;
+    public const IDDOESNOTEXIST          = 1015;
 
     /**
      * Holds OAI error codes for internal error numbers.
      *
      * @var array  Valid OAI parameters.
      */
-    protected static $_oaiErrorCodes = array(
-        self::BADVERB => 'badVerb',
-        self::BADARGUMENT => 'badArgument',
-        self::NORECORDSMATCH => 'noRecordsMatch',
+    protected static $oaiErrorCodes = [
+        self::BADVERB                 => 'badVerb',
+        self::BADARGUMENT             => 'badArgument',
+        self::NORECORDSMATCH          => 'noRecordsMatch',
         self::CANNOTDISSEMINATEFORMAT => 'cannotDisseminateFormat',
-        self::BADRESUMPTIONTOKEN => 'badResumptionToken',
-        self::IDDOESNOTEXIST => 'idDoesNotExist',
-    );
+        self::BADRESUMPTIONTOKEN      => 'badResumptionToken',
+        self::IDDOESNOTEXIST          => 'idDoesNotExist',
+    ];
 
     /**
      * Map internal error codes to OAI error codes.
@@ -63,11 +61,12 @@ class Oai_Model_Error {
      * @param int $code Internal error code.
      * @return string OAI error code.
      */
-    public static function mapCode($code) {
-        if (false === array_key_exists($code, self::$_oaiErrorCodes)) {
+    public static function mapCode($code)
+    {
+        if (false === array_key_exists($code, self::$oaiErrorCodes)) {
                 throw new Oai_Model_Exception("Unknown oai error code $code");
         }
 
-        return self::$_oaiErrorCodes[$code];
+        return self::$oaiErrorCodes[$code];
     }
 }

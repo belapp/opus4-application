@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,70 +24,92 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\FileInterface;
+use Opus\Common\HashValueInterface;
 
 /**
  * Klasse fuer die Handhabung von Datei-Hashes.
- *
- * @category    Application
- * @package     Admin_Model
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_Model_Hash {
+class Admin_Model_Hash
+{
+    /** @var HashValueInterface */
+    private $hash;
 
-    private $_hash = null;
+    /** @var FileInterface */
+    private $file;
 
     /**
-     * @var Opus_File
+     * @param FileInterface      $file
+     * @param HashValueInterface $hash
      */
-    private $_file = null;
-
-    public function __construct($file, $hash) {
-        $this->_hash = $hash;
-        $this->_file = $file;
+    public function __construct($file, $hash)
+    {
+        $this->hash = $hash;
+        $this->file = $file;
     }
 
-    public function getHashType() {
-        return $this->_hash->getType();
+    /**
+     * @return string|null
+     */
+    public function getHashType()
+    {
+        return $this->hash->getType();
     }
 
-    public function getSignatureType() {
+    /**
+     * @return false|string
+     */
+    public function getSignatureType()
+    {
         return substr($this->getHashType(), 0, 3);
     }
 
-    public function getSoll() {
-        return $this->_hash->getValue();
+    /**
+     * @return string|null
+     */
+    public function getSoll()
+    {
+        return $this->hash->getValue();
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
-    public function canVerify() {
-        return $this->_file->canVerify();
+    public function canVerify()
+    {
+        return $this->file->canVerify();
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
-    public function checkFilePermission() {
-        return $this->_file->isReadable();
+    public function checkFilePermission()
+    {
+        return $this->file->isReadable();
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
-    public function checkFileExists() {
-        return $this->_file->exists();
+    public function checkFileExists()
+    {
+        return $this->file->exists();
     }
 
-    public function getIst() {
-        if ($this->_file->exists() && $this->getSignatureType() !== 'gpg' && $this->_file->canVerify()) {
-            return $this->_file->getRealHash($this->getHashType());
-        }
-        else {
+    /**
+     * @return string|null
+     * @throws Exception
+     */
+    public function getIst()
+    {
+        if ($this->file->exists() && $this->getSignatureType() !== 'gpg' && $this->file->canVerify()) {
+            return $this->file->getRealHash($this->getHashType());
+        } else {
             return null;
         }
     }

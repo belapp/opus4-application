@@ -26,12 +26,7 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Frontdoor
- * @author      Edouard Simon <edouard.simon@zib.de>
- * @author      Michael Lang <lang@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2009-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2009, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 -->
@@ -118,11 +113,7 @@
                   </xsl:attribute>
                   <xsl:element name="a">
                       <xsl:attribute name="class">
-                          <xsl:call-template name="replaceCharsInString">
-                              <xsl:with-param name="stringIn" select="string(@MimeType)"/>
-                              <xsl:with-param name="charsIn" select="'/'"/>
-                              <xsl:with-param name="charsOut" select="'_'"/>
-                          </xsl:call-template>
+                         <xsl:value-of select="php:functionString('Application_Xslt::mimeTypeAsCssClass', @MimeType)" />
                       </xsl:attribute>
                      <xsl:attribute name="href">
                         <xsl:copy-of select="$fileLink" />

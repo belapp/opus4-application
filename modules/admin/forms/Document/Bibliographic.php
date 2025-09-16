@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,38 +25,34 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\DocumentInterface;
 
 /**
  * Unterformular fuer weitere Metadaten eines Dokuments.
- *
- * @category    Application
- * @package     Module_Admin
- * @subpackage  Form_Document
  */
-class Admin_Form_Document_Bibliographic extends Admin_Form_Document_Section {
+class Admin_Form_Document_Bibliographic extends Admin_Form_Document_Section
+{
+    public const ELEMENT_CONTRIBUTING_CORPORATION = 'ContributingCorporation';
+    public const ELEMENT_CREATING_CORPORATION     = 'CreatingCorporation';
+    public const ELEMENT_EDITION                  = 'Edition';
+    public const ELEMENT_ISSUE                    = 'Issue';
+    public const ELEMENT_ARTICLE_NUMBER           = 'ArticleNumber';
+    public const ELEMENT_PAGE_FIRST               = 'PageFirst';
+    public const ELEMENT_PAGE_LAST                = 'PageLast';
+    public const ELEMENT_PAGE_COUNT               = 'PageCount';
+    public const ELEMENT_PUBLISHER_NAME           = 'PublisherName';
+    public const ELEMENT_PUBLISHER_PLACE          = 'PublisherPlace';
+    public const ELEMENT_VOLUME                   = 'Volume';
+    public const ELEMENT_THESIS_DATE_ACCEPTED     = 'ThesisDateAccepted';
+    public const ELEMENT_THESIS_YEAR_ACCEPTED     = 'ThesisYearAccepted';
+    public const ELEMENT_BELONGS_TO_BIBLIOGRAPHY  = 'BelongsToBibliography';
 
-    const ELEMENT_CONTRIBUTING_CORPORATION = 'ContributingCorporation';
-    const ELEMENT_CREATING_CORPORATION = 'CreatingCorporation';
-    const ELEMENT_EDITION = 'Edition';
-    const ELEMENT_ISSUE = 'Issue';
-    const ELEMENT_PAGE_FIRST = 'PageFirst';
-    const ELEMENT_PAGE_LAST = 'PageLast';
-    const ELEMENT_PAGE_COUNT = 'PageCount';
-    const ELEMENT_PUBLISHER_NAME = 'PublisherName';
-    const ELEMENT_PUBLISHER_PLACE = 'PublisherPlace';
-    const ELEMENT_VOLUME = 'Volume';
-    const ELEMENT_THESIS_DATE_ACCEPTED = 'ThesisDateAccepted';
-    const ELEMENT_THESIS_YEAR_ACCEPTED = 'ThesisYearAccepted';
-    const ELEMENT_BELONGS_TO_BIBLIOGRAPHY = 'BelongsToBibliography';
-
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->setLegend('admin_document_section_bibliographic');
@@ -63,39 +60,45 @@ class Admin_Form_Document_Bibliographic extends Admin_Form_Document_Section {
         $this->setUseNameAsLabel(true);
 
         // Label entsprechen den Namen der Elemente
-        $this->addElement('text', self::ELEMENT_EDITION, array('size' => 70));
-        $this->addElement('text', self::ELEMENT_VOLUME, array('size' => 30));
-        $this->addElement('text', self::ELEMENT_PUBLISHER_NAME, array('size' => 70));
-        $this->addElement('text', self::ELEMENT_PUBLISHER_PLACE, array('size' => 70));
+        $this->addElement('text', self::ELEMENT_EDITION, ['size' => 70]);
+        $this->addElement('text', self::ELEMENT_VOLUME, ['size' => 30]);
+        $this->addElement('text', self::ELEMENT_PUBLISHER_NAME, ['size' => 70]);
+        $this->addElement('text', self::ELEMENT_PUBLISHER_PLACE, ['size' => 70]);
 
-        $this->addElement('text', self::ELEMENT_PAGE_COUNT, array('size' => 15));
-        $this->addElement('text', self::ELEMENT_PAGE_FIRST, array('size' => 15));
-        $this->addElement('text', self::ELEMENT_PAGE_LAST, array('size' => 15));
+        $this->addElement('text', self::ELEMENT_PAGE_COUNT, ['size' => 15]);
+        $this->addElement('text', self::ELEMENT_PAGE_FIRST, ['size' => 15]);
+        $this->addElement('text', self::ELEMENT_PAGE_LAST, ['size' => 15]);
 
-        $this->addElement('text', self::ELEMENT_ISSUE, array('size' => 30));
-        $this->addElement('text', self::ELEMENT_CONTRIBUTING_CORPORATION, array('size' => 70));
-        $this->addElement('text', self::ELEMENT_CREATING_CORPORATION, array('size' => 70));
+        $this->addElement('text', self::ELEMENT_ISSUE, ['size' => 30]);
+        $this->addElement('text', self::ELEMENT_ARTICLE_NUMBER, ['size' => 15]);
+
+        $this->addElement('text', self::ELEMENT_CONTRIBUTING_CORPORATION, ['size' => 70]);
+        $this->addElement('text', self::ELEMENT_CREATING_CORPORATION, ['size' => 70]);
 
         $this->addElement('Date', self::ELEMENT_THESIS_DATE_ACCEPTED);
         $this->addElement('Year', self::ELEMENT_THESIS_YEAR_ACCEPTED);
 
         $this->addSubForm(
-            new Admin_Form_Document_MultiSubForm(
-                'Admin_Form_Document_Publisher', 'ThesisPublisher',
+            new Admin_Form_Document_DefaultMultiSubForm(
+                'Admin_Form_Document_Publisher',
+                'ThesisPublisher',
                 new Application_Form_Validate_MultiSubForm_RepeatedValues(
                     Admin_Form_Document_Institute::ELEMENT_INSTITUTE,
                     'admin_document_error_repeated_institute'
                 )
-            ), 'Publishers'
+            ),
+            'Publishers'
         );
         $this->addSubForm(
-            new Admin_Form_Document_MultiSubForm(
-                'Admin_Form_Document_Grantor', 'ThesisGrantor',
+            new Admin_Form_Document_DefaultMultiSubForm(
+                'Admin_Form_Document_Grantor',
+                'ThesisGrantor',
                 new Application_Form_Validate_MultiSubForm_RepeatedValues(
                     Admin_Form_Document_Institute::ELEMENT_INSTITUTE,
                     'admin_document_error_repeated_institute'
                 )
-            ), 'Grantors'
+            ),
+            'Grantors'
         );
 
         $this->addElement('checkbox', self::ELEMENT_BELONGS_TO_BIBLIOGRAPHY);
@@ -103,7 +106,11 @@ class Admin_Form_Document_Bibliographic extends Admin_Form_Document_Section {
         $this->setRemoveEmptyCheckbox(false);
     }
 
-    public function populateFromModel($document) {
+    /**
+     * @param DocumentInterface $document
+     */
+    public function populateFromModel($document)
+    {
         parent::populateFromModel($document);
 
         $datesHelper = Zend_Controller_Action_HelperBroker::getStaticHelper('Dates');
@@ -112,6 +119,7 @@ class Admin_Form_Document_Bibliographic extends Admin_Form_Document_Section {
         $this->getElement(self::ELEMENT_CREATING_CORPORATION)->setValue($document->getCreatingCorporation());
         $this->getElement(self::ELEMENT_EDITION)->setValue($document->getEdition());
         $this->getElement(self::ELEMENT_ISSUE)->setValue($document->getIssue());
+        $this->getElement(self::ELEMENT_ARTICLE_NUMBER)->setValue($document->getArticleNumber());
         $this->getElement(self::ELEMENT_PAGE_FIRST)->setValue($document->getPageFirst());
         $this->getElement(self::ELEMENT_PAGE_LAST)->setValue($document->getPageLast());
         $this->getElement(self::ELEMENT_PAGE_COUNT)->setValue($document->getPageNumber());
@@ -125,7 +133,11 @@ class Admin_Form_Document_Bibliographic extends Admin_Form_Document_Section {
         $this->getElement(self::ELEMENT_BELONGS_TO_BIBLIOGRAPHY)->setValue($document->getBelongsToBibliography());
     }
 
-    public function updateModel($document) {
+    /**
+     * @param DocumentInterface $document
+     */
+    public function updateModel($document)
+    {
         parent::updateModel($document);
 
         $datesHelper = Zend_Controller_Action_HelperBroker::getStaticHelper('Dates');
@@ -134,6 +146,7 @@ class Admin_Form_Document_Bibliographic extends Admin_Form_Document_Section {
         $document->setCreatingCorporation($this->getElementValue(self::ELEMENT_CREATING_CORPORATION));
         $document->setEdition($this->getElementValue(self::ELEMENT_EDITION));
         $document->setIssue($this->getElementValue(self::ELEMENT_ISSUE));
+        $document->setArticleNumber($this->getElementValue(self::ELEMENT_ARTICLE_NUMBER));
         $document->setPageFirst($this->getElementValue(self::ELEMENT_PAGE_FIRST));
         $document->setPageLast($this->getElementValue(self::ELEMENT_PAGE_LAST));
         $document->setPageNumber($this->getElementValue(self::ELEMENT_PAGE_COUNT));
@@ -142,11 +155,10 @@ class Admin_Form_Document_Bibliographic extends Admin_Form_Document_Section {
         $document->setVolume($this->getElementValue(self::ELEMENT_VOLUME));
 
         $value = $this->getElementValue(self::ELEMENT_THESIS_DATE_ACCEPTED);
-        $date = (is_null($value)) ? null : $datesHelper->getOpusDate($value);
+        $date  = $value === null ? null : $datesHelper->getOpusDate($value);
         $document->setThesisDateAccepted($date);
 
         $document->setThesisYearAccepted($this->getElementValue(self::ELEMENT_THESIS_YEAR_ACCEPTED));
         $document->setBelongsToBibliography($this->getElementValue(self::ELEMENT_BELONGS_TO_BIBLIOGRAPHY));
     }
-
 }

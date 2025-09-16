@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,45 +25,55 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- *
- * idea and template at http://everflux.de/zend-framework-ein-eigener-validator-601/
- *
- * @category    Application
- * @package     Module_Frontdoor
- * @author      Tobias Leidinger <tobias.leidinger@googlemail.com>
  * @copyright   Copyright (c) 2009, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-require_once 'Zend/Validate/Abstract.php';
-
 
 /**
  * validator class to check if at least one of the given fields is not empty
  */
-class Frontdoor_Form_AtLeastOneValidator extends Zend_Validate_Abstract {
+class Frontdoor_Form_AtLeastOneValidator extends Zend_Validate_Abstract
+{
+    public const REQUIRED_EMPTY = 'requiredFieldsEmpty';
 
-    const REQUIRED_EMPTY = 'requiredFieldsEmpty';
+    /**
+     * @var string[]
+     * @phpcs:disable
+     */
+    protected $_messageTemplates = [
+        self::REQUIRED_EMPTY => 'At least one of the checkboxes must be checked',
+    ];
+    // @phpcs:enable
 
-    protected $_messageTemplates = array(
-        self::REQUIRED_EMPTY => 'At least one of the checkboxes must be checked'
-    );
+    /** @var array */
+    private $requiredFields;
 
-    private $_requiredFields;
-    private $_requiredFieldKeys;
+    /** @var array */
+    private $requiredFieldKeys;
 
-    function __construct() {
-        $this->_requiredFields = array();
-        $this->_requiredFieldKeys = array();
+    public function __construct()
+    {
+        $this->requiredFields    = [];
+        $this->requiredFieldKeys = [];
     }
 
-    public function addField(&$field) {
-        $this->_requiredFieldKeys[] = $field->getName();
-        $this->_requiredFields[] = &$field;
+    /**
+     * @param Zend_Form_Element $field
+     */
+    public function addField(&$field)
+    {
+        $this->requiredFieldKeys[] = $field->getName();
+        $this->requiredFields[]    = &$field;
     }
 
-    public function isValid($value, $context = null) {
-        $size = count($this->_requiredFieldKeys);
+    /**
+     * @param string     $value
+     * @param null|array $context
+     * @return bool
+     */
+    public function isValid($value, $context = null)
+    {
+        $size = count($this->requiredFieldKeys);
         //  if no fields required, return success
         if ($size <= 0) {
             return true;
@@ -74,7 +85,7 @@ class Frontdoor_Form_AtLeastOneValidator extends Zend_Validate_Abstract {
             $empty = true;
 
             foreach (array_keys($context) as $field) {
-                if (in_array($field, $this->_requiredFieldKeys) ) {
+                if (in_array($field, $this->requiredFieldKeys)) {
                     if (! empty($context[$field])) {
                         $empty = false;
                         break;
@@ -86,14 +97,11 @@ class Frontdoor_Form_AtLeastOneValidator extends Zend_Validate_Abstract {
                 $this->_error(self::REQUIRED_EMPTY);
 
                 $result = false;
-            }
-            else {
+            } else {
                 $result = true;
             }
         }
-        
+
         return $result;
     }
-
 }
-

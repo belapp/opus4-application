@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,36 +25,53 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Sword
- * @author      Sascha Szott
- * @copyright   Copyright (c) 2016-2018
+ * @copyright   Copyright (c) 2016, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- *
+ */
+
+use Opus\Common\DocumentInterface;
+use Opus\Common\FileInterface;
+use Opus\Common\Model\NotFoundException;
+
+/**
  * @covers Sword_DepositController
  */
-class Sword_DepositControllerMultipleDocsTest extends ControllerTestCase {
+class Sword_DepositControllerMultipleDocsTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'all';
 
+    /** @var DepositTestHelper */
     private $testHelper;
-    
-    public function setUp() {
+
+    public function setUp(): void
+    {
         parent::setUp();
         $this->testHelper = new DepositTestHelper();
         $this->testHelper->setupTmpDir();
     }
 
-    public function testZipArchiveWith3Docs() {
+    public function testZipArchiveWith3Docs()
+    {
         $this->checkMultipleDocsDeposit('multiple-docs.zip', DepositTestHelper::CONTENT_TYPE_ZIP);
     }
-    
-    public function testTarArchiveWith3Docs() {
+
+    public function testTarArchiveWith3Docs()
+    {
         $this->checkMultipleDocsDeposit('multiple-docs.tar', DepositTestHelper::CONTENT_TYPE_TAR);
     }
 
-    private function checkMultipleDocsDeposit($fileName, $contentType) {
+    /**
+     * @param string $fileName
+     * @param string $contentType
+     * @throws Zend_Controller_Exception
+     * @throws Zend_Exception
+     */
+    private function checkMultipleDocsDeposit($fileName, $contentType)
+    {
         $this->testHelper->assertEmptyTmpDir();
         $this->testHelper->disableExceptionConversion();
-        
+
         $this->getRequest()->setMethod('POST');
         $this->getRequest()->setHeader('Content-Type', $contentType);
         $this->testHelper->setValidAuthorizationHeader($this->getRequest(), DepositTestHelper::USER_AGENT);
@@ -61,47 +79,59 @@ class Sword_DepositControllerMultipleDocsTest extends ControllerTestCase {
         $this->getRequest()->setHeader('Content-Disposition', $fileName);
         $this->testHelper->addImportCollection();
 
-        $this->dispatch('/sword/deposit');                        
+        $this->dispatch('/sword/deposit');
         $this->testHelper->assertEmptyTmpDir();
-        
+
         $this->checkMultipleAtomEntryDocument($checksum, $fileName);
-        
+
         $this->testHelper->removeImportCollection();
-    }    
-    
-    private function checkMultipleAtomEntryDocument($checksum, $fileName) {
+    }
+
+    /**
+     * @param string $checksum
+     * @param string $fileName
+     * @throws NotFoundException
+     */
+    private function checkMultipleAtomEntryDocument($checksum, $fileName)
+    {
         $this->assertEquals(201, $this->getResponse()->getHttpResponseCode());
-        
+
         $headers = $this->getResponse()->getHeaders();
         $this->assertEquals(1, count($headers));
         $header = $headers[0];
         // Location Header tritt bei Multiple-Doc Deposit nicht auf
         $this->assertEquals('Content-Type', $header['name']);
         $this->assertEquals('application/atom+xml; charset=UTF-8', $header['value']);
-                        
+
         $doc = new DOMDocument();
         $doc->loadXML($this->getResponse()->getBody());
-        
+
         $roots = $doc->childNodes;
         $this->assertEquals(1, $roots->length);
         $root = $roots->item(0);
         $this->assertEquals('opus:entries', $root->nodeName);
         $attributes = $root->attributes;
         $this->assertEquals(0, $attributes->length);
-        
+
         $children = $root->childNodes;
         $this->assertEquals(3, $children->length);
-        
+
         $docCount = 1;
         foreach ($children as $child) {
             $doc = $this->testHelper->checkAtomEntryDocument($child, $fileName, $checksum);
             $this->checkMetadata($docCount, $doc);
-            $doc->deletePermanent();  
+            $doc->delete();
             $docCount++;
         }
     }
-    
-    private function checkMetadata($docCount, $doc) {                        
+
+    /**
+     * @param int               $docCount
+     * @param DocumentInterface $doc
+     * @throws Exception
+     */
+    private function checkMetadata($docCount, $doc)
+    {
         switch ($docCount) {
             case 1:
                 $this->checkBasicMetadata($docCount, $doc, 'book', 'deu');
@@ -126,22 +156,36 @@ class Sword_DepositControllerMultipleDocsTest extends ControllerTestCase {
                 throw new Exception('unexpected value of docCount');
         }
     }
-        
-    private function checkBasicMetadata($docCount, $doc, $type, $language) {
+
+    /**
+     * @param int               $docCount
+     * @param DocumentInterface $doc
+     * @param string            $type
+     * @param string            $language
+     */
+    private function checkBasicMetadata($docCount, $doc, $type, $language)
+    {
         $this->assertEquals('unpublished', $doc->getServerState());
         $this->assertEquals($type, $doc->getType());
-        $this->assertEquals($language, $doc->getLanguage());                   
+        $this->assertEquals($language, $doc->getLanguage());
         $this->testHelper->assertTitleValues($doc->getTitleMain(0), 'Title Main ' . $docCount, $doc->getLanguage());
-        $this->testHelper->assertTitleValues($doc->getTitleAbstract(0), 'Abstract ' . $docCount, $doc->getLanguage());        
+        $this->testHelper->assertTitleValues($doc->getTitleAbstract(0), 'Abstract ' . $docCount, $doc->getLanguage());
     }
- 
-    private function checkFile($file, $name, $language, $displayName, $comment) {
+
+    /**
+     * @param FileInterface $file
+     * @param string        $name
+     * @param string        $language
+     * @param string        $displayName
+     * @param string        $comment
+     */
+    private function checkFile($file, $name, $language, $displayName, $comment)
+    {
         $this->assertEquals($name, $file->getPathName());
         $this->assertEquals($language, $file->getLanguage());
-        if (!is_null($displayName)) {
+        if ($displayName !== null) {
             $this->assertEquals($displayName, $file->getLabel());
         }
         $this->assertEquals($comment, $file->getComment());
-    }    
-
+    }
 }

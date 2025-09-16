@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,33 +25,34 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Unit Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
 /**
- * Description of LanguageTest
- *
- * @author Jens Schwidder <schwidder(at)zib.de>
+ * Tests language resources across modules.
  */
-class LanguageTest extends ControllerTestCase {
-    
-    public function setUp() {
+class LanguageTest extends ControllerTestCase
+{
+    public function setUp(): void
+    {
         parent::setUp();
         $this->verifyCommandAvailable('xmllint');
     }
 
-    public function getTmxFiles() {
-        $dir = APPLICATION_PATH . '/modules';
-        $DirIter = new RecursiveDirectoryIterator($dir);
-        $Iterator = new RecursiveIteratorIterator($DirIter);
-        $Regex = new RegexIterator($Iterator, '/^.+\.tmx$/i', RecursiveRegexIterator::GET_MATCH);
+    /**
+     * @return array
+     */
+    public function getTmxFiles()
+    {
+        $dir      = APPLICATION_PATH . '/modules';
+        $dirIter  = new RecursiveDirectoryIterator($dir);
+        $iterator = new RecursiveIteratorIterator($dirIter);
+        $regex    = new RegexIterator($iterator, '/^.+\.tmx$/i', RecursiveRegexIterator::GET_MATCH);
 
-        $files = array();
-        foreach ($Regex as $file) {
-            $files[] = array($file[0]);
+        $files = [];
+        foreach ($regex as $file) {
+            $files[] = [$file[0]];
         }
 
         return $files;
@@ -58,6 +60,7 @@ class LanguageTest extends ControllerTestCase {
 
     /**
      * @dataProvider getTmxFiles
+     * @param string $filePath
      */
     public function testTmxFileValid($filePath)
     {
@@ -65,25 +68,26 @@ class LanguageTest extends ControllerTestCase {
         exec(escapeshellcmd($xmllintCall), $xmllintOutput, $xmllintFeedback);
         $this->assertEquals('0', $xmllintFeedback, "File '$filePath' not valid. (Check with 'xmllint'!)");
     }
-    
+
     /**
      * Test für das Umschalten der Sprache in Unit Tests.
      */
-    public function testSetLanguage() {
-        $translator = Zend_Registry::get('Zend_Translate');
-        
+    public function testSetLanguage()
+    {
+        $this->application->bootstrap('translation');
+
+        $translator = Application_Translate::getInstance();
+
         $this->useGerman();
-        
+
         $this->assertEquals('Startseite', $translator->translate('home_menu_label'));
-        
+
         $this->useEnglish();
-       
+
         $this->assertEquals('Home', $translator->translate('home_menu_label'));
-        
+
         $this->useGerman();
-       
-        $this->assertEquals('Startseite', $translator->translate('home_menu_label'));        
-    }    
 
-
+        $this->assertEquals('Startseite', $translator->translate('home_menu_label'));
+    }
 }

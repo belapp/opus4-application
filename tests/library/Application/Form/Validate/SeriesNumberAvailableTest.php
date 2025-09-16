@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,33 +25,33 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Form_Validate
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
+class Application_Form_Validate_SeriesNumberAvailableTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'translation'];
 
-class Application_Form_Validate_SeriesNumberAvailableTest extends ControllerTestCase {
-
-    public function testIsValidTrue() {
+    public function testIsValidTrue()
+    {
         $validator = new Application_Form_Validate_SeriesNumberAvailable();
 
-        $context = array(
-            'SeriesId' => '1'
-        );
+        $context = [
+            'SeriesId' => '1',
+        ];
 
         $this->assertTrue($validator->isValid('10/10', $context));
     }
 
-    public function testIsValidFalse() {
+    public function testIsValidFalse()
+    {
         $validator = new Application_Form_Validate_SeriesNumberAvailable();
 
-        $context = array(
-            'SeriesId' => '1' // mit Dokument 146 (number = '5/5') verknuepft
-        );
+        $context = [
+            'SeriesId' => '1', // mit Dokument 146 (number = '5/5') verknuepft
+        ];
 
         $this->assertFalse($validator->isValid('5/5', $context));
     }
@@ -60,52 +61,53 @@ class Application_Form_Validate_SeriesNumberAvailableTest extends ControllerTest
      * Validierung erfolgreich sein. Andernfalls würde es zu Fehlern beim Abspeichern eines jeden
      * Dokuments kommen, wenn die Number gleich geblieben ist.
      */
-    public function testIsValidTrueForThisDocument() {
+    public function testIsValidTrueForThisDocument()
+    {
         $validator = new Application_Form_Validate_SeriesNumberAvailable();
 
-        $context = array(
-            'Id' => 146,
-            'SeriesId' => '1' // mit Dokument 146 (number = '5/5') verknuepft
-        );
+        $context = [
+            'Id'       => 146,
+            'SeriesId' => '1', // mit Dokument 146 (number = '5/5') verknuepft
+        ];
 
         $this->assertTrue($validator->isValid('5/5', $context));
     }
 
-    public function testMessagesTranslated() {
-        $translator = Zend_Registry::get('Zend_Translate');
-
-        $translator->loadModule('admin');
+    public function testMessagesTranslated()
+    {
+        $translator = Application_Translate::getInstance();
 
         $this->assertTrue($translator->isTranslated('admin_series_error_number_exists'));
     }
 
-    public function testIsValidTrueForMissingSeriesId() {
+    public function testIsValidTrueForMissingSeriesId()
+    {
         $validator = new Application_Form_Validate_SeriesNumberAvailable();
 
-        $context = array(
-        );
+        $context = [];
 
         $this->assertTrue($validator->isValid('5/5', $context));
     }
 
-    public function testIsValidTrueForUnknownSeriesId() {
+    public function testIsValidTrueForUnknownSeriesId()
+    {
         $validator = new Application_Form_Validate_SeriesNumberAvailable();
 
-        $context = array(
-            'SeriesId' => 300
-        );
+        $context = [
+            'SeriesId' => 300,
+        ];
 
         $this->assertTrue($validator->isValid('5/5', $context));
     }
 
-    public function testIsValidTrueForBadSeriesId() {
+    public function testIsValidTrueForBadSeriesId()
+    {
         $validator = new Application_Form_Validate_SeriesNumberAvailable();
 
-        $context = array(
-            'SeriesId' => 'bla'
-        );
+        $context = [
+            'SeriesId' => 'bla',
+        ];
 
         $this->assertTrue($validator->isValid('5/5', $context));
     }
-
 }

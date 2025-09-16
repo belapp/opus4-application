@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,33 +25,43 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @author      Maximilian Salomon <salomon@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Language;
+use Opus\Common\LanguageInterface;
+use Opus\Common\Model\NotFoundException;
 
 /**
  * Basic unit tests for Admin_LanguageController class.
  *
  * @covers Admin_LanguageController
  */
-class Admin_LanguageControllerTest extends CrudControllerTestCase {
+class Admin_LanguageControllerTest extends CrudControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'all';
 
-    public function setUp() {
+    public function setUp(): void
+    {
         $this->setController('language');
         parent::setUp();
     }
 
-    public function getModels() {
-        return Opus_Language::getAll();
+    /**
+     * @return LanguageInterface[]
+     */
+    public function getModels()
+    {
+        return Language::getAll();
     }
 
-    public function testShowAction() {
+    public function testShowAction()
+    {
         $this->createsModels = true;
 
-        $language = new Opus_Language();
+        $language = Language::new();
 
         $language->setActive(true);
         $language->setRefName('German');
@@ -65,7 +76,7 @@ class Admin_LanguageControllerTest extends CrudControllerTestCase {
 
         $this->dispatch('/admin/language/show/id/' . $modelId);
 
-        $model = new Opus_Language($modelId);
+        $model = Language::get($modelId);
         $model->delete();
 
         $this->assertResponseCode(200);
@@ -87,7 +98,8 @@ class Admin_LanguageControllerTest extends CrudControllerTestCase {
     /**
      * Test, ob Active Status für Wert false (0) angezeigt wird.
      */
-    public function testShowActiveValueForInactiveLicence() {
+    public function testShowActiveValueForInactiveLicence()
+    {
         $this->dispatch('/admin/language/show/id/3'); // Italian (3) is disabled
         $this->assertResponseCode(200);
         $this->assertController('language');
@@ -96,20 +108,21 @@ class Admin_LanguageControllerTest extends CrudControllerTestCase {
         $this->assertQueryContentRegex('div#Active', '/No|Nein/');
     }
 
-    public function testNewActionSave() {
+    public function testNewActionSave()
+    {
         $this->createsModels = true;
 
-        $post = array(
-            'Active' => '1',
+        $post = [
+            'Active'  => '1',
             'RefName' => 'German',
-            'Part2T' => 'deu',
-            'Part2B' => 'ger',
-            'Part1' => 'de',
-            'Scope' => 'I',
-            'Type' => 'L',
+            'Part2T'  => 'deu',
+            'Part2B'  => 'ger',
+            'Part1'   => 'de',
+            'Scope'   => 'I',
+            'Type'    => 'L',
             'Comment' => 'test comment',
-            'Save' => 'Speichern'
-        );
+            'Save'    => 'Speichern',
+        ];
 
         $this->getRequest()->setPost($post)->setMethod('POST');
 
@@ -138,16 +151,17 @@ class Admin_LanguageControllerTest extends CrudControllerTestCase {
         $this->assertQueryContentContains('div#Comment', 'test comment');
     }
 
-    public function testNewActionCancel() {
+    public function testNewActionCancel()
+    {
         $this->createsModels = true;
 
         $modelCount = count($this->getModels());
 
-        $post = array(
+        $post = [
             'RefName' => 'TestGerman',
-            'Part2T' => 'tge',
-            'Cancel' => 'Abbrechen'
-        );
+            'Part2T'  => 'tge',
+            'Cancel'  => 'Abbrechen',
+        ];
 
         $this->getRequest()->setPost($post)->setMethod('POST');
 
@@ -155,15 +169,18 @@ class Admin_LanguageControllerTest extends CrudControllerTestCase {
 
         $this->assertRedirectTo('/admin/language', 'Should be a redirect to index action.');
 
-        $this->assertEquals($modelCount, count(Opus_Language::getAll()),
-            'Es sollte keine neue Sprache geben.');
+        $this->assertEquals(
+            $modelCount,
+            count(Language::getAll()),
+            'Es sollte keine neue Sprache geben.'
+        );
     }
-
 
     /**
      * Tests 'edit' action.
      */
-    public function testEditActionShowForm() {
+    public function testEditActionShowForm()
+    {
         $this->dispatch('/admin/language/edit/id/3');
         $this->assertResponseCode(200);
         $this->assertController('language');
@@ -175,34 +192,35 @@ class Admin_LanguageControllerTest extends CrudControllerTestCase {
         $this->assertQueryCount('input#Id', 1);
     }
 
-    public function testEditActionSave() {
+    public function testEditActionSave()
+    {
         $this->createsModels = true;
 
-        $model = new Opus_Language();
+        $model = Language::new();
 
         $model->setRefName('Test');
         $model->setPart2T('tst');
 
         $modelId = $model->store();
 
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'Id' => $modelId,
-            'Active' => '1',
+        $this->getRequest()->setMethod('POST')->setPost([
+            'Id'      => $modelId,
+            'Active'  => '1',
             'RefName' => 'RefNameModified',
-            'Part2T' => 'n2t',
-            'Part2B' => 'tet',
-            'Part1' => 'us',
-            'Scope' => 'I',
-            'Type' => 'L',
+            'Part2T'  => 'n2t',
+            'Part2B'  => 'tet',
+            'Part1'   => 'us',
+            'Scope'   => 'I',
+            'Type'    => 'L',
             'Comment' => 'test comment',
-            'Save' => 'Speichern'
-        ));
+            'Save'    => 'Speichern',
+        ]);
 
         $this->dispatch('/admin/language/edit');
         $this->assertRedirectTo('/admin/language/show/id/' . $modelId);
         $this->verifyFlashMessage('controller_crud_save_success', self::MESSAGE_LEVEL_NOTICE);
 
-        $model = new Opus_Language($modelId);
+        $model = Language::get($modelId);
 
         $this->assertEquals(1, $model->getActive());
         $this->assertEquals('RefNameModified', $model->getRefName());
@@ -214,32 +232,34 @@ class Admin_LanguageControllerTest extends CrudControllerTestCase {
         $this->assertEquals('test comment', $model->getComment());
     }
 
-    public function testEditActionCancel() {
+    public function testEditActionCancel()
+    {
         $this->createsModels = true;
 
-        $model = new Opus_Language();
+        $model = Language::new();
 
         $model->setRefName('Test');
         $model->setPart2T('tst');
 
         $modelId = $model->store();
 
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'Id' => $modelId,
+        $this->getRequest()->setMethod('POST')->setPost([
+            'Id'      => $modelId,
             'RefName' => 'RefNameModified',
-            'Part2T' => 'tes',
-            'Cancel' => 'Abbrechen'
-        ));
+            'Part2T'  => 'tes',
+            'Cancel'  => 'Abbrechen',
+        ]);
 
         $this->dispatch('/admin/language/edit');
         $this->assertRedirectTo('/admin/language');
 
-        $model = new Opus_Language($modelId);
+        $model = Language::get($modelId);
 
         $this->assertEquals('Test', $model->getRefName());
     }
 
-    public function testDeleteActionShowForm() {
+    public function testDeleteActionShowForm()
+    {
         $this->useEnglish();
 
         $this->dispatch('/admin/language/delete/id/3');
@@ -250,8 +270,12 @@ class Admin_LanguageControllerTest extends CrudControllerTestCase {
         $this->assertQuery('input#ConfirmNo');
     }
 
-    public function createNewModel() {
-        $model = new Opus_Language();
+    /**
+     * @return int
+     */
+    public function createNewModel()
+    {
+        $model = Language::new();
 
         $model->setRefName('TestLang');
         $model->setPart2T('lan');
@@ -259,8 +283,13 @@ class Admin_LanguageControllerTest extends CrudControllerTestCase {
         return $model->store();
     }
 
-    public function getModel($identifier) {
-        return new Opus_Language($identifier);
+    /**
+     * @param int $identifier
+     * @return LanguageInterface
+     * @throws NotFoundException
+     */
+    public function getModel($identifier)
+    {
+        return Language::get($identifier);
     }
-
 }

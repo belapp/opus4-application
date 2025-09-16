@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,22 +25,17 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2016, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
-/**
- * Class Application_Form_Element_SupportedLanguages
- */
-class Application_Form_Element_SupportedLanguages extends Application_Form_Element_MultiCheckbox {
-
+class Application_Form_Element_SupportedLanguages extends Application_Form_Element_MultiCheckbox
+{
     /**
      * @throws Zend_Form_Exception
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->addPrefixPath('Application_Form_Decorator', 'Application/Form/Decorator', Zend_Form::DECORATOR);
@@ -55,32 +51,37 @@ class Application_Form_Element_SupportedLanguages extends Application_Form_Eleme
         $this->addValidator(
             'InArray',
             true,
-            array(
-                'messages' => array(
-                    Zend_Validate_InArray::NOT_IN_ARRAY => 'validation_error_language_not_supported'
-                ),
-                'haystack' => array_keys($options)
-            )
+            [
+                'messages' => [
+                    Zend_Validate_InArray::NOT_IN_ARRAY => 'validation_error_language_not_supported',
+                ],
+                'haystack' => array_keys($options),
+            ]
         );
 
         $this->setAllowEmpty(false); // there must be a value
     }
 
-    /**
-     *
-     */
-    public function loadDefaultDecorators() {
-        if (!$this->loadDefaultDecoratorsIsDisabled() && count($this->getDecorators()) == 0) {
+    public function loadDefaultDecorators()
+    {
+        if (! $this->loadDefaultDecoratorsIsDisabled() && count($this->getDecorators()) === 0) {
             $this->setDecorators(
-                array(
+                [
                     'ViewHelper',
                     'Description',
                     'Errors',
                     'ElementHtmlTag',
-                    array('LabelNotEmpty', array('tag' => 'div', 'tagClass' => 'label', 'placement' => 'prepend',
-                        'disableFor' => true)),
-                    array(array('dataWrapper' => 'HtmlTagWithId'), array('tag' => 'div', 'class' => 'data-wrapper'))
-                )
+                    [
+                        'LabelNotEmpty',
+                        [
+                            'tag'        => 'div',
+                            'tagClass'   => 'label',
+                            'placement'  => 'prepend',
+                            'disableFor' => true,
+                        ],
+                    ],
+                    [['dataWrapper' => 'HtmlTagWithId'], ['tag' => 'div', 'class' => 'data-wrapper']],
+                ]
             );
         }
     }
@@ -91,14 +92,15 @@ class Application_Form_Element_SupportedLanguages extends Application_Form_Eleme
      * @return array
      * @throws Zend_Exception
      */
-    public function getLanguageOptions() {
-        $translator = Zend_Registry::get('Zend_Translate');
+    public function getLanguageOptions()
+    {
+        $translator = Application_Translate::getInstance();
 
         $currentLocale = new Zend_Locale($translator->getLocale());
 
         $translations = $translator->getList();
 
-        $options = array();
+        $options = [];
 
         foreach ($translations as $language) {
             $options[$language] = $currentLocale->getTranslation($language, 'language', $currentLocale->getLanguage());
@@ -109,16 +111,16 @@ class Application_Form_Element_SupportedLanguages extends Application_Form_Eleme
 
     /**
      * Sets value from comma separated values or array.
+     *
      * @param mixed $value
      */
-    public function setValue($value) {
-        if (!is_array($value)) {
+    public function setValue($value)
+    {
+        if (! is_array($value)) {
             $values = array_map('trim', explode(',', $value));
-        }
-        else {
+        } else {
             $values = $value;
         }
         parent::setValue($values);
     }
-
 }

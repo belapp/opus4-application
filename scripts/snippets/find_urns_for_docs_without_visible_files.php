@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,46 +25,47 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Thoralf Klein <thoralf.klein@zib.de>
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
+use Opus\Common\Document;
+use Opus\Common\Repository;
 
 /**
  * Dieses Script sucht Dokumente ohne sichtbare Dateien, fuer die bereits
  * eine URN vergeben wurde.
+ *
+ * TODO integrity check - make part of tools (console, administration)
  */
 
 $updateRequired = 0;
 
-$docfinder = new Opus_DocumentFinder();
-$docfinder->setIdentifierTypeExists('urn');
+$docfinder = Repository::getInstance()->getDocumentFinder();
+$docfinder->setIdentifierExists('urn');
 
 echo "checking documents...\n";
-foreach ($docfinder->ids() as $docId) {
-    $doc = new Opus_Document($docId);
+
+foreach ($docfinder->getIds() as $docId) {
+    $doc = Document::get($docId);
 
     $numVisibleFiles = 0;
-    foreach ($doc->getFile() AS $file) {
-       if ($file->getVisibleInOai() == 1) {
-          $numVisibleFiles++;
-       }
+    foreach ($doc->getFile() as $file) {
+        if ($file->getVisibleInOai()) {
+            $numVisibleFiles++;
+        }
     }
 
     if ($numVisibleFiles > 0) {
-       continue;
+        continue;
     }
 
     echo "-- document $docId has an URN " . $doc->getIdentifierUrn(0)->getValue() . ", but no visible files\n";
 }
 
-if ($updateRequired == 0) {
+if ($updateRequired === 0) {
     echo "all docs were checked -- nothing to do!\n";
-}
-else {
+} else {
     echo "$updateRequired docs need to be updated manually!\n";
 }
 

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,25 +25,29 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Home
- * @author      Jens Schwidder <schwidder@zib.de>
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Search\Result\Base;
+use Opus\Search\SearchException;
+use Opus\Search\Util\Query;
 
 /**
  * Basic unit test for inded controller of home module.
  *
  * @covers Home_IndexController
  */
-class Home_IndexControllerTest extends ControllerTestCase {
+class Home_IndexControllerTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'all';
 
     /**
      * Tests routing to and successfull execution of 'index' action.
      */
-    public function testIndexAction() {
+    public function testIndexAction()
+    {
         $this->dispatch('/home');
         $this->assertResponseCode(200);
         $this->assertModule('home');
@@ -54,7 +59,8 @@ class Home_IndexControllerTest extends ControllerTestCase {
     /**
      * Test help action.
      */
-    public function testHelpActionEnglish() {
+    public function testHelpActionEnglish()
+    {
         $this->useEnglish();
         $this->dispatch('/home/index/help');
         $this->assertResponseCode(200);
@@ -64,7 +70,8 @@ class Home_IndexControllerTest extends ControllerTestCase {
         $this->validateXHTML();
     }
 
-    public function testHelpActionGerman() {
+    public function testHelpActionGerman()
+    {
         $this->useGerman();
         $this->dispatch('/home/index/help');
         $this->assertResponseCode(200);
@@ -74,9 +81,10 @@ class Home_IndexControllerTest extends ControllerTestCase {
         $this->validateXHTML();
     }
 
-    public function testHelpActionSeparate() {
-        $config = Zend_Registry::get('Zend_Config');
-        $config->help->separate = true;
+    public function testHelpActionSeparate()
+    {
+        $config                 = $this->getConfig();
+        $config->help->separate = self::CONFIG_VALUE_TRUE;
         $this->dispatch('/home/index/help');
         $this->assertResponseCode(200);
         $this->assertModule('home');
@@ -88,7 +96,8 @@ class Home_IndexControllerTest extends ControllerTestCase {
     /**
      * Test help action.
      */
-    public function testContactAction() {
+    public function testContactAction()
+    {
         $this->dispatch('/home/index/contact');
         $this->assertResponseCode(200);
         $this->assertModule('home');
@@ -100,7 +109,8 @@ class Home_IndexControllerTest extends ControllerTestCase {
     /**
      * Test help action.
      */
-    public function testImprintAction() {
+    public function testImprintAction()
+    {
         $this->dispatch('/home/index/imprint');
         $this->assertResponseCode(200);
         $this->assertModule('home');
@@ -109,7 +119,8 @@ class Home_IndexControllerTest extends ControllerTestCase {
         $this->validateXHTML();
     }
 
-    public function testFailureAction() {
+    public function testFailureAction()
+    {
         $this->dispatch('/home/index/failure');
         $this->assertRedirectTo('/home');
         $this->assertModule('home');
@@ -117,7 +128,8 @@ class Home_IndexControllerTest extends ControllerTestCase {
         $this->assertAction('failure');
     }
 
-    public function testNoticeAction() {
+    public function testNoticeAction()
+    {
         $this->dispatch('/home/index/notice');
         $this->assertRedirectTo('/home');
         $this->assertModule('home');
@@ -125,28 +137,34 @@ class Home_IndexControllerTest extends ControllerTestCase {
         $this->assertAction('notice');
     }
 
-    private function getDocsInSearchIndex($checkConsistency = true) {
-        $searcher = new Opus_SolrSearch_Searcher();
-        $query = new Opus_SolrSearch_Query();
+    /**
+     * @param bool $checkConsistency
+     * @return Base
+     * @throws SearchException
+     */
+    private function getDocsInSearchIndex($checkConsistency = true)
+    {
+        $searcher = Application_Search_SearcherFactory::getSearcher();
+        $query    = new Query();
         $query->setCatchAll("*:*");
-        $query->setRows(Opus_SolrSearch_Query::MAX_ROWS);
-        $resultList = $searcher->search($query, $checkConsistency);
-        return $resultList;
+        $query->setRows(Query::MAX_ROWS);
+        return $searcher->search($query, $checkConsistency);
     }
 
     /**
      * Regression test for OPUSVIER-849
      */
-    public function testStartPageContainsTotalNumOfDocs() {
+    public function testStartPageContainsTotalNumOfDocs()
+    {
         // get total number of documents from all doc search
         $this->dispatch('/solrsearch/index/search/searchtype/all');
 
         $document = new DOMDocument();
         $document->loadHTML($this->getResponse()->getBody());
-        $element = $document->getElementById('search-result-numofhits');
+        $element   = $document->getElementById('search-result-numofhits');
         $numOfHits = $element->firstChild->textContent;
 
-        $docsInIndex = $this->getDocsInSearchIndex();
+        $docsInIndex    = $this->getDocsInSearchIndex();
         $numOfIndexDocs = $docsInIndex->getNumberOfHits();
         $this->assertEquals($numOfIndexDocs, $numOfHits);
 
@@ -156,13 +174,13 @@ class Home_IndexControllerTest extends ControllerTestCase {
 
         $document = new DOMDocument();
         $document->loadHTML($this->getResponse()->getBody());
-        $element = $document->getElementById('solrsearch-totalnumofdocs');
+        $element   = $document->getElementById('solrsearch-totalnumofdocs');
         $numOfDocs = $element->firstChild->textContent;
 
-        $docFinder = new Opus_DocumentFinder();
+        $docFinder = $this->getDocumentFinder();
         $docFinder->setServerState('published');
 
-        $numOfDbDocs = $docFinder->count();
+        $numOfDbDocs = $docFinder->getCount();
         $this->assertEquals($numOfDbDocs, $numOfDocs);
 
         // kurze Erklärung des Vorhabens: die Dokumentanzahl bei der Catch-All-Suche
@@ -173,17 +191,16 @@ class Home_IndexControllerTest extends ControllerTestCase {
         // wenn sie abweichen, dann aufgrund einer Inkonsistenz zwischen Datenbank
         // und Suchindex (das sollte im Rahmen der Tests eigentlich nicht auftreten)
 
-        if ($numOfDbDocs != $numOfIndexDocs) {
-
+        if ($numOfDbDocs !== $numOfIndexDocs) {
             // ermittle die Doc-IDs, die im Index, aber nicht in der DB existieren
             // bzw. die in der DB, aber nicht im Index existieren
-            $idsIndex = array();
-            $results = $docsInIndex->getResults();
+            $idsIndex = [];
+            $results  = $docsInIndex->getResults();
             foreach ($results as $result) {
                 array_push($idsIndex, $result->getId());
             }
 
-            $idsDb = $docFinder->ids();
+            $idsDb = $docFinder->getIds();
 
             $idsIndexOnly = array_diff($idsIndex, $idsDb);
             $this->assertEquals(0, count($idsIndexOnly), 'Document IDs in search index, but not in database: '
@@ -193,14 +210,18 @@ class Home_IndexControllerTest extends ControllerTestCase {
             $this->assertEquals(0, count($idsDbOnly), 'Document IDs in database, but not in search index: '
                 . var_export($idsDbOnly, true));
 
-            $this->assertEquals($numOfDbDocs, $numOfIndexDocs,
-                "number of docs in database ($numOfDbDocs) and search index ($numOfIndexDocs) differ from each other");
+            $this->assertEquals(
+                $numOfDbDocs,
+                $numOfIndexDocs,
+                "number of docs in database ($numOfDbDocs) and search index ($numOfIndexDocs) differ from each other"
+            );
         }
 
         $this->assertEquals($numOfDocs, $numOfHits);
     }
 
-    public function testFlashMessengerDivNotDisplayedWithoutMessages() {
+    public function testFlashMessengerDivNotDisplayedWithoutMessages()
+    {
         $this->dispatch('/home');
         $this->assertResponseCode(200);
         $this->assertNotQuery("div#content/div.messages");
@@ -209,7 +230,8 @@ class Home_IndexControllerTest extends ControllerTestCase {
     /**
      * Prüft, ob nur die erlaubten Einträge im Admin Menu angezeigt werden.
      */
-    public function testShowAccountLinkForUsersWithModuleAccess() {
+    public function testShowAccountLinkForUsersWithModuleAccess()
+    {
         $this->useEnglish();
         $this->enableSecurity();
         $this->loginUser("security7", "security7pwd");
@@ -217,7 +239,8 @@ class Home_IndexControllerTest extends ControllerTestCase {
         $this->assertQueryContentContains("//div[@id='login-bar']", 'Account');
     }
 
-    public function testHideAccountLinkForUsersWithoutModuleAccess() {
+    public function testHideAccountLinkForUsersWithoutModuleAccess()
+    {
         $this->useEnglish();
         $this->enableSecurity();
         $this->loginUser("security1", "security1pwd");
@@ -225,18 +248,21 @@ class Home_IndexControllerTest extends ControllerTestCase {
         $this->assertNotQueryContentContains("//div[@id='login-bar']", 'Account');
     }
 
-    public function testShowLanguageSelector() {
+    public function testShowLanguageSelector()
+    {
         $this->dispatch("/home");
         $this->assertQuery('//ul#lang-switch');
     }
 
-    public function testHideLanguageSelector() {
-        Zend_Registry::get('Zend_Config')->supportedLanguages = 'de';
+    public function testHideLanguageSelector()
+    {
+        $this->getConfig()->supportedLanguages = 'de';
         $this->dispatch("/home");
         $this->assertNotQuery('//ul#lang-switch');
     }
 
-    public function testPageLanguageAttributeEnglish() {
+    public function testPageLanguageAttributeEnglish()
+    {
         $this->useEnglish();
 
         $this->dispatch('/home');
@@ -247,7 +273,8 @@ class Home_IndexControllerTest extends ControllerTestCase {
         $this->assertXPath('//meta[@http-equiv="Content-Language" and @content="en"]');
     }
 
-    public function testPageLanguageAttributeGerman() {
+    public function testPageLanguageAttributeGerman()
+    {
         $this->useGerman();
 
         $this->dispatch('/home');
@@ -261,7 +288,8 @@ class Home_IndexControllerTest extends ControllerTestCase {
     /**
      * Assumes that test are not run in 'production' environment.
      */
-    public function testSignalNonProductionEnvironment() {
+    public function testSignalNonProductionEnvironment()
+    {
         $this->useEnglish();
 
         $this->dispatch('/home');
@@ -273,66 +301,76 @@ class Home_IndexControllerTest extends ControllerTestCase {
      * No way to change APPLICATION_ENV once it is set. It makes testing 'production' impossible,
      * but that is a good thing because environment cannot be hidden by some other code.
      */
-    public function testNoSignalingOfEnvironment() {
+    public function testNoSignalingOfEnvironment()
+    {
         $this->useEnglish();
 
         $this->dispatch('/home');
 
         if (APPLICATION_ENV !== 'production') {
             $this->assertQueryContentContains(
-                '//div#top-header', 'NON PRODUCTION ENVIRONMENT (' . APPLICATION_ENV . ')'
+                '//div#top-header',
+                'NON PRODUCTION ENVIRONMENT (' . APPLICATION_ENV . ')'
             );
-        }
-        else {
+        } else {
             $this->assertNotQueryContentContains('//div#top-header', 'NON PRODUCTION ENVIRONMENT');
         }
     }
 
-    public function testWrongModuleNameCase() {
+    public function testWrongModuleNameCase()
+    {
         $this->markTestSkipped('Revisit with ZF3.');
         $this->dispatch('/hoMe');
         $this->assertResponseCode(404);
     }
 
-    public function testWrongModuleName() {
+    public function testWrongModuleName()
+    {
         $this->dispatch('/home2');
         $this->assertResponseCode(404);
     }
 
-    public function testAllCapitalModuleName() {
+    public function testAllCapitalModuleName()
+    {
         $this->markTestSkipped('Revisit with ZF3.');
         $this->dispatch('/HOME');
         $this->assertResponseCode(404);
     }
 
-    public function testWrongControllerName() {
+    public function testWrongControllerName()
+    {
         $this->dispatch('/home/index2');
         $this->assertResponseCode(404);
     }
 
-    public function testWrongControllerNameCase() {
+    public function testWrongControllerNameCase()
+    {
         $this->markTestSkipped('Revisit with ZF3.');
         $this->dispatch('/home/inDex');
         $this->assertResponseCode(404);
     }
 
-    public function testAllCapitalControllerName() {
+    public function testAllCapitalControllerName()
+    {
         $this->dispatch('/home/INDEX');
         $this->assertResponseCode(200); // TODO should be '404'?
     }
 
-    public function testWrongActionName() {
+    public function testWrongActionName()
+    {
         $this->dispatch('/home/index/help2');
         $this->assertResponseCode(404);
     }
 
-    public function testWrongActionNameCase() {
+    public function testWrongActionNameCase()
+    {
         $this->markTestSkipped('Revisit with ZF3.');
         $this->dispatch('/home/index/heLp');
         $this->assertResponseCode(404);
     }
 
-    public function testAllCapitalActionName() {
+    public function testAllCapitalActionName()
+    {
         $this->dispatch('/home/index/HELP');
         $this->assertResponseCode(200); // TODO should be '404'?
     }

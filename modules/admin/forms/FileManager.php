@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,40 +25,42 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Admin_Form
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_Form_FileManager extends Application_Form_Model_Abstract {
 
-    const SUBFORM_UPLOAD = 'Upload';
-    const SUBFORM_FILES = 'Files';
-    const SUBFORM_INFO = 'Info';
-    const SUBFORM_ACTION = 'Action';
+use Opus\Common\DocumentInterface;
 
-    private $_message;
+class Admin_Form_FileManager extends Application_Form_Model_Abstract
+{
+    public const SUBFORM_UPLOAD = 'Upload';
+    public const SUBFORM_FILES  = 'Files';
+    public const SUBFORM_INFO   = 'Info';
+    public const SUBFORM_ACTION = 'Action';
 
-    public function init() {
+    /** @var string */
+    private $message;
+
+    public function init()
+    {
         parent::init();
 
         $this->addSubForm(new Admin_Form_ActionBox($this), self::SUBFORM_ACTION);
         $this->addSubForm(new Admin_Form_InfoBox(), self::SUBFORM_INFO);
 
         $this->getSubForm(self::SUBFORM_INFO)->addDecorator(
-            'HtmlTag', array('class' => 'wrapper', 'openOnly' => true, 'placement' => 'prepend')
+            'HtmlTag',
+            ['class' => 'wrapper', 'openOnly' => true, 'placement' => 'prepend']
         );
 
         $this->addSubForm(new Admin_Form_Files(), self::SUBFORM_FILES);
 
         $this->setDecorators(
-            array(
-            'FormElements',
-            array('HtmlTag', array('class' => 'wrapper', 'closeOnly' => true)),
-            'Form'
-            )
+            [
+                'FormElements',
+                ['HtmlTag', ['class' => 'wrapper', 'closeOnly' => true]],
+                'Form',
+            ]
         );
 
         $this->setName('FileManager');
@@ -65,9 +68,11 @@ class Admin_Form_FileManager extends Application_Form_Model_Abstract {
 
     /**
      * Initialisiert das Formular mit Werten einer Model-Instanz.
-     * @param $model
+     *
+     * @param DocumentInterface $document
      */
-    public function populateFromModel($document) {
+    public function populateFromModel($document)
+    {
         $this->getSubForm(self::SUBFORM_ACTION)->populateFromModel($document);
         $this->getSubForm(self::SUBFORM_INFO)->populateFromModel($document);
         $this->getSubForm(self::SUBFORM_FILES)->populateFromModel($document);
@@ -75,20 +80,28 @@ class Admin_Form_FileManager extends Application_Form_Model_Abstract {
 
     /**
      * Aktualsiert Model-Instanz mit Werten im Formular.
-     * @param $model
+     *
+     * @param DocumentInterface $document
      */
-    public function updateModel($document) {
+    public function updateModel($document)
+    {
         $this->getSubForm(self::SUBFORM_FILES)->updateModel($document);
     }
 
-    public function processPost($post, $context) {
+    /**
+     * @param array $post
+     * @param array $context
+     * @return null|string
+     */
+    public function processPost($post, $context)
+    {
         $result = parent::processPost($post, $context);
 
-        if (is_null($result)) {
+        if ($result === null) {
             foreach ($this->getSubForms() as $name => $subform) {
                 if (array_key_exists($name, $post)) {
                     $result = $subform->processPost($post[$name], $context);
-                    if (!is_null($result)) {
+                    if ($result !== null) {
                         break;
                     }
                 }
@@ -98,7 +111,12 @@ class Admin_Form_FileManager extends Application_Form_Model_Abstract {
         return $result;
     }
 
-    public function constructFromPost($post, $document = null) {
+    /**
+     * @param array                  $post
+     * @param DocumentInterface|null $document
+     */
+    public function constructFromPost($post, $document = null)
+    {
         $this->getSubForm(self::SUBFORM_ACTION)->populateFromModel($document); // TODO needed here?
         $this->getSubForm(self::SUBFORM_INFO)->populateFromModel($document); // TODO needed here?
         if (isset($post[self::SUBFORM_FILES])) {
@@ -106,22 +124,40 @@ class Admin_Form_FileManager extends Application_Form_Model_Abstract {
         }
     }
 
-    public function continueEdit($request, $post) {
+    /**
+     * @param Zend_Controller_Request_Http $request
+     * @param array                        $post
+     */
+    public function continueEdit($request, $post)
+    {
         $this->getSubForm(self::SUBFORM_FILES)->continueEdit($request, $post[self::SUBFORM_FILES]);
     }
 
-    static public function getInstanceFromPost($post, $document) {
+    /**
+     * @param array             $post
+     * @param DocumentInterface $document
+     * @return self
+     */
+    public static function getInstanceFromPost($post, $document)
+    {
         $form = new Admin_Form_FileManager();
         $form->constructFromPost($post, $document);
         return $form;
     }
 
-    public function setMessage($message) {
-        $this->_message = $message;
+    /**
+     * @param string|null $message
+     */
+    public function setMessage($message)
+    {
+        $this->message = $message;
     }
 
-    public function getMessage() {
-        return $this->_message;
+    /**
+     * @return string
+     */
+    public function getMessage()
+    {
+        return $this->message;
     }
-
 }

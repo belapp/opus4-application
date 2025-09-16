@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,32 +25,42 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Unit Test
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Account;
+use Opus\Common\Security\SecurityException;
 
 /**
  * Basic unit tests for the Admin_AccountController class.
  *
  * @covers Admin_AccountController
  */
-class Admin_AccountControllerTest extends ControllerTestCase {
+class Admin_AccountControllerTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'all';
 
-    public static function tearDownAfterClass() {
+    public static function tearDownAfterClass(): void
+    {
         // even if something fails, the created test account won't be left in database
-        $account = Opus_Account::fetchAccountByLogin('wally');
-        if ($account instanceof Opus_Account) {
-            $account->delete();
+        $accounts = ['wally', 'wally2'];
+
+        foreach ($accounts as $login) {
+            try {
+                $account = Account::fetchAccountByLogin($login);
+                $account->delete();
+            } catch (SecurityException $ex) {
+            }
         }
     }
 
     /**
      * Tests routing to and successfull execution of 'index' action.
      */
-    public function testIndexAction() {
+    public function testIndexAction()
+    {
         $this->dispatch('/admin/account');
         $this->assertResponseCode(200);
         $this->assertModule('admin');
@@ -59,17 +70,18 @@ class Admin_AccountControllerTest extends ControllerTestCase {
         // check information shown (Stichproben)
         $this->assertQueryContentContains('td.accountname', 'admin');
         $this->assertQueryContentContains('td.accountname', 'security4');
-        $this->assertQueryContentContains('td.fullname', 'Zugriff auf Review und Admin Modul, security4');
+        $this->assertQueryContentContains('td.lastname', 'Zugriff auf Review und Admin Modul');
+        $this->assertQueryContentContains('td.firstname', 'security4');
         $this->assertQueryContentContains('td.email', 'security4@example.org');
         $this->assertQueryContentContains('td.roles', 'reviewer');
         $this->assertQueryContentContains('td.roles', 'fulladmin');
-
     }
 
     /**
      * Tests showing an account.
      */
-    public function testShowAction() {
+    public function testShowAction()
+    {
         $this->dispatch('/admin/account/show/id/1');
         $this->assertResponseCode(200);
         $this->assertModule('admin');
@@ -77,7 +89,8 @@ class Admin_AccountControllerTest extends ControllerTestCase {
         $this->assertAction('show');
     }
 
-    public function testShowActionWithoutId() {
+    public function testShowActionWithoutId()
+    {
         $this->dispatch('/admin/account/show');
         $this->assertModule('admin');
         $this->assertController('account');
@@ -88,7 +101,8 @@ class Admin_AccountControllerTest extends ControllerTestCase {
     /**
      * Tests showing form for new account.
      */
-    public function testNewAction() {
+    public function testNewAction()
+    {
         $this->dispatch('/admin/account/new');
         $this->assertResponseCode(200);
         $this->assertModule('admin');
@@ -99,7 +113,8 @@ class Admin_AccountControllerTest extends ControllerTestCase {
     /**
      * Tests showing account for editing.
      */
-    public function testEditAction() {
+    public function testEditAction()
+    {
         $this->dispatch('/admin/account/edit/id/1');
         $this->assertResponseCode(200);
         $this->assertModule('admin');
@@ -107,7 +122,8 @@ class Admin_AccountControllerTest extends ControllerTestCase {
         $this->assertAction('edit');
     }
 
-    public function testEditActionWithoutId() {
+    public function testEditActionWithoutId()
+    {
         $this->dispatch('/admin/account/edit');
         $this->assertModule('admin');
         $this->assertController('account');
@@ -120,58 +136,65 @@ class Admin_AccountControllerTest extends ControllerTestCase {
      *
      * FIXME cancel form for now, since creating account results in database lock timeout
      */
-    public function testCreateAction() {
+    public function testCreateAction()
+    {
          $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'username' => 'wally',
-                    'firstname' => 'wally',
-                    'lastname' => 'walross',
-                    'email' => 'wally@example.org',
-                    'password' => 'dummypassword',
+                ->setPost([
+                    'username'        => 'wally',
+                    'firstname'       => 'wally',
+                    'lastname'        => 'walross',
+                    'email'           => 'wally@example.org',
+                    'password'        => 'dummypassword',
                     'confirmPassword' => 'dummypassword',
-                    'roleguest' => '1',
-                    'roleadministrator' => '0',
-                    'submit' => 'submit'
-                ));
+                    'roles'           => [
+                        'guest'         => '1',
+                        'administrator' => '0',
+                    ],
+                    'Save'            => 'Save',
+                ]);
 
-        $this->dispatch('/admin/account/create');
+        $this->dispatch('/admin/account/new');
         $this->assertModule('admin');
         $this->assertController('account');
-        $this->assertAction('create');
+        $this->assertAction('new');
         $this->assertRedirect();
-        $this->assertNotNull(new Opus_Account(null, null, 'wally'));
+        $this->assertNotNull(Account::fetchAccountByLogin('wally'));
     }
 
-    public function testCreateActionCancel() {
-         $this->request
+    public function testCreateActionCancel()
+    {
+         $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'cancel' => 'cancel'
-                ));
+                ->setPost([
+                    'Cancel' => 'Cancel',
+                ]);
 
-        $this->dispatch('/admin/account/create');
+        $this->dispatch('/admin/account/new');
         $this->assertModule('admin');
         $this->assertController('account');
-        $this->assertAction('create');
+        $this->assertAction('new');
         $this->assertRedirect('/admin/account/index');
     }
 
-    public function testCreateActionMissingInput() {
-         $this->request
+    public function testCreateActionMissingInput()
+    {
+         $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'password' => 'dummypassword',
+                ->setPost([
+                    'password'        => 'dummypassword',
                     'confirmPassword' => 'dummypassword',
-                    'roleguest' => '1',
-                    'roleadministrator' => '0',
-                    'submit' => 'submit'
-                ));
-        $this->dispatch('/admin/account/create');
+                    'roles'           => [
+                        'guest'         => '1',
+                        'administrator' => '0',
+                    ],
+                    'Save'            => 'Save',
+                ]);
+        $this->dispatch('/admin/account/new');
         $this->assertResponseCode(200);
         $this->assertModule('admin');
         $this->assertController('account');
-        $this->assertAction('create');
+        $this->assertAction('new');
     }
 
     /**
@@ -179,90 +202,100 @@ class Admin_AccountControllerTest extends ControllerTestCase {
      *
      * @depends testCreateAction
      */
-    public function testUpdateAction() {
-        $account = new Opus_Account(null, null, 'wally');
-        $id = $account->getId();
-        $this->request
+    public function testUpdateAction()
+    {
+        $account = Account::fetchAccountByLogin('wally');
+        $id      = $account->getId();
+        $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'id' => $id,
-                    'username' => 'wally2',
+                ->setPost([
+                    'Id'        => $id,
+                    'username'  => 'wally2',
                     'firstname' => 'wally',
-                    'lastname' => 'walross',
-                    'email' => 'wally@example.org',
-                    'roleguest' => '1',
-                    'roleadministrator' => '0',
-                    'submit' => 'submit'
-                ));
+                    'lastname'  => 'walross',
+                    'email'     => 'wally@example.org',
+                    'roles'     => [
+                        'guest'         => '1',
+                        'administrator' => '0',
+                    ],
+                    'Save'      => 'Save',
+                ]);
 
-        $this->dispatch('/admin/account/update');
+        $this->dispatch('/admin/account/edit');
         $this->assertController('account');
-        $this->assertAction('update');
+        $this->assertAction('edit');
         $this->assertRedirect();
-        $this->assertNotNull(new Opus_Account(null, null, 'wally2'));
+        $this->assertNotNull(Account::fetchAccountByLogin('wally2'));
     }
 
-    public function testUpdateActionCancel() {
-        $this->request
+    public function testUpdateActionCancel()
+    {
+        $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'cancel' => 'cancel'
-                ));
-        $this->dispatch('/admin/account/update');
+                ->setPost([
+                    'Cancel' => 'Cancel',
+                ]);
+        $this->dispatch('/admin/account/edit');
         $this->assertModule('admin');
         $this->assertController('account');
-        $this->assertAction('update');
+        $this->assertAction('edit');
         $this->assertRedirect('/admin/account/index');
     }
 
     /**
      * @depends testUpdateAction
      */
-    public function testUpdateActionMissingInput() {
-        $account = new Opus_Account(null, null, 'wally2');
-        $id = $account->getId();
-        $this->request
+    public function testUpdateActionMissingInput()
+    {
+        $account = Account::fetchAccountByLogin('wally2');
+        $id      = $account->getId();
+        $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'id' => $id,
-                    'roleguest' => '1',
-                    'roleadministrator' => '0',
-                    'submit' => 'submit'
-                ));
+                ->setPost([
+                    'Id'    => $id,
+                    'roles' => [
+                        'roleguest'         => '1',
+                        'roleadministrator' => '0',
+                    ],
+                    'Save'  => 'Save',
+                ]);
 
-        $this->dispatch('/admin/account/update');
+        $this->dispatch('/admin/account/edit');
         $this->assertResponseCode(200);
         $this->assertModule('admin');
         $this->assertController('account');
-        $this->assertAction('update');
+        $this->assertAction('edit');
     }
 
     /**
      * @depends testUpdateActionMissingInput
      */
-    public function testUpdateActionChangePassword() {
-        $account = new Opus_Account(null, null, 'wally2');
-        $id = $account->getId();
-        $this->request
+    public function testUpdateActionChangePassword()
+    {
+        $account = Account::fetchAccountByLogin('wally2');
+        $id      = $account->getId();
+        $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'id' => $id,
-                    'username' => 'wally2',
-                    'firstname' => 'wally',
-                    'lastname' => 'walross',
-                    'email' => 'wally@example.org',
-                    'password' => 'newpassword',
+                ->setPost([
+                    'Id'              => $id,
+                    'username'        => 'wally2',
+                    'firstname'       => 'wally',
+                    'lastname'        => 'walross',
+                    'email'           => 'wally@example.org',
+                    'password'        => 'newpassword',
                     'confirmPassword' => 'newpassword',
-                    'roleguest' => '1',
-                    'roleadministrator' => '0',
-                    'submit' => 'submit'
-                ));
+                    'roles'           => [
+                        'roleguest'         => '1',
+                        'roleadministrator' => '0',
+                    ],
+                    'submit'          => 'submit',
+                ]);
 
-        $this->dispatch('/admin/account/update');
+        $this->dispatch('/admin/account/edit');
         $this->assertController('account');
-        $this->assertAction('update');
+        $this->assertAction('edit');
         $this->assertRedirect();
-        $this->assertNotNull(new Opus_Account(null, null, 'wally2'));
+        $this->assertNotNull(Account::fetchAccountByLogin('wally2'));
     }
 
     /**
@@ -270,17 +303,29 @@ class Admin_AccountControllerTest extends ControllerTestCase {
      *
      * @depends testUpdateActionChangePassword
      */
-    public function testDeleteAction() {
-        $account = new Opus_Account(null, null, 'wally2');
-        $id = $account->getId();
-        $this->dispatch('/admin/account/delete/id/' . $id);
+    public function testDeleteAction()
+    {
+        $account = Account::fetchAccountByLogin('wally2');
+        $id      = $account->getId();
+        $this->getRequest()
+            ->setMethod('POST')
+            ->setPost([
+                'Id'         => $id,
+                'ConfirmYes' => 'Yes',
+            ]);
+
+        $this->dispatch('/admin/account/delete');
         $this->assertController('account');
         $this->assertAction('delete');
         $this->assertRedirect('/admin/account/index');
+
+        $this->expectException(SecurityException::class);
+        $this->assertNull(Account::fetchAccountByLogin('wally2'));
     }
 
-    public function testDeleteActionDeleteSelf() {
-        $user = new Opus_Account();
+    public function testDeleteActionDeleteSelf()
+    {
+        $user = Account::new();
         $user->setLogin('john');
         $user->setPassword('testpwd');
         $user->store();
@@ -292,47 +337,48 @@ class Admin_AccountControllerTest extends ControllerTestCase {
         $this->assertAction('delete');
         $this->assertRedirect('/admin/account/index');
 
-        $user = new Opus_Account(null, null, 'john');
+        $user = Account::fetchAccountByLogin('john');
         $this->assertNotNull($user);
         $user->delete();
     }
 
-    public function testDeleteActionDeleteAdmin() {
-        $user = new Opus_Account(null, null, 'admin');
+    public function testDeleteActionDeleteAdmin()
+    {
+        $user = Account::fetchAccountByLogin('admin');
         $this->dispatch('/admin/account/delete/id/' . $user->getId());
         $this->assertController('account');
         $this->assertAction('delete');
         $this->assertRedirect('/admin/account/index');
-        $user = new Opus_Account(null, null, 'admin');
+        $user = Account::fetchAccountByLogin('admin');
         $this->assertNotNull($user);
     }
 
-    public function testHideDeleteLinkForAdmin() {
-        $user = new Opus_Account(null, null, 'admin');
+    public function testHideDeleteLinkForAdmin()
+    {
+        $user = Account::fetchAccountByLogin('admin');
         $this->dispatch('/admin/account');
         $this->assertResponseCode(200);
 
         $this->assertQueryCount("a[@href='" . $this->getRequest()->getBaseUrl()
-            . "/admin/account/delete/id/" . $user->getId() . "']", 0, "There should be no delete link for 'admin'."
-        );
+            . "/admin/account/delete/id/" . $user->getId() . "']", 0, "There should be no delete link for 'admin'.");
     }
 
-    public function testHideDeleteLinkForCurrentUser() {
+    public function testHideDeleteLinkForCurrentUser()
+    {
         $this->enableSecurity();
         $this->loginUser('security4', 'security4pwd');
 
         $this->dispatch('/admin/account');
         $this->assertResponseCode(200, $this->getResponse()->getBody());
         $this->logoutUser();
-        $this->restoreSecuritySetting();
 
-        $user = new Opus_Account(null, null, 'security4');
+        $user = Account::fetchAccountByLogin('security4');
 
-        $this->assertQueryCount("a[@href='" . $this->getRequest()->getBaseUrl()
-            . "/admin/account/delete/id/" . $user->getId() . "']", 0,
+        $this->assertQueryCount(
+            "a[@href='" . $this->getRequest()->getBaseUrl()
+            . "/admin/account/delete/id/" . $user->getId() . "']",
+            0,
             "There should be no delete link for current user'."
         );
     }
-
 }
-

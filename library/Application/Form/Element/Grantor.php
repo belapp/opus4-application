@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,20 +25,21 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\DnbInstitute;
+use Opus\Common\Model\ModelException;
+use Opus\Common\Model\NotFoundException;
 
 /**
  * Select Element für Thesis Grantor Institute.
  */
-class Application_Form_Element_Grantor extends Application_Form_Element_Select {
-
-    public function init() {
+class Application_Form_Element_Grantor extends Application_Form_Element_Select
+{
+    public function init()
+    {
         parent::init();
 
         $this->setRequired(true);
@@ -47,11 +49,33 @@ class Application_Form_Element_Grantor extends Application_Form_Element_Select {
         $validator->setMessage('validation_error_int');
         $this->addValidator($validator);
 
-        $options = Opus_DnbInstitute::getGrantors();
+        $options = DnbInstitute::getGrantors();
 
         foreach ($options as $option) {
             $this->addMultiOption($option->getId(), $option->getDisplayName());
         }
     }
 
+    /**
+     * Set value for Grantor select form element.
+     *
+     * If $value is a valid DNB institute a corresponding option is added to select if necessary.
+     *
+     * @param mixed $value
+     * @return $this
+     * @throws ModelException
+     */
+    public function setValue($value)
+    {
+        try {
+            $institute = DnbInstitute::get($value);
+        } catch (NotFoundException $omne) {
+            parent::setValue($value); // could be blocked, but keeping compatibility just in case
+            return $this;
+        }
+
+        $this->addMultiOption($institute->getId(), $institute->getDisplayName());
+        parent::setValue($value);
+        return $this;
+    }
 }

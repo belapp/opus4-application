@@ -25,65 +25,69 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Cronjob
- * @package     Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2016, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
-require_once('CronTestCase.php');
+require_once 'CronTestCase.php';
 
-/**
- *
- */
+use Opus\Common\Date;
+use Opus\Common\Document;
+use Opus\Common\Repository;
+
 class EmbargoUpdateTest extends CronTestCase
 {
+    /** @var string */
+    protected $additionalResources = 'database';
 
     public function testEmbargoUpdate()
     {
-        $twoDaysAgo = new Opus_Date();
+        $twoDaysAgo = new Date();
         $twoDaysAgo->setDateTime(new DateTime(date('Y-m-d H:i:s', strtotime('-2 day'))));
 
         $yesterday = date('Y-m-d', strtotime('-1 day'));
 
         $today = date('Y-m-d', time());
 
-        $doc = new Opus_Document();
+        $doc = Document::new();
         $doc->setEmbargoDate($yesterday);
         $expiredId = $doc->store();
 
-        $doc = new Opus_Document();
+        $doc         = Document::new();
         $noEmbargoId = $doc->store();
 
-        $doc = new Opus_Document();
+        $doc = Document::new();
         $doc->setEmbargoDate($today);
         $notExpiredId = $doc->store();
 
-        Opus_Document::setServerDateModifiedByIds($twoDaysAgo, array($expiredId, $noEmbargoId, $notExpiredId));
+        $documents = Repository::getInstance()->getModelRepository(Document::class);
+
+        $documents->setServerDateModifiedForDocuments($twoDaysAgo, [$expiredId, $noEmbargoId, $notExpiredId]);
 
         $this->executeScript('cron-embargo-update.php');
 
         // document embargo until yesterday -> therefore ServerDateModified got updated
-        $doc = new Opus_Document($expiredId);
+        $doc = Document::get($expiredId);
         $this->assertTrue($this->sameDay(new DateTime($today), $doc->getServerDateModified()->getDateTime()));
 
         // document embargo until today -> therefore ServerDateModified not yet updated
-        $doc = new Opus_Document($notExpiredId);
+        $doc = Document::get($notExpiredId);
         $this->assertTrue($this->sameDay($twoDaysAgo->getDateTime(), $doc->getServerDateModified()->getDateTime()));
 
         // no document embargo -> therefore ServerDateModified unchanged
-        $doc = new Opus_Document($noEmbargoId);
+        $doc = Document::get($noEmbargoId);
         $this->assertTrue($this->sameDay($twoDaysAgo->getDateTime(), $doc->getServerDateModified()->getDateTime()));
     }
 
+    /**
+     * @param DateTime $firstDate
+     * @param DateTime $secondDate
+     * @return bool
+     */
     private function sameDay($firstDate, $secondDate)
     {
-        $first = $firstDate->format('Y-m-d');
+        $first  = $firstDate->format('Y-m-d');
         $second = $secondDate->format('Y-m-d');
-        return $first == $second;
+        return $first === $second;
     }
-
 }
-
-

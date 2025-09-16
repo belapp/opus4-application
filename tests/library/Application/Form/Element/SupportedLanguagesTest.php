@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,54 +24,64 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 /**
  * Unit Tests von Formularelement fuer die Auswahl von Rollen.
- *
- * @category    Application Unit Test
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2016, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
-class Application_Form_Element_SupportedLanguagesTest extends FormElementTestCase {
+class Application_Form_Element_SupportedLanguagesTest extends FormElementTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'translation';
 
-    public function setUp() {
-        $this->_formElementClass = 'Application_Form_Element_SupportedLanguages';
-        $this->_expectedDecoratorCount = 6;
-        $this->_expectedDecorators = array(
-            'ViewHelper', 'Description', 'Errors', 'ElementHtmlTag', 'LabelNotEmpty', 'dataWrapper'
-        );
-        $this->_staticViewHelper = 'viewFormMultiCheckbox';
+    public function setUp(): void
+    {
+        $this->formElementClass       = 'Application_Form_Element_SupportedLanguages';
+        $this->expectedDecoratorCount = 6;
+        $this->expectedDecorators     = [
+            'ViewHelper',
+            'Description',
+            'Errors',
+            'ElementHtmlTag',
+            'LabelNotEmpty',
+            'dataWrapper',
+        ];
+        $this->staticViewHelper       = 'viewFormMultiCheckbox';
         parent::setUp();
     }
 
-    public function testGetValue() {
+    public function testGetValue()
+    {
         $element = $this->getElement();
 
-        $element->setValue(array('en', 'de'));
+        $element->setValue(['en', 'de']);
 
-        $this->assertEquals(array('en', 'de'), $element->getValue());
+        $this->assertEquals(['en', 'de'], $element->getValue());
     }
 
-    public function testSetValue() {
+    public function testSetValue()
+    {
         $element = $this->getElement();
 
         $element->setValue('en,de');
 
-        $this->assertEquals(array('en', 'de'), $element->getValue());
+        $this->assertEquals(['en', 'de'], $element->getValue());
     }
 
-    public function testSetValueWithSpaces() {
+    public function testSetValueWithSpaces()
+    {
         $element = $this->getElement();
 
         $element->setValue(' en , de ');
 
-        $this->assertEquals(array('en', 'de'), $element->getValue());
+        $this->assertEquals(['en', 'de'], $element->getValue());
     }
 
-    public function testGetLanguageOptionsInGerman() {
+    public function testGetLanguageOptionsInGerman()
+    {
         $this->useGerman();
 
         $element = $this->getElement();
@@ -79,12 +90,14 @@ class Application_Form_Element_SupportedLanguagesTest extends FormElementTestCas
 
         $this->assertNotNull($options);
         $this->assertInternalType('array', $options);
-        $this->assertEquals(array(
-            'en' => 'Englisch', 'de' => 'Deutsch'
-        ), $options);
+        $this->assertEquals([
+            'en' => 'Englisch',
+            'de' => 'Deutsch',
+        ], $options);
     }
 
-    public function testGetLanguageOptionsInEnglish() {
+    public function testGetLanguageOptionsInEnglish()
+    {
         $this->useEnglish();
 
         $element = $this->getElement();
@@ -93,20 +106,21 @@ class Application_Form_Element_SupportedLanguagesTest extends FormElementTestCas
 
         $this->assertNotNull($options);
         $this->assertInternalType('array', $options);
-        $this->assertEquals(array(
-            'en' => 'English', 'de' => 'German'
-        ), $options);
+        $this->assertEquals([
+            'en' => 'English',
+            'de' => 'German',
+        ], $options);
     }
 
-    public function testValidation() {
+    public function testValidation()
+    {
         $element = $this->getElement();
 
-        $this->assertTrue($element->isValid(array('de', 'en')));
-        $this->assertTrue($element->isValid(array('en', 'de')));
-        $this->assertTrue($element->isValid(array('de')));
-        $this->assertTrue($element->isValid(array('en')));
-        $this->assertFalse($element->isValid(array()));
-        $this->assertFalse($element->isValid(array('ru')));
+        $this->assertTrue($element->isValid(['de', 'en']));
+        $this->assertTrue($element->isValid(['en', 'de']));
+        $this->assertTrue($element->isValid(['de']));
+        $this->assertTrue($element->isValid(['en']));
+        $this->assertFalse($element->isValid([]));
+        $this->assertFalse($element->isValid(['ru']));
     }
-
 }

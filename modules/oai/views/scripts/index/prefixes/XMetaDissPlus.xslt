@@ -26,13 +26,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Oai
- * @author      Simone Finkbeiner <simone.finkbeiner@ub.uni-stuttgart.de>
- * @author      Thoralf Klein <thoralf.klein@zib.de>
- * @copyright   Copyright (c) 2009-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2009, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 -->
 
@@ -59,7 +54,7 @@
     xmlns="http://www.d-nb.de/standards/subject/"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:php="http://php.net/xsl"
-    xsi:schemaLocation="http://www.d-nb.de/standards/xmetadissplus/ http://files.dnb.de/standards/xmetadissplus/xmetadissplus.xsd"
+    xsi:schemaLocation="http://www.d-nb.de/standards/xmetadissplus/ https://d-nb.info/standards/schema/xmetadissplus.xsd"
     exclude-result-prefixes="php">
 
     <xsl:output method="xml" indent="yes" />
@@ -68,7 +63,7 @@
         <xMetaDiss:xMetaDiss
             xmlns:xMetaDiss="http://www.d-nb.de/standards/xmetadissplus/"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://www.d-nb.de/standards/xmetadissplus/ http://files.dnb.de/standards/xmetadissplus/xmetadissplus.xsd">
+            xsi:schemaLocation="http://www.d-nb.de/standards/xmetadissplus/ https://d-nb.info/standards/schema/xmetadissplus.xsd">
 
             <!-- dc:title -->
             <xsl:apply-templates select="TitleMain" mode="xmetadissplus" />
@@ -124,91 +119,22 @@
             </dcterms:issued>
 
             <dc:type xsi:type="dini:PublType">
-                 <xsl:choose>
-                   <xsl:when test="@Type='article'">
-                       <xsl:text>article</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='bachelorthesis'">
-                       <xsl:text>bachelorThesis</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='book'">
-                       <xsl:text>book</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='bookpart'">
-                       <xsl:text>bookPart</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='conferenceobject'">
-                       <xsl:text>conferenceObject</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='contributiontoperiodical'">
-                       <xsl:text>contributionToPeriodical</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='coursematerial'">
-                       <xsl:text>CourseMaterial</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='diplom'">
-                       <xsl:text>masterThesis</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='doctoralthesis'">
-                       <xsl:text>doctoralThesis</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='examen'">
-                       <xsl:text>masterThesis</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='habilitation'">
-                       <xsl:text>doctoralThesis</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='image'">
-                       <xsl:text>Image</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='lecture'">
-                       <xsl:text>lecture</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='magister'">
-                       <xsl:text>masterThesis</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='masterthesis'">
-                       <xsl:text>masterThesis</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='movingimage'">
-                       <xsl:text>MovingImage</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='other'">
-                       <xsl:text>Other</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='periodical'">
-                       <xsl:text>Periodical</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='periodicalpart'">
-                       <xsl:text>PeriodicalPart</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='preprint'">
-                       <xsl:text>preprint</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='report'">
-                       <xsl:text>report</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='review'">
-                       <xsl:text>review</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='sound'">
-                       <xsl:text>Sound</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='studythesis'">
-                       <xsl:text>StudyThesis</xsl:text>
-                   </xsl:when>
-                   <xsl:when test="@Type='workingpaper'">
-                       <xsl:text>workingPaper</xsl:text>
-                   </xsl:when>
-                   <xsl:otherwise>
-                     <xsl:value-of select="@Type" />
-                       <xsl:text>Other</xsl:text>
-                   </xsl:otherwise>
-                 </xsl:choose>
+                <xsl:value-of select="php:functionString('Application_Xslt::dcType', @Type)" />
+            </dc:type>
+
+            <dc:type xsi:type="dcterms:DCMIType">
+                <xsl:value-of select="php:functionString('Application_Xslt::dcmiType', @Type)" />
             </dc:type>
 
             <!-- dc:identifier -->
-            <xsl:apply-templates select="IdentifierUrn" mode="xmetadissplus" />
+            <xsl:choose>
+                <xsl:when test="Identifier[@Type = 'urn']">
+                    <xsl:apply-templates select="Identifier[@Type = 'urn']" mode="xmetadissplus" />
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:apply-templates select="Identifier[@Type = 'doi']" mode="xmetadissplus" />
+                </xsl:otherwise>
+            </xsl:choose>
 
             <!-- weird DNB constraint: dcterms:medium must appear after dc:identifier -->
             <xsl:for-each select="File[not(@MimeType = preceding-sibling::File/@MimeType)]/@MimeType">
@@ -223,7 +149,7 @@
 
             <!-- weird DNB constraint: dc:language must appear after dcterms:medium -->
             <dc:language xsi:type="dcterms:ISO639-2">
-                <xsl:value-of select="php:functionString('Oai_Model_Language::getLanguageCode', @Language)" />
+                <xsl:value-of select="php:functionString('Opus\Common\Language::getLanguageCode', @Language)" />
             </dc:language >
 
             <!-- dcterms:isPartOf -->
@@ -307,11 +233,15 @@
                 <xsl:apply-templates select="TransferUrl" mode="xmetadissplus" />
             </xsl:if>
 
-            <xsl:apply-templates select="IdentifierUrl" mode="xmetadissplus" />
+            <xsl:apply-templates select="Identifier[@Type = 'url']" mode="xmetadissplus" />
 
             <ddb:identifier ddb:type="URL">
                <xsl:value-of select="@frontdoorurl" />
             </ddb:identifier>
+
+            <xsl:if test="Identifier[@Type = 'urn']">
+                <xsl:apply-templates select="Identifier[@Type = 'doi']" mode="ddb" />
+            </xsl:if>
 
             <ddb:rights ddb:kind="free" />
 
@@ -321,7 +251,7 @@
     <xsl:template match="TitleMain" mode="xmetadissplus">
         <dc:title xsi:type="ddb:titleISO639-2">
             <xsl:attribute name="lang">
-              <xsl:value-of select="php:functionString('Oai_Model_Language::getLanguageCode', @Language)" />
+              <xsl:value-of select="php:functionString('Opus\Common\Language::getLanguageCode', @Language)" />
              </xsl:attribute>
             <xsl:choose>
               <xsl:when test="../@Language!=@Language">
@@ -337,7 +267,7 @@
     <xsl:template match="TitleSub" mode="xmetadissplus">
         <dcterms:alternative xsi:type="ddb:talternativeISO639-2">
             <xsl:attribute name="lang">
-                 <xsl:value-of select="php:functionString('Oai_Model_Language::getLanguageCode', @Language)" />
+                 <xsl:value-of select="php:functionString('Opus\Common\Language::getLanguageCode', @Language)" />
             </xsl:attribute>
             <xsl:choose>
               <xsl:when test="../@Language!=@Language">
@@ -353,21 +283,40 @@
     <xsl:template match="PersonAuthor" mode="xmetadissplus">
        <dc:creator xsi:type="pc:MetaPers">
          <pc:person>
-          <pc:name type="nameUsedByThePerson">
-             <xsl:if test="normalize-space(@FirstName)">
-                <pc:foreName>
-                  <xsl:value-of select="@FirstName" />
-                </pc:foreName>
-             </xsl:if>
-             <pc:surName>
-               <xsl:value-of select="@LastName" />
-             </pc:surName>
-          </pc:name>
-          <xsl:if test="normalize-space(@AcademicTitle)">
+           <xsl:if test="normalize-space(@IdentifierGnd)">
+             <xsl:attribute name="ddb:GND-Nr">
+               <xsl:value-of select="@IdentifierGnd"/>
+             </xsl:attribute>
+            </xsl:if>
+           <xsl:if test="normalize-space(@IdentifierOrcid)">
+              <ddb:ORCID>
+                <xsl:value-of select="@IdentifierOrcid"/>
+              </ddb:ORCID>
+           </xsl:if>
+           <xsl:choose>
+             <xsl:when test="normalize-space(@FirstName) != '' and normalize-space(@LastName) != ''">
+               <pc:name type="nameUsedByThePerson">
+                 <pc:foreName>
+                    <xsl:value-of select="@FirstName" />
+                 </pc:foreName>
+                 <pc:surName>
+                    <xsl:value-of select="@LastName" />
+                 </pc:surName>                
+               </pc:name>
+             </xsl:when>
+             <xsl:otherwise>
+               <pc:name type="otherName">
+                 <pc:personEnteredUnderGivenName>
+                   <xsl:value-of select="@LastName" />
+                 </pc:personEnteredUnderGivenName>
+               </pc:name>
+             </xsl:otherwise>
+           </xsl:choose>           
+           <xsl:if test="normalize-space(@AcademicTitle)">
              <pc:academicTitle>
                <xsl:value-of select="@AcademicTitle" />
              </pc:academicTitle>
-          </xsl:if>
+           </xsl:if>
          </pc:person>
        </dc:creator>
     </xsl:template>
@@ -417,7 +366,7 @@
     <xsl:template match="TitleAbstract" mode="xmetadissplus">
         <dcterms:abstract xsi:type="ddb:contentISO639-2" ddb:type="noScheme">
             <xsl:attribute name="lang">
-                <xsl:value-of select="php:functionString('Oai_Model_Language::getLanguageCode', @Language)" />
+                <xsl:value-of select="php:functionString('Opus\Common\Language::getLanguageCode', @Language)" />
             </xsl:attribute>
             <xsl:value-of select="@Value" />
         </dcterms:abstract>
@@ -426,21 +375,40 @@
     <xsl:template match="PersonAdvisor" mode="xmetadissplus">
        <dc:contributor xsi:type="pc:Contributor" type="dcterms:ISO3166" thesis:role="advisor">
           <pc:person>
-             <pc:name type="nameUsedByThePerson">
-                <xsl:if test="normalize-space(@FirstName)">
-                   <pc:foreName>
-                      <xsl:value-of select="@FirstName" />
-                   </pc:foreName>
-                </xsl:if>
-                <pc:surName>
-                   <xsl:value-of select="@LastName" />
-                </pc:surName>
-             </pc:name>
-             <xsl:if test="normalize-space(@AcademicTitle)">
-                <pc:academicTitle>
-                   <xsl:value-of select="@AcademicTitle" />
-                </pc:academicTitle>
-             </xsl:if>
+            <xsl:if test="normalize-space(@IdentifierGnd)">
+                <xsl:attribute name="ddb:GND-Nr">
+                    <xsl:value-of select="@IdentifierGnd"/>
+                </xsl:attribute>
+            </xsl:if>
+            <xsl:if test="normalize-space(@IdentifierOrcid)">
+                <ddb:ORCID>
+                    <xsl:value-of select="@IdentifierOrcid"/>
+                </ddb:ORCID>
+            </xsl:if>
+            <xsl:choose>
+              <xsl:when test="normalize-space(@FirstName) != '' and normalize-space(@LastName) != ''">
+                <pc:name type="nameUsedByThePerson">
+                  <pc:foreName>
+                    <xsl:value-of select="@FirstName" />
+                  </pc:foreName>
+                  <pc:surName>
+                     <xsl:value-of select="@LastName" />
+                  </pc:surName>
+                </pc:name>
+              </xsl:when>
+              <xsl:otherwise>
+                <pc:name type="otherName">
+                  <pc:personEnteredUnderGivenName>
+                    <xsl:value-of select="@LastName" />
+                  </pc:personEnteredUnderGivenName>
+                </pc:name>
+              </xsl:otherwise>
+            </xsl:choose>
+            <xsl:if test="normalize-space(@AcademicTitle)">
+              <pc:academicTitle>
+                <xsl:value-of select="@AcademicTitle" />
+              </pc:academicTitle>
+            </xsl:if>
           </pc:person>
        </dc:contributor>
     </xsl:template>
@@ -448,16 +416,35 @@
     <xsl:template match="PersonReferee" mode="xmetadissplus">
        <dc:contributor xsi:type="pc:Contributor" type="dcterms:ISO3166" thesis:role="referee">
            <pc:person>
-             <pc:name type="nameUsedByThePerson">
-               <xsl:if test="normalize-space(@FirstName)">
-                  <pc:foreName>
-                    <xsl:value-of select="@FirstName" />
-                  </pc:foreName>
-               </xsl:if>
-                <pc:surName>
-                  <xsl:value-of select="@LastName" />
-                </pc:surName>
-             </pc:name>
+            <xsl:if test="normalize-space(@IdentifierGnd)">
+                <xsl:attribute name="ddb:GND-Nr">
+                    <xsl:value-of select="@IdentifierGnd"/>
+                </xsl:attribute>
+            </xsl:if>
+            <xsl:if test="normalize-space(@IdentifierOrcid)">
+                <ddb:ORCID>
+                    <xsl:value-of select="@IdentifierOrcid"/>
+                </ddb:ORCID>
+            </xsl:if>
+             <xsl:choose>
+               <xsl:when test="normalize-space(@FirstName) != '' and normalize-space(@LastName) != ''">
+                 <pc:name type="nameUsedByThePerson">
+                   <pc:foreName>
+                     <xsl:value-of select="@FirstName" />
+                   </pc:foreName>
+                   <pc:surName>
+                     <xsl:value-of select="@LastName" />
+                   </pc:surName>
+                 </pc:name>
+               </xsl:when>
+               <xsl:otherwise>
+                 <pc:name type="otherName">
+                   <pc:personEnteredUnderGivenName>
+                     <xsl:value-of select="@LastName" />
+                   </pc:personEnteredUnderGivenName>
+                 </pc:name>
+               </xsl:otherwise>
+             </xsl:choose>
              <xsl:if test="normalize-space(@AcademicTitle)">
                 <pc:academicTitle>
                   <xsl:value-of select="@AcademicTitle" />
@@ -470,16 +457,35 @@
     <xsl:template match="PersonEditor" mode="xmetadissplus">
        <dc:contributor xsi:type="pc:Contributor" type="dcterms:ISO3166" thesis:role="editor">
            <pc:person>
-             <pc:name type="nameUsedByThePerson">
-               <xsl:if test="normalize-space(@FirstName)">
-                  <pc:foreName>
-                    <xsl:value-of select="@FirstName" />
-                  </pc:foreName>
-               </xsl:if>
-                <pc:surName>
-                  <xsl:value-of select="@LastName" />
-                </pc:surName>
-             </pc:name>
+            <xsl:if test="normalize-space(@IdentifierGnd)">
+                <xsl:attribute name="ddb:GND-Nr">
+                    <xsl:value-of select="@IdentifierGnd"/>
+                </xsl:attribute>
+            </xsl:if>
+            <xsl:if test="normalize-space(@IdentifierOrcid)">
+                <ddb:ORCID>
+                    <xsl:value-of select="@IdentifierOrcid"/>
+                </ddb:ORCID>
+            </xsl:if>
+             <xsl:choose>
+               <xsl:when test="normalize-space(@FirstName) != '' and normalize-space(@LastName) != ''">
+                 <pc:name type="nameUsedByThePerson">
+                   <pc:foreName>
+                     <xsl:value-of select="@FirstName" />
+                   </pc:foreName>
+                   <pc:surName>
+                     <xsl:value-of select="@LastName" />
+                   </pc:surName>
+                 </pc:name>
+               </xsl:when>
+               <xsl:otherwise>
+                 <pc:name type="otherName">
+                   <pc:personEnteredUnderGivenName>
+                     <xsl:value-of select="@LastName" />
+                   </pc:personEnteredUnderGivenName>
+                 </pc:name>
+               </xsl:otherwise>
+             </xsl:choose>
              <xsl:if test="normalize-space(@AcademicTitle)">
                 <pc:academicTitle>
                   <xsl:value-of select="@AcademicTitle" />
@@ -505,10 +511,22 @@
         </dc:publisher>
     </xsl:template>
 
-    <xsl:template match="IdentifierUrn" mode="xmetadissplus">
+    <xsl:template match="Identifier[@Type = 'urn']" mode="xmetadissplus">
         <dc:identifier xsi:type="urn:nbn">
             <xsl:value-of select="@Value" />
         </dc:identifier>
+    </xsl:template>
+
+    <xsl:template match="Identifier[@Type = 'doi']" mode="xmetadissplus">
+        <dc:identifier xsi:type="doi:doi">
+            <xsl:value-of select="@Value" />
+        </dc:identifier>
+    </xsl:template>
+
+    <xsl:template match="Identifier[@Type = 'doi']" mode="ddb">
+        <ddb:identifier ddb:type="DOI">
+            <xsl:value-of select="@Value" />
+        </ddb:identifier>
     </xsl:template>
 
     <xsl:template match="Licence" mode="xmetadissplus">
@@ -531,7 +549,7 @@
         </ddb:transfer>
     </xsl:template>
 
-    <xsl:template match="IdentifierUrl" mode="xmetadissplus">
+    <xsl:template match="Identifier[@Type = 'url']" mode="xmetadissplus">
         <ddb:identifier ddb:type="URL">
             <xsl:value-of select="@Value" />
         </ddb:identifier>

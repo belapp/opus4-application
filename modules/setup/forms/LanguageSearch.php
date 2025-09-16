@@ -25,30 +25,105 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Setup
- * @author      Edouard Simon (edouard.simon@zib.de)
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
- * 
+ * Form for search translations and translation keys.
+ *
+ * TODO reduce vertical height of form ("Search: TEXT Button")
+ *
+ * TODO add option for search keys/content only
+ * TODO add option for filtering by module
  */
-class Setup_Form_LanguageSearch extends Zend_Form {
+class Setup_Form_LanguageSearch extends Application_Form_Abstract
+{
+    /**
+     * Input field for search string for translations.
+     */
+    public const ELEMENT_FILTER = 'search';
 
-    protected $_sortKeys = array('unit', 'module', 'directory', 'filename', 'language', 'variant');
+    /**
+     * Select for modules included in search.
+     */
+    public const ELEMENT_MODULES = 'modules';
 
-    public function getSortKeys() {
-        return $this->_sortKeys;
+    /**
+     * Select for state of translations (All, Edited, Added).
+     */
+    public const ELEMENT_STATE = 'state';
+
+    /**
+     * Select for scope of search (keys, translations)
+     */
+    public const ELEMENT_SCOPE = 'scope';
+
+    /**
+     * Button for starting search.
+     */
+    public const ELEMENT_SUBMIT = 'show';
+
+    /**
+     * TODO not supported yet (keys are always included) - make keys optional
+     */
+    public const ELEMENT_INCLUDE_KEYS = 'SearchKeys';
+
+    public function init()
+    {
+        parent::init();
+
+        $this->setElementDecorators(['ViewHelper']);
+
+        $element = $this->createElement('text', self::ELEMENT_FILTER, [
+            'size' => '40',
+        ]);
+        $this->addElement($element);
+
+        $element = $this->createElement('submit', self::ELEMENT_SUBMIT, [
+            'label' => 'setup_translation_search_button',
+        ]);
+        $this->addElement($element);
+
+        $element = $this->createElement('TranslationState', self::ELEMENT_STATE);
+        $this->addElement($element);
+
+        $element = $this->createElement('TranslationScope', self::ELEMENT_SCOPE);
+        $this->addElement($element);
+
+        $element = $this->createElement('TranslationModules', self::ELEMENT_MODULES);
+        $this->addElement($element);
+
+        $this->setDecorators([
+            ['ViewScript', ['viewScript' => 'languagesearch.phtml']],
+            'Form',
+        ]);
     }
-    
-    public function init() {
-        $this->addElement('text', 'search');
 
-        $this->addElement('select', 'sort');
-        $this->addElement('submit', 'Anzeigen');
+    /**
+     * @param Zend_Controller_Request_Http $request
+     *
+     * TODO should this code go somewhere else (add responsibility to class)
+     */
+    public function populateFromRequest($request)
+    {
+        $module = $request->getParam('modules', null);
+        if ($module !== null) {
+            $module = strtolower($module);
+        }
+
+        $scope = $request->getParam('scope', null);
+        if ($scope !== null) {
+            $scope = strtolower($scope);
+        }
+
+        $state = $request->getParam('state', null);
+        if ($state !== null) {
+            $state = strtolower($state);
+        }
+
+        $this->getElement(self::ELEMENT_MODULES)->setValue($module);
+        $this->getElement(self::ELEMENT_SCOPE)->setValue($scope);
+        $this->getElement(self::ELEMENT_STATE)->setValue($state);
     }
-
 }

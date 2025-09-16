@@ -1,6 +1,5 @@
-#!/usr/bin/env php
-
 <?PHP
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -26,9 +25,6 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Scripts
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
@@ -47,24 +43,18 @@ $helper->log('Removing database schema link and createdb.sh script ...');
 
 $schemaLink = APPLICATION_PATH . '/db/schema';
 
-if (is_link($schemaLink))
-{
+if (is_link($schemaLink)) {
     unlink($schemaLink);
     $helper->log("Deleted link '$schemaLink'");
-}
-else
-{
+} else {
     $helper->log("Link '$schemaLink' not found");
 }
 
 $createdbScript = APPLICATION_PATH . '/db/createdb.sh';
 
-if (is_file($createdbScript))
-{
+if (is_file($createdbScript)) {
     unlink($createdbScript);
     $helper->log("Deleted file '$createdbScript'");
-}
-else
-{
+} else {
     $helper->log("File '$createdbScript' not found");
 }

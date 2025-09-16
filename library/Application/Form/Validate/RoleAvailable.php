@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,29 +25,32 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    TODO
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\UserRole;
 
 /**
  * Checks if a role already exists.
  */
-class Application_Form_Validate_RoleAvailable extends Zend_Validate_Abstract {
-
+class Application_Form_Validate_RoleAvailable extends Zend_Validate_Abstract
+{
     /**
      * Constant for login is not available anymore.
      */
-    const NOT_AVAILABLE = 'isAvailable';
+    public const NOT_AVAILABLE = 'isAvailable';
 
     /**
      * Error messages.
+     *
+     * @var string[]
+     * @phpcs:disable
      */
-    protected $_messageTemplates = array(
-        self::NOT_AVAILABLE => 'admin_role_error_role_used'
-    );
+    protected $_messageTemplates = [
+        self::NOT_AVAILABLE => 'admin_role_error_role_used',
+    ];
+    // @phpcs:emable
 
     /**
      * Checks if a login already exists.
@@ -56,11 +60,12 @@ class Application_Form_Validate_RoleAvailable extends Zend_Validate_Abstract {
      *
      * TODO Is there a better way to deal with updates?
      *
-     * @param string $value
-     * @param mixed $context
-     * @return boolean
+     * @param string     $value
+     * @param array|null $context
+     * @return bool
      */
-    public function isValid($value, $context = null) {
+    public function isValid($value, $context = null)
+    {
         $value = (string) $value;
 
         $this->_setValue($value);
@@ -71,12 +76,11 @@ class Application_Form_Validate_RoleAvailable extends Zend_Validate_Abstract {
             if (isset($context['oldRole'])) {
                 $oldRole = $context['oldRole'];
             }
-        }
-        elseif (is_string($context)) {
+        } elseif (is_string($context)) {
             $oldRole = $context;
         }
 
-        if (($this->_isRoleUsed($value)) && !($oldRole === $value)) {
+        if (($this->isLoginUsed($value)) && ! ($oldRole === $value)) {
             $this->_error(self::NOT_AVAILABLE);
             return false;
         }
@@ -86,14 +90,16 @@ class Application_Form_Validate_RoleAvailable extends Zend_Validate_Abstract {
 
     /**
      * Checks if a login name already exists in database.
+     *
      * @param string $login
-     * @return boolean
+     * @return bool
      */
-    protected function _isRoleUsed($role) {
+    protected function isLoginUsed($login)
+    {
         try {
-            $role = Opus_UserRole::fetchByName($role);
+            $login = UserRole::fetchByName($login);
 
-            if (empty($role)) {
+            if (empty($login)) {
                 return false;
             }
         } catch (Exception $ex) {
@@ -101,6 +107,4 @@ class Application_Form_Validate_RoleAvailable extends Zend_Validate_Abstract {
         }
         return true;
     }
-
 }
-

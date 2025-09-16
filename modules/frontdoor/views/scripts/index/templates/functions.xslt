@@ -26,12 +26,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Frontdoor
- * @author      Edouard Simon <edouard.simon@zib.de>
- * @copyright   Copyright (c) 2009-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2009, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 -->
 
@@ -39,7 +35,7 @@
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:php="http://php.net/xsl"
                 exclude-result-prefixes="php">
-   
+
     <!-- Additional Templates with auxilliary functions. -->
 
 
@@ -49,7 +45,7 @@
         <xsl:if test="normalize-space(@Language)">
             <!-- translation of language abbreviations  -->
             <xsl:text> (</xsl:text>
-            <xsl:call-template name="translateString">
+            <xsl:call-template name="translateLanguage">
                 <xsl:with-param name="string" select="@Language" />
             </xsl:call-template>
             <xsl:text>)</xsl:text>
@@ -57,10 +53,20 @@
         <xsl:text>:</xsl:text>
     </xsl:template>
 
+    <xsl:template name="translateIdentifier">
+        <xsl:value-of select="php:functionString('Application_Xslt::translateIdentifier', @Type)" />
+        <xsl:text>:</xsl:text>
+    </xsl:template>
+
     <!-- Named template to translate an arbitrary string. Needs the translation key as a parameter. -->
     <xsl:template name="translateString">
         <xsl:param name="string" />
         <xsl:value-of select="php:functionString('Application_Xslt::translate', $string)" />
+    </xsl:template>
+
+    <xsl:template name="translateLanguage">
+        <xsl:param name="string" />
+        <xsl:value-of select="php:functionString('Application_Xslt::translateLanguage', $string)" />
     </xsl:template>
 
     <xsl:template name="translateStringWithDefault">

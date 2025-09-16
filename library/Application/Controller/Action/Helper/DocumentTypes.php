@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,75 +25,63 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Controller
- * @author      Jens Schwidder <schwidder@zib.de>
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Config;
+use Opus\Document;
 
 /**
  * Helper class for getting document types and template names.
- *
  */
-class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller_Action_Helper_Abstract {
-
-    /**
-     * Configuration.
-     *
-     * @var Zend_Config
-     */
-    private $_config;
-
+class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller_Action_Helper_Abstract
+{
     /**
      * Names and paths for document type definition files.
+     *
      * @var array
      */
-    private $_allDocTypes;
+    private $allDocTypes;
 
     /**
      * Array with names and paths for template files.
+     *
      * @var array
      */
-    private $_templates;
+    private $templates;
 
     /**
      * Variable to store document types for additional calls.
-     * @var array($docTypeName => $docTypeName)
+     *
+     * @var array ($docTypeName => $docTypeName)
      */
-    private $_docTypes;
+    private $docTypes;
 
     /**
      * Variable to store errors of document-type validation
+     *
      * @var array ($documentType => $errorMessage)
      */
-    private $_errors;
-
-    /**
-     * Constructs instances.
-     */
-    public function __construct() {
-        $this->_config = Zend_Registry::get('Zend_Config');
-    }
+    private $errors;
 
     /**
      * Returns filtered list of document types.
+     *
      * @return array
      */
     public function getDocumentTypes()
     {
-        if (!isset($this->_docTypes)) {
+        if (! isset($this->docTypes)) {
             $allDocTypes = $this->getAllDocumentTypes();
 
             $docTypes = $allDocTypes;
 
-            $include = $this->_getIncludeList();
+            $include = $this->getIncludeList();
 
             // include only listed document types
-            if (!empty($include)) {
-                $docTypes = array();
+            if (! empty($include)) {
+                $docTypes = [];
 
                 foreach ($include as $docType) {
                     if (array_key_exists($docType, $allDocTypes)) {
@@ -102,35 +91,38 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
             }
 
             // remove all listed document types
-            foreach ($this->_getExcludeList() as $docType) {
+            foreach ($this->getExcludeList() as $docType) {
                 unset($docTypes[$docType]);
             }
 
-            $this->_docTypes = $docTypes;
+            $this->docTypes = $docTypes;
         }
 
-        return $this->_docTypes;
+        return $this->docTypes;
     }
 
     /**
      * Returns array with names and paths for all document types.
+     *
      * @return array
      */
-    public function getAllDocumentTypes() {
-        if (!isset($this->_allDocTypes)) {
-            $this->_allDocTypes = $this->_getDocTypeFileNames();
+    public function getAllDocumentTypes()
+    {
+        if (! isset($this->allDocTypes)) {
+            $this->allDocTypes = $this->getDocTypeFileNames();
         }
 
-        return $this->_allDocTypes;
+        return $this->allDocTypes;
     }
 
     /**
      * Checks if a document type is supported.
      *
      * @param string $documentType
-     * @return boolean
+     * @return bool
      */
-    public function isValid($documentType) {
+    public function isValid($documentType)
+    {
         return array_key_exists($documentType, $this->getDocumentTypes());
     }
 
@@ -139,10 +131,11 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
      *
      * @param string $documentType
      * @return DOMDocument
-     * @throws Application_Exception if invalid documentType passed.
+     * @throws Application_Exception If invalid documentType passed.
      */
-    public function getDocument($documentType) {
-        if (!$this->isValid($documentType)) {
+    public function getDocument($documentType)
+    {
+        if (! $this->isValid($documentType)) {
             throw new Application_Exception('Unable to load invalid document type "' . $documentType . '"');
         }
 
@@ -151,16 +144,17 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
 
         // clear libxml error buffer and enable user error handling
         libxml_clear_errors();
-        libxml_use_internal_errors(true);
+        $useInternalErrors = libxml_use_internal_errors(true);
 
-        if (!$dom->schemaValidate($this->getXmlSchemaPath())) {
+        if (! $dom->schemaValidate($this->getXmlSchemaPath())) {
             libxml_clear_errors();
             throw new Application_Exception(
-                'given xml document type definition for document type ' . $documentType .
-                ' is not valid'
+                'given xml document type definition for document type ' . $documentType
+                . ' is not valid'
             );
         }
-
+        libxml_use_internal_errors($useInternalErrors);
+        libxml_clear_errors();
         return $dom;
     }
 
@@ -169,39 +163,44 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
      * This method does NOT check if the corresponding PHTML file exist or is readable.
      *
      * @param string $documentType
-     * @return string
+     * @return string|null
      */
     public function getTemplateName($documentType)
     {
-        if (!$this->isValid($documentType)) {
+        if (! $this->isValid($documentType)) {
             return null; // TODO throw exception
         }
 
         $template = null;
 
-        if (isset($this->_config->documentTypes->templates->$documentType)) {
-            $template = $this->_config->documentTypes->templates->$documentType;
+        $config = $this->getConfig();
+
+        if (isset($config->documentTypes->templates->$documentType)) {
+            $template = $config->documentTypes->templates->$documentType;
         }
 
-        if (!empty($template)) {
+        if (! empty($template)) {
             return $template;
-        }
-        else {
+        } else {
             return $documentType;
         }
     }
 
     /**
      * Returns array with template names and paths.
+     *
+     * @return array
      */
     public function getTemplates()
     {
-        if (!isset($this->_templates)) {
-            if (!isset($this->_config->publish->path->documenttemplates)) {
+        $config = $this->getConfig();
+
+        if (! isset($this->templates)) {
+            if (! isset($config->publish->path->documenttemplates)) {
                 throw new Application_Exception('invalid configuration: publish.path.documenttemplates is not defined');
             }
 
-            $path = $this->_config->publish->path->documenttemplates;
+            $path = $config->publish->path->documenttemplates;
 
             if ($path instanceof Zend_Config) {
                 $path = $path->toArray();
@@ -209,27 +208,28 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
 
             $iterator = $this->getDirectoryIterator($path);
 
-            $files = array();
+            $files = [];
 
             foreach ($iterator as $fileinfo) {
                 if ($fileinfo->isFile()) {
-                    if (strrchr($fileinfo->getBaseName(), '.') == '.phtml') {
-                        $filename = $fileinfo->getBaseName('.phtml');
+                    if (strrchr($fileinfo->getBaseName(), '.') === '.phtml') {
+                        $filename         = $fileinfo->getBaseName('.phtml');
                         $files[$filename] = $fileinfo->getPathname();
                     }
                 }
             }
 
-            $this->_templates = $files;
+            $this->templates = $files;
         }
 
-        return $this->_templates;
+        return $this->templates;
     }
 
     /**
      * Returns path to file for template name.
-     * @param $templateName string Name of template
-     * @return null | string Path to template file
+     *
+     * @param string $templateName Name of template
+     * @return null|string Path to template file
      * @throws Application_Exception
      */
     public function getTemplatePath($templateName)
@@ -238,8 +238,7 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
 
         if (isset($templates[$templateName])) {
             return $templates[$templateName];
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -250,11 +249,14 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
      * @return string
      * @throws Application_Exception
      */
-    public function getDocTypesPath() {
+    public function getDocTypesPath()
+    {
         $path = null;
 
-        if (isset($this->_config->publish->path->documenttypes)) {
-            $path = $this->_config->publish->path->documenttypes;
+        $config = $this->getConfig();
+
+        if (isset($config->publish->path->documenttypes)) {
+            $path = $config->publish->path->documenttypes;
         }
 
         if (empty($path)) {
@@ -263,8 +265,7 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
 
         if ($path instanceof Zend_Config) {
             return $path->toArray();
-        }
-        else {
+        } else {
             return $path;
         }
     }
@@ -274,17 +275,18 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
      *
      * @return array
      */
-    protected function _getDocTypeFileNames() {
+    protected function getDocTypeFileNames()
+    {
         $docTypesPath = $this::getDocTypesPath();
 
         $iterator = $this->getDirectoryIterator($docTypesPath);
 
-        $files = array();
+        $files = [];
 
         foreach ($iterator as $fileinfo) {
             if ($fileinfo->isFile()) {
-                if (strrchr($fileinfo->getBaseName(), '.') == '.xml') {
-                    $filename = $fileinfo->getBaseName('.xml');
+                if (strrchr($fileinfo->getBaseName(), '.') === '.xml') {
+                    $filename         = $fileinfo->getBaseName('.xml');
                     $files[$filename] = $fileinfo->getPathname();
                 }
             }
@@ -297,26 +299,27 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
 
     /**
      * Returns iterator for one or more directories.
-     * @param $docTypesPath string|array Path(s)
+     *
+     * @param string|array $docTypesPath Path(s)
      * @return AppendIterator|DirectoryIterator|null
      * @throws Application_Exception
      */
-    public function getDirectoryIterator($docTypesPath) {
+    public function getDirectoryIterator($docTypesPath)
+    {
         $iterator = null;
 
         if (is_array($docTypesPath)) {
             $iterator = new AppendIterator();
 
             foreach ($docTypesPath as $path) {
-                if (!is_dir($path) || !is_readable($path)) {
+                if (! is_dir($path) || ! is_readable($path)) {
                     throw new Application_Exception('could not read document type definitions');
                 }
 
                 $iterator->append(new DirectoryIterator($path));
             }
-        }
-        else {
-            if (!is_dir($docTypesPath) || !is_readable($docTypesPath)) {
+        } else {
+            if (! is_dir($docTypesPath) || ! is_readable($docTypesPath)) {
                 throw new Application_Exception('could not read document type definitions');
             }
             $iterator = new DirectoryIterator($docTypesPath);
@@ -330,33 +333,47 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
      *
      * @return array
      */
-    public function direct() {
+    public function direct()
+    {
         return $this->getDocumentTypes();
     }
 
     /**
      * Returns array with names of included document types.
+     *
      * @return array of strings
      */
-    protected function _getIncludeList() {
-        if (!isset($this->_config->documentTypes->include)) {
-            return array();
+    protected function getIncludeList()
+    {
+        $config = $this->getConfig();
+
+        if (! isset($config->documentTypes->include)) {
+            return [];
         }
-        return $this->_getList($this->_config->documentTypes->include);
+        return $this->getList($config->documentTypes->include);
     }
 
     /**
      * Returns array with names of exluded document types.
+     *
      * @return array of strings
      */
-    protected function _getExcludeList() {
-        if (!isset($this->_config->documentTypes->exclude)) {
-            return array();
+    protected function getExcludeList()
+    {
+        $config = $this->getConfig();
+
+        if (! isset($config->documentTypes->exclude)) {
+            return [];
         }
-        return $this->_getList($this->_config->documentTypes->exclude);
+        return $this->getList($config->documentTypes->exclude);
     }
 
-    private function _getList($str) {
+    /**
+     * @param string $str
+     * @return false|string[]
+     */
+    private function getList($str)
+    {
         $result = explode(',', $str);
         Application_Util_Array::trim($result);
         return $result;
@@ -365,16 +382,18 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
     /**
      * Validates all document types in folder getDocTypesPath().
      * returns an array ($filename => bool)
+     *
+     * @return array
      */
-    public function validateAll() {
-        $documents = array();
-        $iterator = $this->getDirectoryIterator($this->getDocTypesPath());
+    public function validateAll()
+    {
+        $documents = [];
+        $iterator  = $this->getDirectoryIterator($this->getDocTypesPath());
 
         foreach ($iterator as $fileInfo) {
             if ($fileInfo->isFile()) {
-                if (strrchr($fileInfo->getBaseName(), '.') == '.xml')
-                {
-                    $filename = $fileInfo->getBaseName('.xml');
+                if (strrchr($fileInfo->getBaseName(), '.') === '.xml') {
+                    $filename             = $fileInfo->getBaseName('.xml');
                     $documents[$filename] = $this->validate($filename);
                 }
             }
@@ -383,14 +402,18 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
         return $documents;
     }
 
-    /*
+    /**
      * validates a single file
      * writes errors into array $this->errors ($filename, libXMLError)
      * returns bool
+     *
+     * @param string $documentType
+     * @return bool
      */
-    public function validate($documentType) {
-        if (is_null($this->_errors)) {
-            $this->_errors = array();
+    public function validate($documentType)
+    {
+        if ($this->errors === null) {
+            $this->errors = [];
         }
         $domDoc = new DOMDocument();
         $domDoc->load($this->getPathForDocumentType($documentType));
@@ -399,48 +422,61 @@ class Application_Controller_Action_Helper_DocumentTypes extends Zend_Controller
         libxml_use_internal_errors(true);
 
         try {
-            $isValid = $domDoc->schemaValidate($this->getXmlSchemaPath());
-            $this->_errors[$documentType] = libxml_get_errors();
+            $isValid                     = $domDoc->schemaValidate($this->getXmlSchemaPath());
+            $this->errors[$documentType] = libxml_get_errors();
+        } catch (Exception $e) {
+            $this->errors[$documentType] = $e->getMessage();
+            return false;
         }
-        catch (Exception $e) {
-            $this->_errors[$documentType] = $e->getMessage();
-            return 0;
-        }
+        libxml_use_internal_errors(false);
+        libxml_clear_errors();
         return $isValid;
     }
 
     /**
      * Returns errors.
+     *
      * @return array
      */
-    public function getErrors () {
-        return $this->_errors;
+    public function getErrors()
+    {
+        return $this->errors;
     }
 
     /**
      * Returns path to xml schema for validation of document type definitions.
+     *
      * @return string
      */
-    public function getXmlSchemaPath() {
-        $reflector = new ReflectionClass('Opus_Document');
+    public function getXmlSchemaPath()
+    {
+        $reflector = new ReflectionClass(Document::class);
         return dirname($reflector->getFileName()) . DIRECTORY_SEPARATOR . 'Document' . DIRECTORY_SEPARATOR
             . 'documenttype.xsd';
     }
 
     /**
      * Returns the actual path for a document type definition file.
-     * @param $name string Name of document type
-     * @return string Path to document type definition file
+     *
+     * @param string $name Name of document type
+     * @return string|null Path to document type definition file
      */
-    public function getPathForDocumentType($name) {
+    public function getPathForDocumentType($name)
+    {
         $docTypes = $this->getAllDocumentTypes();
 
-        if (isset($name) && !empty($name)) {
+        if (isset($name) && ! empty($name)) {
             return $docTypes[$name];
         }
 
         return null;
     }
 
+    /**
+     * @return Zend_Config
+     */
+    public function getConfig()
+    {
+        return Config::get();
+    }
 }
-

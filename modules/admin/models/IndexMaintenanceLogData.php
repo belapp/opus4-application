@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,34 +25,47 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Admin_Model_IndexMaintenanceLogData {
-    
-    private $_content;
-    
-    private $_modifiedDate;
-    
-    public function getContent() {
-        return $this->_content;
+class Admin_Model_IndexMaintenanceLogData
+{
+    /** @var string */
+    private $content;
+
+    /** @var string */
+    private $modifiedDate;
+
+    /**
+     * @return string
+     */
+    public function getContent()
+    {
+        return $this->content;
     }
 
-    public function setContent($content) {
-        $this->_content = $content;
+    /**
+     * @param string $content
+     */
+    public function setContent($content)
+    {
+        $this->content = $content;
     }
 
-    public function getModifiedDate() {
-        return $this->_modifiedDate;
+    /**
+     * @return string
+     */
+    public function getModifiedDate()
+    {
+        return $this->modifiedDate;
     }
 
-    public function setModifiedDate($modifiedDate) {
-        $this->_modifiedDate = $modifiedDate;
-    }    
-
+    /**
+     * @param string $modifiedDate
+     */
+    public function setModifiedDate($modifiedDate)
+    {
+        $this->modifiedDate = $modifiedDate;
+    }
 }

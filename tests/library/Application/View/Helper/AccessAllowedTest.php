@@ -25,44 +25,44 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Tests
- * @author      Edouard Simon (edouard.simon@zib.de)
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-/**
- *
- */
-class Application_View_Helper_AccessAllowedTest extends ControllerTestCase {
+class Application_View_Helper_AccessAllowedTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'view'];
 
-    private $__helper;
+    /** @var Application_View_Helper_AccessAllowed */
+    private $helper;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         // workaround to enable security before bootstrapping
         // bootstrapping authorization twice is not possible
         parent::setUpWithEnv('production');
         $this->assertSecurityConfigured();
-        $acl = Zend_Registry::get('Opus_Acl');
+        $acl = Application_Security_AclProvider::getAcl();
         $acl->allow('guest', 'accounts');
-        $this->__helper = new Application_View_Helper_AccessAllowed();
-        $this->__helper->setView(Zend_Registry::get('Opus_View'));
+        $this->helper = new Application_View_Helper_AccessAllowed();
+        $this->helper->setView($this->getView());
     }
 
-    public function tearDown() {
-        $acl = Zend_Registry::get('Opus_Acl');
+    public function tearDown(): void
+    {
+        $acl = Application_Security_AclProvider::getAcl();
         $acl->deny('guest', 'accounts');
         parent::tearDown();
     }
 
-    public function testAccessAllowed() {
+    public function testAccessAllowed()
+    {
         $user = Zend_Auth::getInstance()->getIdentity();
         $this->assertEquals('', $user, "expected no user to be set (should use default 'guest' as default)");
-        $allowedDocuments = $this->__helper->accessAllowed('documents');
+        $allowedDocuments = $this->helper->accessAllowed('documents');
         $this->assertFalse($allowedDocuments, "expected access denied to resource 'documents'");
-        $allowedAccount = $this->__helper->accessAllowed('accounts');
+        $allowedAccount = $this->helper->accessAllowed('accounts');
         $this->assertTrue($allowedAccount, "expected access allowed to module 'account'");
     }
-
 }

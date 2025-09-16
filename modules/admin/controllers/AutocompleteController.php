@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -25,31 +26,39 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2016, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\CollectionRole;
+use Opus\Enrichment\AbstractType;
 
 /**
  * Controller for providing JSON formatted data used for autocomplete
  * functions in forms.
+ *
+ * TODO should we better rename this controller to RestController as it
+ *      is not exclusively responsible for auto completion?
+ * TODO the different services should be independent classes that can be exposed through a common controller
+ *      dynamically - this would allow for decentralized extension
+ * TODO access control needs to be a support concept for services
  */
 class Admin_AutocompleteController extends Application_Controller_ModuleAccess
 {
-
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->disableViewRendering();
+
+        $this->getResponse()->setHeader('Content-Type', 'application/json');
     }
 
-
-    public function subjectAction() {
+    public function subjectAction()
+    {
         $term = $this->getRequest()->getParam('term');
 
-        if (!is_null($term)) {
+        if ($term !== null) {
             $provider = new Application_Data_SubjectProvider();
 
             $data = $provider->getValues($term);
@@ -58,4 +67,52 @@ class Admin_AutocompleteController extends Application_Controller_ModuleAccess
         echo json_encode($data);
     }
 
+    public function collectionrolesAction()
+    {
+        $roles = CollectionRole::fetchAll();
+
+        $data = [];
+
+        foreach ($roles as $role) {
+            $translated           = $this->view->translate('default_collection_role_' . $role->getOaiName());
+            $data[$role->getId()] = $translated;
+        }
+
+        echo json_encode($data);
+    }
+
+    /**
+     * Provides information about matching collections.
+     */
+    public function collectionAction()
+    {
+        $term = $this->getRequest()->getParam('term');
+
+        if ($term !== null) {
+            $provider = new Application_Data_CollectionProvider();
+            $data     = $provider->getValues($term);
+        }
+
+        echo json_encode($data);
+    }
+
+    public function enrichmenttypedescriptionAction()
+    {
+        $description = '';
+
+        $typeName = $this->getRequest()->getParam('typeName');
+        if ($typeName !== null && $typeName !== '') {
+            $typeName = 'Opus\\Enrichment\\' . $typeName;
+            $allTypes = AbstractType::getAllEnrichmentTypes(true);
+            if (in_array($typeName, $allTypes)) {
+                $typeObj         = new $typeName();
+                $typeDescription = $typeObj->getDescription();
+                if ($typeDescription !== null && $typeDescription !== '') {
+                    $description = $this->view->translate($typeDescription);
+                }
+            }
+        }
+
+        echo json_encode(['typeName' => $description]);
+    }
 }

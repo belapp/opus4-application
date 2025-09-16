@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,35 +25,34 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Account
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Account;
 
 /**
  * Controller for editing account of logged in user.
  */
-class Account_IndexController extends Application_Controller_Action {
-
+class Account_IndexController extends Application_Controller_Action
+{
     /**
      * Custom access check to be called by parent class.  Returns the value of
      * config key "account.editOwnAccount" if set; false otherwise.
      *
-     * @return boolean
+     * @return bool
      */
-    protected function customAccessCheck() {
-        $parentValue =  parent::customAccessCheck();
+    protected function customAccessCheck()
+    {
+        $parentValue = parent::customAccessCheck();
 
         $config = $this->getConfig();
 
-        if (!isset($config) or !isset($config->account->editOwnAccount)) {
+        if (! isset($config) || ! isset($config->account->editOwnAccount)) {
             return false;
         }
 
-        return $parentValue and $config->account->editOwnAccount;
+        return $parentValue && filter_var($config->account->editOwnAccount, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
@@ -60,21 +60,21 @@ class Account_IndexController extends Application_Controller_Action {
      *
      * TODO show title on page H" $this->view->title;
      */
-    public function indexAction() {
+    public function indexAction()
+    {
         $login = Zend_Auth::getInstance()->getIdentity();
 
-        if (!empty($login)) {
+        if (! empty($login)) {
             $accountForm = new Account_Form_Account();
-            $account = new Opus_Account(null, null, $login);
+            $account     = Account::fetchAccountByLogin($login);
             $accountForm->populateFromModel($account);
 
-            $actionUrl = $this->view->url(array('action' => 'save'));
+            $actionUrl = $this->view->url(['action' => 'save']);
 
             $accountForm->setAction($actionUrl);
 
             $this->renderForm($accountForm);
-        }
-        else {
+        } else {
             $params = $this->_helper->returnParams->getReturnParameters();
             $this->_helper->redirector->gotoSimple('index', 'auth', 'default', $params);
         }
@@ -82,19 +82,19 @@ class Account_IndexController extends Application_Controller_Action {
 
     /**
      * Save account information.
-     * @return <type>
      *
      * TODO move logic into model or form
      */
-    public function saveAction() {
+    public function saveAction()
+    {
         $login = Zend_Auth::getInstance()->getIdentity();
 
         $config = $this->getConfig();
         $logger = $this->getLogger();
 
-        if (!empty($login) && $this->getRequest()->isPost()) {
+        if (! empty($login) && $this->getRequest()->isPost()) {
             $accountForm = new Account_Form_Account();
-            $account = new Opus_Account(null, null, $login);
+            $account     = Account::fetchAccountByLogin($login);
             $accountForm->populateFromModel($account);
 
             $postData = $this->getRequest()->getPost();
@@ -104,32 +104,34 @@ class Account_IndexController extends Application_Controller_Action {
             if (empty($postData['password'])) {
                 // modify to pass default validation
                 // TODO think about better solution
-                $postData[Account_Form_Account::ELEMENT_PASSWORD] = 'notchanged';
+                $postData[Account_Form_Account::ELEMENT_PASSWORD]         = 'notchanged';
                 $postData[Account_Form_Account::ELEMENT_CONFIRM_PASSWORD] = 'notchanged';
-                $isPasswordChanged = false;
+                $isPasswordChanged                                        = false;
             }
 
             // check if username was provided and if it may be changed
-            if (!isset($postData['username'])
-                    || (isset($config->account->editPasswordOnly) && $config->account->editPasswordOnly)
-                    || (isset($config->account->changeLogin) && !$config->account->changeLogin)) {
+            if (
+                ! isset($postData['username'])
+                    || (isset($config->account->editPasswordOnly) && filter_var($config->account->editPasswordOnly, FILTER_VALIDATE_BOOLEAN))
+                    || (isset($config->account->changeLogin) && (! filter_var($config->account->changeLogin, FILTER_VALIDATE_BOOLEAN)))
+            ) {
                 $postData['username'] = $login;
             }
 
             $postData['oldLogin'] = $login;
 
             if ($accountForm->isValid($postData)) {
-                $account = new Opus_Account(null, null, $login);
+                $account = Account::fetchAccountByLogin($login);
 
-                $newLogin = $postData['username'];
-                $password = $postData['password'];
+                $newLogin  = $postData['username'];
+                $password  = $postData['password'];
                 $firstname = $postData['firstname'];
-                $lastname = $postData['lastname'];
-                $email = $postData['email'];
+                $lastname  = $postData['lastname'];
+                $email     = $postData['email'];
 
                 $isLoginChanged = false;
 
-                if (isset($config->account->editPasswordOnly) && !$config->account->editPasswordOnly) {
+                if (isset($config->account->editPasswordOnly) && (! filter_var($config->account->editPasswordOnly, FILTER_VALIDATE_BOOLEAN))) {
                     $account->setFirstName($firstname);
                     $account->setLastName($lastname);
                     $account->setEmail($email);
@@ -137,7 +139,7 @@ class Account_IndexController extends Application_Controller_Action {
                     $logger->debug('login = ' . $login);
                     $logger->debug('new login = ' . $newLogin);
 
-                    $isLoginChanged = ($login == $newLogin) ? false : true;
+                    $isLoginChanged = $login === $newLogin ? false : true;
 
                     if ($isLoginChanged && ($login !== 'admin')) {
                         $logger->debug('login changed');
@@ -154,18 +156,18 @@ class Account_IndexController extends Application_Controller_Action {
 
                 if ($isLoginChanged || $isPasswordChanged) {
                     Zend_Auth::getInstance()->clearIdentity();
+                    $this->_helper->redirector->redirectToAndExit('index', 'account_password_change_success', 'index', 'auth');
+                    return;
                 }
-            }
-            else {
-                $actionUrl = $this->view->url(array('action' => 'save'));
+            } else {
+                $actionUrl = $this->view->url(['action' => 'save']);
                 $accountForm->setAction($actionUrl);
 
-                return $this->renderForm($accountForm);
+                $this->renderForm($accountForm);
+                return;
             }
         }
 
         $this->_helper->redirector('index');
     }
-
 }
-

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,26 +25,24 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2017-2019, OPUS 4 development team
+ * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
+use Opus\Common\Date;
+
 /**
- * Class Admin_Form_Person_Changes
- *
  * TODO merge old values and changes array (only set/getChanges with all values)?
  * TODO make generic to be usable with any model (incl. excluded fields)
- * TODO work with model objects like Opus_Date for fields that use them
+ * TODO work with model objects like Date for fields that use them
  */
 class Admin_Form_Person_Changes extends Application_Form_Abstract
 {
+    /** @var array */
+    private $changes;
 
-    private $_changes;
-
-    private $_oldValues;
+    /** @var array */
+    private $oldValues;
 
     public function init()
     {
@@ -51,53 +50,67 @@ class Admin_Form_Person_Changes extends Application_Form_Abstract
 
         $this->setDecorators([
             'PrepareElements',
-            ['ViewScript', ['viewScript' => 'changes.phtml']]
+            ['ViewScript', ['viewScript' => 'changes.phtml']],
         ]);
     }
 
+    /**
+     * @param array $changes
+     */
     public function setChanges($changes)
     {
-        $this->_changes = $changes;
+        $this->changes = $changes;
     }
 
+    /**
+     * @return array
+     */
     public function getChanges()
     {
-        return $this->_changes;
+        return $this->changes;
     }
 
+    /**
+     * @param array $values
+     */
     public function setOldValues($values)
     {
-        $this->_oldValues = $values;
+        $this->oldValues = $values;
     }
 
+    /**
+     * @return array
+     */
     public function getOldValues()
     {
-        return $this->_oldValues;
+        return $this->oldValues;
     }
 
+    /**
+     * @return array
+     */
     public function getPreparedChanges()
     {
         $oldValues = $this->getOldValues();
-        $changes = $this->getChanges();
+        $changes   = $this->getChanges();
 
-        if (!is_array($oldValues))
-        {
+        if (! is_array($oldValues)) {
             // TODO do some logging
             throw new InvalidArgumentException('Changes form requires old values attribute to be set');
         }
 
-        $preparedChanges = array();
+        $preparedChanges = [];
 
         $helper = new Application_Controller_Action_Helper_Dates();
 
         foreach ($oldValues as $field => $values) {
-            // TODO Opus_Person specific code that needs to be removed later
+            // TODO Person specific code that needs to be removed later
             if (in_array($field, ['Id', 'OpusId'])) {
                 continue;
             }
 
             if (stripos($field, 'date') !== false) {
-                $preparedChanges[$field]['old'] = $this->forceArray($helper->getDateString(new Opus_Date($values)));
+                $preparedChanges[$field]['old'] = $this->forceArray($helper->getDateString(new Date($values)));
             } else {
                 $preparedChanges[$field]['old'] = $this->forceArray($values);
             }
@@ -105,16 +118,15 @@ class Admin_Form_Person_Changes extends Application_Form_Abstract
             $action = 'notmodified';
 
             if (array_key_exists($field, $changes)) {
-
                 if (stripos($field, 'date') !== false) {
                     $preparedChanges[$field]['new'] = $this->forceArray($helper->getDateString(
-                        new Opus_Date($changes[$field])
+                        new Date($changes[$field])
                     ));
                 } else {
                     $preparedChanges[$field]['new'] = $this->forceArray($changes[$field]);
                 }
 
-                if (is_null($values)) {
+                if ($values === null) {
                     $action = 'added';
                 } else {
                     if (is_array($values)) {
@@ -123,7 +135,7 @@ class Admin_Form_Person_Changes extends Application_Form_Abstract
                         $action = 'modified';
                     }
 
-                    if (is_null($changes[$field])) {
+                    if ($changes[$field] === null) {
                         $action .= ' removed';
                     }
                 }
@@ -139,12 +151,13 @@ class Admin_Form_Person_Changes extends Application_Form_Abstract
 
     /**
      * Wraps value in array if necessary.
-     * @param $values
+     *
+     * @param array|string $values
      * @return array
      */
     public function forceArray($values)
     {
-        if (is_null($values)) {
+        if ($values === null) {
             return [];
         }
         if (is_array($values)) {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,15 +25,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Export
- * @author      Sascha Szott <szott@zib.de>
- * @author      Gunar Maiwald <maiwald@zib.de>
- * @author      Michael Lang <lang@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
@@ -41,34 +35,36 @@
  * The export actions are separate classes implementing the interface Application_Export_ExportPlugin and are
  * dynamically mapped to controller functions.
  */
-class Export_IndexController extends Application_Controller_ModuleAccess {
-
+class Export_IndexController extends Application_Controller_ModuleAccess
+{
     /**
      * Manages export plugins.
      *
      * @var Application_Export_ExportService
      */
-    private $_exportService;
+    private $exportService;
 
     /**
      * Do some initialization on startup of every action
      *
-     * @return void
+     * @throws Zend_Exception
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         // Controller outputs plain Xml, so rendering and layout are disabled.
         $this->disableViewRendering(); // TODO there could be plugins requiring rendering
 
-        $this->_exportService = Zend_Registry::get('Opus_ExportService');
-        $this->_exportService->loadPlugins();
+        $this->exportService = Zend_Registry::get('Opus_ExportService');
+        $this->exportService->loadPlugins();
     }
 
     /**
      * Returns small XML error message if access to module has been denied.
      */
-    public function moduleAccessDeniedAction() {
+    public function moduleAccessDeniedAction()
+    {
         $response = $this->getResponse();
         $response->setHttpResponseCode(401);
 
@@ -80,13 +76,15 @@ class Export_IndexController extends Application_Controller_ModuleAccess {
     /**
      * Maps action calls to export plugins or returns an error message.
      *
-     * @param  string $action     The name of the action that was called.
-     * @param  array  $parameters The parameters passed to the action.
-     * @return void
+     * @param string $action The name of the action that was called.
+     * @param array  $parameters The parameters passed to the action.
+     * @throws Zend_Controller_Action_Exception
+     * @throws Application_Exception Wenn keine zugehöriges Plugin-Klasse gefunden werden kann.
      */
-    public function __call($action, $parameters) {
+    public function __call($action, $parameters)
+    {
         // TODO what does this code do
-        if (!'Action' == substr($action, -6)) {
+        if (! 'Action' === substr($action, -6)) {
             $this->getLogger()->info(__METHOD__ . ' undefined method: ' . $action);
             parent::__call($action, $parameters);
         }
@@ -95,21 +93,29 @@ class Export_IndexController extends Application_Controller_ModuleAccess {
 
         $this->getLogger()->debug("Request to export plugin $actionName");
 
-        $plugin = $this->_exportService->getPlugin($actionName);
+        $plugin = $this->exportService->getPlugin($actionName);
 
-        if (!is_null($plugin)) {
+        if ($plugin !== null) {
+            if ($plugin->isAccessRestricted()) {
+                $this->moduleAccessDeniedAction();
+                return;
+            }
+
             $plugin->setRequest($this->getRequest());
             $plugin->setResponse($this->getResponse());
             $plugin->setView($this->view);
 
             $plugin->init();
-            $plugin->execute();
+            $result = $plugin->execute();
+            if ($result !== 0) {
+                // nur im Fehlerfall wird eine HTML-Statusseite an den Client zurückgegeben
+                $this->_helper->layout->enableLayout();
+                $this->_helper->viewRenderer->setNoRender(false);
+            }
+
             $plugin->postDispatch();
-        }
-        else {
+        } else {
             throw new Application_Exception('Plugin ' . htmlspecialchars($actionName) . ' not found');
         }
     }
-
 }
-

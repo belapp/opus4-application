@@ -26,13 +26,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Frontdoor
- * @author      Edouard Simon <edouard.simon@zib.de>
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2009-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2009, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 -->
 
@@ -78,7 +73,7 @@
         </tr>
     </xsl:template>
 
-    <xsl:template match="@PageFirst|@PageLast|@PageNumber|@PublishedYear|@PublisherName|@PublisherPlace">
+    <xsl:template match="@PageFirst|@PageLast|@PageNumber|@ArticleNumber|@PublishedYear|@PublisherName|@PublisherPlace">
         <tr>
             <th class="name">
                 <xsl:call-template name="translateFieldname" />
@@ -95,12 +90,11 @@
                 <xsl:call-template name="translateFieldname" />
             </th>
             <td>
-                <xsl:call-template name="translateString">
+                <xsl:call-template name="translateLanguage">
                     <xsl:with-param name="string">
                         <xsl:value-of select="." />
                     </xsl:with-param>
                 </xsl:call-template>
-
             </td>
         </tr>
     </xsl:template>
@@ -276,41 +270,8 @@
             <xsl:value-of select="concat(@FirstName, ' ', @LastName)" />
         </xsl:element>
 
-        <xsl:if test="@IdentifierOrcid and php:functionString('Application_Xslt::optionEnabled', 'linkAuthor.frontdoor', 'orcid')">
-            <xsl:element name="a">
-                <xsl:attribute name="href">
-                    <xsl:value-of select="php:functionString('Application_Xslt::optionValue', 'baseUrl', 'orcid')"/>
-                    <xsl:value-of select="@IdentifierOrcid"/>
-                </xsl:attribute>
-                <xsl:attribute name="class">
-                    <xsl:text>orcid-link</xsl:text>
-                </xsl:attribute>
-                <xsl:attribute name="title">
-                    <xsl:call-template name="translateString">
-                        <xsl:with-param name="string">frontdoor_orcid</xsl:with-param>
-                    </xsl:call-template>
-                </xsl:attribute>
-                <xsl:text>ORCiD</xsl:text>
-            </xsl:element>
-        </xsl:if>
-
-        <xsl:if test="@IdentifierGnd and php:functionString('Application_Xslt::optionEnabled', 'linkAuthor.frontdoor', 'gnd')">
-            <xsl:element name="a">
-                <xsl:attribute name="href">
-                    <xsl:value-of select="php:functionString('Application_Xslt::optionValue', 'baseUrl', 'gnd')"/>
-                    <xsl:value-of select="@IdentifierGnd"/>
-                </xsl:attribute>
-                <xsl:attribute name="class">
-                    <xsl:text>gnd-link</xsl:text>
-                </xsl:attribute>
-                <xsl:attribute name="title">
-                    <xsl:call-template name="translateString">
-                        <xsl:with-param name="string">frontdoor_gnd</xsl:with-param>
-                    </xsl:call-template>
-                </xsl:attribute>
-                <xsl:text>GND</xsl:text>
-            </xsl:element>
-        </xsl:if>
+        <xsl:call-template name="PersonOrcidLink" />
+        <xsl:call-template name="PersonGndLink" />
 
         <xsl:if test="position() != last()">, </xsl:if>
 
@@ -319,7 +280,6 @@
             <xsl:text disable-output-escaping="yes">&lt;/tr&gt;</xsl:text>
         </xsl:if>
     </xsl:template>
-
 
     <xsl:template match="PersonAdvisor|PersonOther|PersonContributor|PersonEditor|PersonTranslator">
         <xsl:if test="position() = 1">
@@ -332,17 +292,72 @@
             <xsl:text disable-output-escaping="yes">&lt;td&gt;</xsl:text>
         </xsl:if>
         <xsl:value-of select="concat(@FirstName, ' ', @LastName)" />
+
+        <xsl:call-template name="PersonOrcidLink" />
+        <xsl:call-template name="PersonGndLink" />
+
         <xsl:if test="position() != last()">, </xsl:if>
+
         <xsl:if test="position() = last()">
             <xsl:text disable-output-escaping="yes">&lt;/td&gt;</xsl:text>
             <xsl:text disable-output-escaping="yes">&lt;/tr&gt;</xsl:text>
         </xsl:if>
     </xsl:template>
 
-    <xsl:template match="IdentifierArxiv">
+    <xsl:template name="PersonOrcidLink">
+        <xsl:if test="@IdentifierOrcid and php:functionString('Application_Xslt::optionEnabled', 'linkAuthor.frontdoor', 'orcid')">
+            <xsl:call-template name="PersonIdentifierLink">
+                <xsl:with-param name="baseUrl">orcid</xsl:with-param>
+                <xsl:with-param name="id"><xsl:value-of select="@IdentifierOrcid"/></xsl:with-param>
+                <xsl:with-param name="cssClass">orcid-link</xsl:with-param>
+                <xsl:with-param name="linkTitle">frontdoor_orcid</xsl:with-param>
+                <xsl:with-param name="linkText">ORCiD</xsl:with-param>
+            </xsl:call-template>
+        </xsl:if>
+    </xsl:template>
+
+    <xsl:template name="PersonGndLink">
+        <xsl:if test="@IdentifierGnd and php:functionString('Application_Xslt::optionEnabled', 'linkAuthor.frontdoor', 'gnd')">
+            <xsl:call-template name="PersonIdentifierLink">
+                <xsl:with-param name="baseUrl">gnd</xsl:with-param>
+                <xsl:with-param name="id"><xsl:value-of select="@IdentifierGnd"/></xsl:with-param>
+                <xsl:with-param name="cssClass">gnd-link</xsl:with-param>
+                <xsl:with-param name="linkTitle">frontdoor_gnd</xsl:with-param>
+                <xsl:with-param name="linkText">GND</xsl:with-param>
+            </xsl:call-template>
+        </xsl:if>
+    </xsl:template>
+
+    <xsl:template name="PersonIdentifierLink">
+        <xsl:param name="baseUrl"/>
+        <xsl:param name="id"/>
+        <xsl:param name="cssClass"/>
+        <xsl:param name="linkTitle"/>
+        <xsl:param name="linkText"/>
+        <xsl:element name="a">
+            <xsl:attribute name="href">
+                <xsl:value-of select="php:functionString('Application_Xslt::optionValue', 'baseUrl', $baseUrl)"/>
+                <xsl:value-of select="$id"/>
+            </xsl:attribute>
+            <xsl:attribute name="class">
+                <xsl:value-of select="$cssClass"/>
+            </xsl:attribute>
+            <xsl:attribute name="title">
+                <xsl:call-template name="translateString">
+                    <xsl:with-param name="string"><xsl:value-of select="$linkTitle"/></xsl:with-param>
+                </xsl:call-template>
+            </xsl:attribute>
+            <xsl:attribute name="target">
+                <xsl:text>_blank</xsl:text>
+            </xsl:attribute>
+            <xsl:value-of select="$linkText"/>
+        </xsl:element>
+    </xsl:template>
+
+    <xsl:template match="Identifier[@Type = 'arxiv']">
         <tr>
             <th class="name">
-                <xsl:call-template name="translateFieldname"/>
+                <xsl:call-template name="translateIdentifier"/>
             </th>
             <td>
                 <xsl:element name="a">
@@ -357,28 +372,28 @@
         </tr>
     </xsl:template>
 
-    <xsl:template match="IdentifierPubmed">
+    <xsl:template match="Identifier[@Type = 'pmid']">
         <tr>
             <th class="name">
-                <xsl:call-template name="translateFieldname"/>
+                <xsl:call-template name="translateIdentifier"/>
             </th>
             <td>
                 <xsl:element name="a">
                     <xsl:attribute name="href">
-                        <xsl:text>http://www.ncbi.nlm.nih.gov/pubmed?term=</xsl:text>
+                        <xsl:value-of select="php:functionString('Application_Xslt::optionValue', 'baseUrl', 'pubmed')"/>
                         <xsl:value-of select="@Value" />
                     </xsl:attribute>
-                    <xsl:text>http://www.ncbi.nlm.nih.gov/pubmed?term=</xsl:text>
+                    <xsl:value-of select="php:functionString('Application_Xslt::optionValue', 'baseUrl', 'pubmed')"/>
                     <xsl:value-of select="@Value" />
                 </xsl:element>
             </td>
         </tr>
     </xsl:template>
 
-    <xsl:template match="IdentifierHandle|IdentifierUrl">
+    <xsl:template match="Identifier[@Type = 'handle']|Identifier[@Type = 'url']">
         <tr>
             <th class="name">
-                <xsl:call-template name="translateFieldname"/>
+                <xsl:call-template name="translateIdentifier"/>
             </th>
             <td>
                 <xsl:element name="a">
@@ -403,10 +418,10 @@
         </tr>
     </xsl:template>
 
-    <xsl:template match="IdentifierDoi|ReferenceDoi">
+    <xsl:template match="Identifier[@Type = 'doi']|ReferenceDoi">
         <tr>
             <th class="name">
-                <xsl:call-template name="translateFieldname"/>
+                <xsl:call-template name="translateIdentifier"/>
             </th>
             <td>
                 <xsl:element name="a">
@@ -421,10 +436,10 @@
         </tr>
     </xsl:template>
 
-    <xsl:template match="IdentifierUrn|ReferenceUrn">
+    <xsl:template match="Identifier[@Type = 'urn']|ReferenceUrn">
         <tr>
             <th class="name">
-                <xsl:call-template name="translateFieldname"/>
+                <xsl:call-template name="translateIdentifier"/>
             </th>
             <td>
                 <xsl:element name="a">
@@ -438,7 +453,18 @@
         </tr>
     </xsl:template>
 
-    <xsl:template match="IdentifierIsbn|IdentifierIssn|IdentifierSerial|ReferenceIsbn|ReferenceIssn|ReferenceHandle">
+    <xsl:template match="Identifier[@Type = 'isbn' or @Type = 'issn' or @Type = 'serial']">
+        <tr>
+            <th class="name">
+                <xsl:call-template name="translateIdentifier"/>
+            </th>
+            <td>
+                <xsl:value-of select="@Value" />
+            </td>
+        </tr>
+    </xsl:template>
+
+    <xsl:template match="ReferenceIsbn|ReferenceIssn|ReferenceHandle">
         <tr>
             <th class="name">
                 <xsl:call-template name="translateFieldname"/>
@@ -654,9 +680,27 @@
             </xsl:call-template>
             <xsl:text>:</xsl:text>
             <xsl:text disable-output-escaping="yes">&lt;/th&gt;</xsl:text>
-            <xsl:text disable-output-escaping="yes">&lt;td&gt;&lt;em class="data-marker"&gt;</xsl:text>
+            <xsl:text disable-output-escaping="yes">&lt;td&gt;&lt;em class="data-marker subject"&gt;</xsl:text>
         </xsl:if>
         <xsl:value-of select="@Value" />
+        <xsl:if test="@Type='swd' and @ExternalKey">
+            <xsl:element name="a">
+                <xsl:attribute name="href">
+                    <xsl:value-of select="php:functionString('Application_Xslt::optionValue', 'gnd.baseUrl')"/>
+                    <xsl:value-of select="@ExternalKey" />
+                </xsl:attribute>
+                <xsl:attribute name="class">
+                    <xsl:text>gnd-link</xsl:text>
+                </xsl:attribute>
+                <xsl:attribute name="rel">
+                    <xsl:text>nofollow</xsl:text>
+                </xsl:attribute>
+                <xsl:attribute name="target">
+                    <xsl:text>_blank</xsl:text>
+                </xsl:attribute>
+                <xsl:text>GND</xsl:text>
+            </xsl:element>
+        </xsl:if>
         <xsl:if test="position() != last()">; </xsl:if>
         <xsl:if test="position() = last()">
             <xsl:text disable-output-escaping="yes">&lt;/em&gt;&lt;/td&gt;</xsl:text>
@@ -677,9 +721,9 @@
         </tr>
     </xsl:template>
 
-    <xsl:template match="IdentifierStdDoi"/>
-    <xsl:template match="IdentifierCrisLink"/>
-    <xsl:template match="IdentifierSplashUrl"/>
+    <xsl:template match="Identifier[@Type = 'std-doi']"/>
+    <xsl:template match="Identifier[@Type = 'cris-link']"/>
+    <xsl:template match="Identifier[@Type = 'splash-url']"/>
     <xsl:template match="ReferenceStdDoi"/>
     <xsl:template match="ReferenceCrisLink"/>
     <xsl:template match="ReferenceSplashUrl"/>

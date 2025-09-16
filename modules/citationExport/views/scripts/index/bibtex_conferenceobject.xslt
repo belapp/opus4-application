@@ -26,12 +26,7 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_CitationExport
- * @author      Oliver Marahrens <o.marahrens@tu-harburg.de>
- * @author      Gunar Maiwald <maiwald@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2010-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2010, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 -->
@@ -168,12 +163,12 @@
         </xsl:call-template>
         <xsl:call-template name="outputFieldValue">
             <xsl:with-param name="field">doi      </xsl:with-param>
-            <xsl:with-param name="value"><xsl:value-of select ="IdentifierDoi/@Value" /></xsl:with-param>
+            <xsl:with-param name="value"><xsl:value-of select ="Identifier[@Type = 'doi']/@Value" /></xsl:with-param>
             <xsl:with-param name="delimiter">,</xsl:with-param>
         </xsl:call-template>
         <xsl:call-template name="outputFieldValue">
             <xsl:with-param name="field">url      </xsl:with-param>
-            <xsl:with-param name="value"><xsl:value-of select ="IdentifierUrl/@Value" /></xsl:with-param>
+            <xsl:with-param name="value"><xsl:value-of select ="Identifier[@Type = 'url']/@Value" /></xsl:with-param>
             <xsl:with-param name="delimiter">,</xsl:with-param>
         </xsl:call-template>
         <xsl:call-template name="outputFieldValue">

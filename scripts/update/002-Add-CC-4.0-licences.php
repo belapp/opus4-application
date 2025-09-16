@@ -1,6 +1,5 @@
-#!/usr/bin/env php
-
 <?PHP
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -26,9 +25,6 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Scripts
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
@@ -39,20 +35,21 @@
 
 require_once dirname(__FILE__) . '/../common/update.php';
 
+use Opus\Common\Licence;
+use Opus\Database;
+
 $helper = new Application_Update_Helper();
 
-$licence = Opus_Licence::fetchByName('CC BY 4.0');
+$licence = Licence::fetchByName('CC BY 4.0');
 
-if (!is_null($licence))
-{
+if ($licence !== null) {
     $helper->log('Creative Commons 4.0 seem to be present in database.');
 }
 
-if ($helper->askYesNo('Add CC 4.0 licences to database [Y|n]? '))
-{
+if ($helper->askYesNo('Add CC 4.0 licences to database [Y|n]? ')) {
     $helper->log('Add CC 4.0 licences ...');
 
-    $database = new Opus_Database();
+    $database = new Database();
 
     $script = APPLICATION_PATH . '/db/masterdata/021-add-version-4-CC-licences.sql';
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,15 +25,14 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
+use Opus\Common\Document;
+use Opus\Common\Series;
+
 /**
- * 
  * Setzt die interne Sortierreihenfolge (doc_sort_order) für die einer
  * Schriftenreihe zugeordneten Dokumente auf Basis der vergebenenen Bandnummern
  * neu.
@@ -42,10 +42,9 @@
  * neu zugeordnet. Als Sortierkriterium wird dabei die existierende Bandnummer
  * betrachtet. Sind alle Bandnummern numerisch, so wird numerisch nach
  * Bandnummer sortiert; andernfalls lexikographisch nach Bandnummer.
- *
  */
 
-foreach (Opus_Series::getAll() as $series) {
+foreach (Series::getAll() as $series) {
     echo "\nreassign doc_sort_order for documents in series #" . $series->getId() . ': ';
     $docIds = $series->getDocumentIds();
     if (empty($docIds)) {
@@ -54,9 +53,9 @@ foreach (Opus_Series::getAll() as $series) {
     }
     echo count($docIds) . " documents found\n";
 
-    $seriesNumbers = array();
+    $seriesNumbers = [];
     foreach ($docIds as $docId) {
-        $doc = new Opus_Document($docId);
+        $doc = Document::get($docId);
         foreach ($doc->getSeries() as $docSeries) {
             if ($docSeries->getModel()->getId() === $series->getId()) {
                 $seriesNumbers[$docId] = $docSeries->getNumber();
@@ -66,22 +65,21 @@ foreach (Opus_Series::getAll() as $series) {
 
     $allNumerics = true;
     foreach ($seriesNumbers as $docId => $seriesNumber) {
-        if (!is_numeric($seriesNumber)) {
+        if (! is_numeric($seriesNumber)) {
             $allNumerics = false;
             break;
         }
     }
-    
+
     if ($allNumerics) {
         echo "sorting documents in series #" . $series->getId() . " numerically\n";
-        if (!asort($seriesNumbers, SORT_NUMERIC)) {
+        if (! asort($seriesNumbers, SORT_NUMERIC)) {
             echo "Error while sorting docs -- skip series #" . $series->getId() . "\n";
             break;
         }
-    }
-    else {
+    } else {
         echo "sorting documents in series #" . $series->getId() . " lexicographically\n";
-        if (!asort($seriesNumbers, SORT_STRING)) {
+        if (! asort($seriesNumbers, SORT_STRING)) {
             echo "Error while sorting docs -- skip series #" . $series->getId() . "\n";
             break;
         }
@@ -89,9 +87,9 @@ foreach (Opus_Series::getAll() as $series) {
 
     $seriesCounter = 0;
     foreach ($seriesNumbers as $docId => $seriesNumber) {
-        $doc = new Opus_Document($docId);
+        $doc       = Document::get($docId);
         $allSeries = $doc->getSeries();
-        $doc->setSeries(array());
+        $doc->setSeries([]);
         $doc->store();
         foreach ($allSeries as $docSeries) {
             $seriesInstance = $docSeries->getModel();
@@ -100,8 +98,7 @@ foreach (Opus_Series::getAll() as $series) {
                     . $docSeries->getNumber() . ") -- old / new doc_sort_order: " . $docSeries->getDocSortOrder()
                     . " / " . $seriesCounter . "\n";
                 $doc->addSeries($seriesInstance)->setNumber($docSeries->getNumber())->setDocSortOrder($seriesCounter++);
-            }
-            else {
+            } else {
                 $doc->addSeries($seriesInstance)->setNumber(
                     $docSeries->getNumber()
                 )->setDocSortOrder(

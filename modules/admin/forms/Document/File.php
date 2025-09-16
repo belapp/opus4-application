@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,50 +24,52 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\FileInterface;
 
 /**
  * Formular fuer die Anzeige einer Datei in der Metadaten-Uebersicht.
- *
- * @category    Application
- * @package     Admin_Form_Document
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_Form_Document_File extends Admin_Form_AbstractDocumentSubForm {
-
-    private $_file = null;
+class Admin_Form_Document_File extends Admin_Form_AbstractDocumentSubForm
+{
+    /** @var FileInterface|null */
+    private $file;
 
     /**
      * Initialisiert Formular und setzt Dekoratoren.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->setDecorators(
-            array(
-            array('ViewScript', array('viewScript' => 'filerow.phtml'))
-            )
+            [
+                ['ViewScript', ['viewScript' => 'filerow.phtml']],
+            ]
         );
     }
 
     /**
-     * Setzt die Instanz von Opus_File fuer das Formular.
-     * @param Opus_File $model
+     * Setzt die Instanz von File fuer das Formular.
+     *
+     * @param FileInterface|null $model
      */
-    public function populateFromModel($model) {
-        $this->_file = $model;
+    public function populateFromModel($model)
+    {
+        $this->file = $model;
     }
 
     /**
-     * Liefert die gesetzte Instanz von Opus_File fuer Formular.
-     * @return null
+     * Liefert die gesetzte Instanz von File fuer Formular.
+     *
+     * @return FileInterface|null
      */
-    public function getModel() {
-        return $this->_file;
+    public function getModel()
+    {
+        return $this->file;
     }
-
 }
-

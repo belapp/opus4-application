@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,15 +25,14 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Application_View_Helper_IsDisplayFieldTest extends ControllerTestCase
 {
+    /** @var bool */
+    protected $configModifiable = true;
 
     public function testIsDisplayField()
     {
@@ -40,9 +40,9 @@ class Application_View_Helper_IsDisplayFieldTest extends ControllerTestCase
 
         $this->assertFalse($helper->isDisplayField('BelongsToBibliography'));
 
-        Zend_Registry::get('Zend_Config')->merge(new Zend_Config(array(
-            'frontdoor' => array('metadata' => array('BelongsToBibliography' => '1'))
-        )));
+        $this->adjustConfiguration([
+            'frontdoor' => ['metadata' => ['BelongsToBibliography' => self::CONFIG_VALUE_TRUE]],
+        ]);
 
         $this->assertTrue($helper->isDisplayField('BelongsToBibliography'));
     }
@@ -53,5 +53,4 @@ class Application_View_Helper_IsDisplayFieldTest extends ControllerTestCase
 
         $this->assertFalse($helper->isDisplayField('unknown'));
     }
-
 }

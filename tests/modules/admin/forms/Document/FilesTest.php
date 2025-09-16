@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,16 +25,19 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Admin_Form_Document
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_Form_Document_FilesTest extends ControllerTestCase {
 
-    public function testConstructForm() {
+use Opus\Common\Document;
+
+class Admin_Form_Document_FilesTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'translation'];
+
+    public function testConstructForm()
+    {
         $form = new Admin_Form_Document_Files();
 
         $this->assertNotNull($form->getLegend());
@@ -49,10 +53,11 @@ class Admin_Form_Document_FilesTest extends ControllerTestCase {
         $this->assertNotNull($form->getDecorator('divWrapper'));
     }
 
-    public function testPopulateFromModel() {
+    public function testPopulateFromModel()
+    {
         $form = new Admin_Form_Document_Files();
 
-        $document = new Opus_Document(84);
+        $document = Document::get(84);
 
         $this->assertEquals(1, count($form->getSubForms()));
 
@@ -69,24 +74,22 @@ class Admin_Form_Document_FilesTest extends ControllerTestCase {
         $this->assertNotNull($form->getSubForm('File1')->getModel());
     }
 
-    public function testColumnLabelTranslations() {
+    public function testColumnLabelTranslations()
+    {
         $form = new Admin_Form_Document_Files();
 
-        $property = new ReflectionProperty('Admin_Form_Document_Files', '_header');
+        $property = new ReflectionProperty('Admin_Form_Document_Files', 'header');
         $property->setAccessible(true);
 
         $header = $property->getValue($form);
 
-        $translate = Zend_Registry::get('Zend_Translate');
-
-        $translate->loadModule('admin');
+        $translate = Application_Translate::getInstance();
 
         foreach ($header as $column) {
-            if (isset($column['label']) && !is_null($column['label'])) {
+            if (isset($column['label']) && $column['label'] !== null) {
                 $label = $column['label'];
                 $this->assertTrue($translate->isTranslated($label), "Label '$label' is not translated.");
             }
         }
     }
-
 }

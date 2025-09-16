@@ -25,77 +25,78 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Publish Unit Test
- * @author      Susanne Gottwald <gottwald@zib.de>
- * @copyright   Copyright (c) 2008-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Publish_Model_DocumenttypeParserTest extends ControllerTestCase {
 
-    protected $_logger;
+class Publish_Model_DocumenttypeParserTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
 
-    public function setUp() {
-        $writer = new Zend_Log_Writer_Null;
-        $this->_logger = new Zend_Log($writer);
+    /** @var Zend_Log */
+    protected $logger;
+
+    public function setUp(): void
+    {
+        $writer       = new Zend_Log_Writer_Null();
+        $this->logger = new Zend_Log($writer);
         parent::setUp();
     }
 
-    /**
-     * @expectedException Application_Exception
-     */
-    public function testConstructorWithWrongDom() {
+    public function testConstructorWithWrongDom()
+    {
+        $this->expectException(Application_Exception::class);
         $dom = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes')->getDocument('irgendwas');
+
         $model = new Publish_Model_DocumenttypeParser($dom, null);
         $this->assertNull($model->dom);
     }
 
-    public function testConstructorWithCorrectDom() {
-        $dom = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes')->getDocument('preprint');
+    public function testConstructorWithCorrectDom()
+    {
+        $dom   = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes')->getDocument('preprint');
         $model = new Publish_Model_DocumenttypeParser($dom, null);
         $this->assertInstanceOf('DOMDocument', $model->dom);
     }
 
-    /**
-     * @expectedException Application_Exception
-     */
-    public function testConstructorWithCorrectDomAndWrongForm() {
-        $session = new Zend_Session_Namespace('Publish');
+    public function testConstructorWithCorrectDomAndWrongForm()
+    {
+        $session               = new Zend_Session_Namespace('Publish');
         $session->documentType = 'irgendwas';
-        $dom = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes')->getDocument('preprint');
-        $form = new Publish_Form_PublishingSecond($this->_logger);
+        $dom                   = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes')->getDocument('preprint');
+
+        $this->expectException(Application_Exception::class);
+        $form = new Publish_Form_PublishingSecond($this->logger);
+
         $model = new Publish_Model_DocumenttypeParser($dom, $form);
         $this->assertInstanceOf('DOMDocument', $model->dom);
     }
 
-    public function testConstructorWithCorrectDomAndCorrectForm() {
-        $session = new Zend_Session_Namespace('Publish');
+    public function testConstructorWithCorrectDomAndCorrectForm()
+    {
+        $session               = new Zend_Session_Namespace('Publish');
         $session->documentType = 'preprint';
-        $dom = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes')->getDocument('preprint');
-        $form = new Publish_Form_PublishingSecond($this->_logger);
-        $model = new Publish_Model_DocumenttypeParser($dom, $form);
+        $dom                   = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes')->getDocument('preprint');
+        $form                  = new Publish_Form_PublishingSecond($this->logger);
+        $model                 = new Publish_Model_DocumenttypeParser($dom, $form);
         $this->assertInstanceOf('DOMDocument', $model->dom);
         $this->assertInstanceOf('Publish_Form_PublishingSecond', $model->form);
     }
 
-    /**
-     * @expectedException Publish_Model_FormIncorrectFieldNameException
-     */
-    public function testInccorectFieldName() {
-
-        $session = new Zend_Session_Namespace('Publish');
+    public function testInccorectFieldName()
+    {
+        $session               = new Zend_Session_Namespace('Publish');
         $session->documentType = 'all';
-        
-        /* @var $dom DomDocument */
+
+        /** @var DOMDocument $dom */
         $dom = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes')->getDocument('all');
         $this->assertInstanceOf('DOMDocument', $dom);
 
         foreach ($dom->getElementsByTagname('documenttype') as $rootNode) {
-
-            $domElement = $dom->createElement('field');
+            $domElement   = $dom->createElement('field');
             $domAttribute = $dom->createAttribute('name');
-            
+
             // Value for the created attribute
             $domAttribute->value = 'wrong.name';
 
@@ -107,32 +108,30 @@ class Publish_Model_DocumenttypeParserTest extends ControllerTestCase {
             $dom->saveXML();
         }
 
-        $model = new Publish_Model_DocumenttypeParser($dom, new Publish_Form_PublishingSecond($this->_logger));
+        $model = new Publish_Model_DocumenttypeParser($dom, new Publish_Form_PublishingSecond($this->logger));
+
+        $this->expectException(Publish_Model_FormIncorrectFieldNameException::class);
         $model->parse();
     }
 
-    /**
-     * @expectedException Publish_Model_FormIncorrectEnrichmentKeyException
-     */
-    public function testIncorrectEnrichmentKey() {
-        
-        $session = new Zend_Session_Namespace('Publish');
+    public function testIncorrectEnrichmentKey()
+    {
+        $session               = new Zend_Session_Namespace('Publish');
         $session->documentType = 'all';
-        
-        /* @var $dom DomDocument */
+
+        /** @var DOMDocument $dom */
         $dom = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes')->getDocument('all');
         $this->assertInstanceOf('DOMDocument', $dom);
 
         foreach ($dom->getElementsByTagname('documenttype') as $rootNode) {
-
             $domElement = $dom->createElement('field');
-            
-            $domAttribute = $dom->createAttribute('name');                        
+
+            $domAttribute        = $dom->createAttribute('name');
             $domAttribute->value = 'IncorrectEnrichmentKey';
 
-            $domAttribute2 = $dom->createAttribute('datatype');            
+            $domAttribute2        = $dom->createAttribute('datatype');
             $domAttribute2->value = 'Enrichment';
-            
+
             // Don't forget to append it to the element
             $domElement->appendChild($domAttribute);
             $domElement->appendChild($domAttribute2);
@@ -141,8 +140,10 @@ class Publish_Model_DocumenttypeParserTest extends ControllerTestCase {
             $rootNode->appendChild($domElement);
             $dom->saveXML();
         }
-        
-        $model = new Publish_Model_DocumenttypeParser($dom, new Publish_Form_PublishingSecond($this->_logger));
-        $model->parse();        
+
+        $model = new Publish_Model_DocumenttypeParser($dom, new Publish_Form_PublishingSecond($this->logger));
+
+        $this->expectException(Publish_Model_FormIncorrectEnrichmentKeyException::class);
+        $model->parse();
     }
 }

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -23,45 +24,49 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- */
-
-/**
- * @category    Application Unit Test
- * @package     Admin_Form_File
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_Form_File_UploadTest extends ControllerTestCase {
 
-    private $_documentId;
+use Opus\Common\Document;
 
-    public function tearDown() {
-        $this->removeDocument($this->_documentId);
+class Admin_Form_File_UploadTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
+
+    /** @var int */
+    private $documentId;
+
+    public function tearDown(): void
+    {
+        $this->removeDocument($this->documentId);
 
         parent::tearDown();
     }
 
-    public function testCreateForm() {
+    public function testCreateForm()
+    {
         $form = new Admin_Form_File_Upload();
 
-        $elements = array('Id', 'File', 'Label', 'Comment', 'Language', 'Save', 'Cancel', 'OpusHash', 'SortOrder');
+        $elements = ['Id', 'File', 'Label', 'Comment', 'Language', 'Save', 'Cancel', 'OpusHash', 'SortOrder'];
 
-        $this->assertEquals(count($elements), count($form->getElements()));
+        $this->assertSameSize($elements, $form->getElements());
 
         foreach ($elements as $element) {
             $this->assertNotNull($form->getElement($element), "Element '$element' is missing.'");
         }
 
-        $this->assertEquals(1, count($form->getSubForms()));
+        $this->assertCount(1, $form->getSubForms());
         $this->assertNotNull($form->getSubForm('Info'));
 
         $this->assertEquals('admin_filemanager_upload', $form->getLegend());
     }
 
-    public function testPopulateFromModel() {
-        $document = new Opus_Document(146);
+    public function testPopulateFromModel()
+    {
+        $document = Document::get(146);
 
         $form = new Admin_Form_File_Upload();
 
@@ -74,10 +79,11 @@ class Admin_Form_File_UploadTest extends ControllerTestCase {
         $this->assertEquals($document, $infoForm->getDocument());
     }
 
-    public function testValidation() {
+    public function testValidation()
+    {
         $form = new Admin_Form_File_Upload();
 
-        $post = array();
+        $post = [];
 
         $result = $form->isValid($post);
 
@@ -89,7 +95,8 @@ class Admin_Form_File_UploadTest extends ControllerTestCase {
         $this->assertContains('missingToken', $form->getErrors('OpusHash'));
     }
 
-    public function testUpdateModel() {
+    public function testUpdateModel()
+    {
         $form = new Admin_Form_File_Upload();
 
         $form->getElement('Label')->setValue('Testlabel');
@@ -98,20 +105,20 @@ class Admin_Form_File_UploadTest extends ControllerTestCase {
 
         $document = $this->createTestDocument();
 
-        $fileInfo = array(
-            array(
-                'name' => 'test%202.txt',
-                'type' => 'text/plain',
-                'tmp_name' => 'test'
-            )
-        );
+        $fileInfo = [
+            [
+                'name'     => 'test%202.txt',
+                'type'     => 'text/plain',
+                'tmp_name' => 'test',
+            ],
+        ];
 
         $form->setFileInfo($fileInfo);
         $form->updateModel($document);
 
         $files = $document->getFile();
 
-        $this->assertEquals(1, count($files));
+        $this->assertCount(1, $files);
 
         $file = $files[0];
 
@@ -123,29 +130,27 @@ class Admin_Form_File_UploadTest extends ControllerTestCase {
         $this->assertEquals('test', $file->getTempFile());
     }
 
-    public function testGetFileInfo() {
+    public function testGetFileInfo()
+    {
         $form = new Admin_Form_File_Upload();
 
         $fileInfo = $form->getFileInfo();
 
         $this->assertInternalType('array', $fileInfo);
-        $this->assertEquals(0, count($fileInfo));
+        $this->assertCount(0, $fileInfo);
     }
 
-    public function testSetGetFileInfo() {
+    public function testSetGetFileInfo()
+    {
         $form = new Admin_Form_File_Upload();
 
         // entspricht nicht der richtige Struktur, reicht aber für Test
-        $fileInfo = array(
-            array('file')
-        );
+        $fileInfo = [
+            ['file'],
+        ];
 
         $form->setFileInfo($fileInfo);
 
         $this->assertEquals($fileInfo, $form->getFileInfo());
     }
-
-
-
 }
-

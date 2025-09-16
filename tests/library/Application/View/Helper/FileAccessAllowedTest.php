@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,15 +25,17 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Application_View_Helper_FileAccessAllowedTest extends ControllerTestCase
 {
+    /** @var bool */
+    protected $configModifiable = true;
+
+    /** @var string */
+    protected $additionalResources = 'database';
 
     public function testFileAccessAllowed()
     {
@@ -42,7 +45,7 @@ class Application_View_Helper_FileAccessAllowedTest extends ControllerTestCase
 
         $this->assertFalse($helper->fileAccessAllowed(null));
 
-        $file = $this->createTestFile('accesstest.txt');
+        $file = $this->createOpusTestFile('accesstest.txt');
 
         $this->assertFalse($helper->fileAccessAllowed($file));
 
@@ -50,6 +53,4 @@ class Application_View_Helper_FileAccessAllowedTest extends ControllerTestCase
 
         $this->assertTrue($helper->fileAccessAllowed($file));
     }
-
-
 }

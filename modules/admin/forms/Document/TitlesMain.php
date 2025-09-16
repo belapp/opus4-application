@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,53 +25,54 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\DocumentInterface;
 
 /**
  * Unterformular fuer Haupttitel eines Dokuments.
  *
  * Die Basisklasse wurde erweitert um dafür zu sorgen, dass der Titel in der Dokumentensprache zuerst angezeigt wird.
  * Außerdem wird zusätzlich bei der Validierung geprüft, ob ein Titel in der Dokumentsprache existiert.
- *
- * @category    Application
- * @package     Module_Admin
  */
-class Admin_Form_Document_TitlesMain extends Admin_Form_Document_MultiSubForm {
-
+class Admin_Form_Document_TitlesMain extends Admin_Form_Document_DefaultMultiSubForm
+{
     /**
      * Konstruiert Unterformular fuer die Haupttitel eines Dokuments.
      */
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct(
-            'Admin_Form_Document_Title', 'TitleMain',
+            'Admin_Form_Document_Title',
+            'TitleMain',
             new Application_Form_Validate_MultiSubForm_RepeatedLanguages()
         );
     }
 
-    public function init() {
+    public function init()
+    {
         parent::init();
         $this->setDecorators(
-            array(
-            'FormElements',
-            array(array('fieldsWrapper' => 'HtmlTag'), array('tag' => 'div', 'class' => 'fields-wrapper')),
-            array('FormErrors', array(
-                'placement' => 'prepend',
-                'ignoreSubForms' => true,
-                'onlyCustomFormErrors' => true,
-                'markupListStart' => '<div class="form-errors">',
-                'markupListItemStart' => '',
-                'markupListItemEnd' => '',
-                'markupListEnd' => '</div>'
-            )),
-            array('FieldsetWithButtons', array('legendButtons' => self::ELEMENT_ADD)),
-            array(array('divWrapper' => 'HtmlTag'), array('tag' => 'div', 'class' => 'subform'))
-            )
+            [
+                'FormElements',
+                [['fieldsWrapper' => 'HtmlTag'], ['tag' => 'div', 'class' => 'fields-wrapper']],
+                [
+                    'FormErrors',
+                    [
+                        'placement'            => 'prepend',
+                        'ignoreSubForms'       => true,
+                        'onlyCustomFormErrors' => true,
+                        'markupListStart'      => '<div class="form-errors">',
+                        'markupListItemStart'  => '',
+                        'markupListItemEnd'    => '',
+                        'markupListEnd'        => '</div>',
+                    ],
+                ],
+                ['FieldsetWithButtons', ['legendButtons' => self::ELEMENT_ADD]],
+                [['divWrapper' => 'HtmlTag'], ['tag' => 'div', 'class' => 'subform']],
+            ]
         );
     }
 
@@ -82,21 +84,22 @@ class Admin_Form_Document_TitlesMain extends Admin_Form_Document_MultiSubForm {
      *
      * @param array $data
      * @param array $globalContext Daten für das gesamte Metadaten-Formular
-     * @return boolean true - wenn keine Abhängigkeiten verletzt wurden
+     * @return bool true - wenn keine Abhängigkeiten verletzt wurden
      */
-    public function isDependenciesValid($data, $globalContext) {
+    public function isDependenciesValid($data, $globalContext)
+    {
         $result = parent::isDependenciesValid($data, $globalContext);
 
         $language = $globalContext['General']['Language']; // TODO kann das dynamisch ermittelt werden
 
         $validator = new Application_Form_Validate_ValuePresentInSubforms('Language');
 
-        if (!$validator->isValid($language, $data)) {
+        if (! $validator->isValid($language, $data)) {
             $translator = $this->getTranslator();
             $this->addErrorMessage(
                 vsprintf(
                     $translator->translate('admin_document_error_NoTitleInDocumentLanguage'),
-                    array($translator->translate($language))
+                    [$translator->translate($language)]
                 )
             );
 
@@ -110,18 +113,19 @@ class Admin_Form_Document_TitlesMain extends Admin_Form_Document_MultiSubForm {
      *
      * Sorgt dafuer, dass der Titel in der Dokumentensprache zuerst im Array steht.
      *
-     * @param Opus_Document $document
+     * @param DocumentInterface $document
      * @return array
      */
-    public function getFieldValues($document) {
+    public function getFieldValues($document)
+    {
         $values = parent::getFieldValues($document);
 
         $doclang = $document->getLanguage();
 
-        $sortedValues = array();
+        $sortedValues = [];
 
         foreach ($values as $index => $value) {
-            if ($value->getLanguage() == $doclang) {
+            if ($value->getLanguage() === $doclang) {
                 $sortedValues[] = $value;
                 unset($values[$index]);
                 break;
@@ -130,6 +134,4 @@ class Admin_Form_Document_TitlesMain extends Admin_Form_Document_MultiSubForm {
 
         return array_merge($sortedValues, $values);
     }
-
 }
-

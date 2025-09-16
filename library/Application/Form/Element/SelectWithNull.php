@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,34 +25,58 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_Form_Element_SelectWithNull extends Application_Form_Element_Select {
+/**
+ * Select with option to selecting no option (null).
+ */
+class Application_Form_Element_SelectWithNull extends Application_Form_Element_Select
+{
+    /** @var string */
+    private $nullValue = 'Null';
 
-    public function setValue($value) {
-        if (is_null($value)) {
-            parent::setValue('Null');
-        }
-        else {
-            parent::setValue($value);
+    /**
+     * @param string $value
+     * @return $this
+     */
+    public function setValue($value)
+    {
+        if ($value === null) {
+            return parent::setValue($this->nullValue);
+        } else {
+            return parent::setValue($value);
         }
     }
 
-    public function getValue() {
+    /**
+     * @return string|null
+     */
+    public function getValue()
+    {
         $value = parent::getValue();
 
-        if ($value == 'Null') {
+        if ($value === $this->nullValue) {
             return null;
-        }
-        else {
+        } else {
             return $value;
         }
     }
 
+    /**
+     * @param string $nullValue
+     */
+    public function setNullValue($nullValue)
+    {
+        $this->nullValue = $nullValue;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNullValue()
+    {
+        return $this->nullValue;
+    }
 }

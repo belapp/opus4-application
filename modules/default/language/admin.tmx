@@ -60,6 +60,15 @@
       </tuv>
     </tu>
 
+    <tu tuid="admin_button_create">
+        <tuv xml:lang="en">
+            <seg>Create</seg>
+        </tuv>
+        <tuv xml:lang="de">
+            <seg>Erstellen</seg>
+        </tuv>
+    </tu>
+
     <tu tuid="admin_button_remove">
       <tuv xml:lang="en">
         <seg>Remove</seg>
@@ -67,6 +76,15 @@
       <tuv xml:lang="de">
         <seg>Entfernen</seg>
       </tuv>
+    </tu>
+
+    <tu tuid="admin_button_remove_from_documents">
+        <tuv xml:lang="en">
+            <seg>Remove from documents</seg>
+        </tuv>
+        <tuv xml:lang="de">
+            <seg>Aus Dokumenten entfernen</seg>
+        </tuv>
     </tu>
 
     <tu tuid="admin_button_edit">
@@ -182,7 +200,25 @@
                 <seg>Create new document and open it for editing.</seg>
             </tuv>
             <tuv xml:lang="de">
-                <seg>Neues document erzeugen und zum Editieren öffnen.</seg>
+                <seg>Neues Dokument erzeugen und zum Editieren öffnen.</seg>
+            </tuv>
+        </tu>
+
+        <tu tuid="admin_bibtex_import">
+            <tuv xml:lang="en">
+                <seg>Import BibTeX</seg>
+            </tuv>
+            <tuv xml:lang="de">
+                <seg>BibTeX-Import</seg>
+            </tuv>
+        </tu>
+
+        <tu tuid="admin_bibtex_import_tooltip">
+            <tuv xml:lang="en">
+                <seg>Import documents from BibTeX file.</seg>
+            </tuv>
+            <tuv xml:lang="de">
+                <seg>Importiert Dokumente aus einer BibTeX-Datei.</seg>
             </tuv>
         </tu>
 

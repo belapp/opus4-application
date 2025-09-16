@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,26 +25,35 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_Form_Element_NumberTest extends FormElementTestCase {
+class Application_Form_Element_NumberTest extends FormElementTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'translation';
 
-    public function setUp() {
-        $this->_formElementClass = 'Application_Form_Element_Number';
-        $this->_expectedDecoratorCount = 8;
-        $this->_expectedDecorators = array('ViewHelper', 'Placeholder', 'Description', 'ElementHint', 'Errors',
-            'ElementHtmlTag', 'LabelNotEmpty', 'dataWrapper');
-        $this->_staticViewHelper = 'viewFormDefault';
+    public function setUp(): void
+    {
+        $this->formElementClass       = 'Application_Form_Element_Number';
+        $this->expectedDecoratorCount = 8;
+        $this->expectedDecorators     = [
+            'ViewHelper',
+            'Placeholder',
+            'Description',
+            'ElementHint',
+            'Errors',
+            'ElementHtmlTag',
+            'LabelNotEmpty',
+            'dataWrapper',
+        ];
+        $this->staticViewHelper       = 'viewFormDefault';
         parent::setUp();
     }
 
-    public function testValidation() {
+    public function testValidation()
+    {
         $element = $this->getElement();
 
         $this->assertTrue($element->getValidator('Int') !== false, 'Validator Int is missing.');
@@ -51,27 +61,31 @@ class Application_Form_Element_NumberTest extends FormElementTestCase {
         $this->assertEquals(-1, $element->getValidator('GreaterThan')->getMin());
     }
 
-    public function testDefaultSize() {
+    public function testDefaultSize()
+    {
         $element = $this->getElement();
 
         $this->assertEquals(6, $element->getAttrib('size'));
     }
 
-    public function testCustomSize() {
-        $element = $this->getElement(array('size' => 10));
+    public function testCustomSize()
+    {
+        $element = $this->getElement(['size' => 10]);
 
         $this->assertEquals(10, $element->getAttrib('size'));
     }
 
-    public function testMessagesTranslated() {
-        $translator = Zend_Registry::get('Zend_Translate');
+    public function testMessagesTranslated()
+    {
+        $translator = Application_Translate::getInstance();
 
         $this->assertTrue($translator->isTranslated('validation_error_number_tooSmall'));
         $this->assertTrue($translator->isTranslated('validation_error_number_notBetween'));
     }
 
-    public function testSettingMinAndMax() {
-        $element = $this->getElement(array('min' => 10, 'max' => 100));
+    public function testSettingMinAndMax()
+    {
+        $element = $this->getElement(['min' => 10, 'max' => 100]);
 
         $this->assertNotFalse($element->getValidator('Between'), 'Validator Between missing.');
         $this->assertFalse($element->getValidator('GreaterThan'));
@@ -88,8 +102,9 @@ class Application_Form_Element_NumberTest extends FormElementTestCase {
         $this->assertFalse($element->isValid(101));
     }
 
-    public function testSettingMinOnly() {
-        $element = $this->getElement(array('min' => 10));
+    public function testSettingMinOnly()
+    {
+        $element = $this->getElement(['min' => 10]);
 
         $this->assertFalse($element->getValidator('Between'), 'Validator Between present.');
         $this->assertNotFalse($element->getValidator('GreaterThan'));
@@ -101,5 +116,4 @@ class Application_Form_Element_NumberTest extends FormElementTestCase {
         $this->assertTrue($element->isValid(10));
         $this->assertFalse($element->isValid(9));
     }
-
 }

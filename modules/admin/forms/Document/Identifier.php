@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,38 +25,33 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @author      Maximilian Salomon <salomon@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
+use Opus\Common\Identifier;
+use Opus\Common\IdentifierInterface;
+use Opus\Common\Model\NotFoundException;
+
 /**
  * Formular fuer einen Identifier eines Dokuments.
- *
- * @category    Application
- * @package     Module_Admin
- * @subpackage  Form_Document
  */
 class Admin_Form_Document_Identifier extends Admin_Form_AbstractModelSubForm
 {
-
     /**
      * Name fuer Formularelement fuer Identifier-Wert.
      */
-    const ELEMENT_VALUE = 'Value';
+    public const ELEMENT_VALUE = 'Value';
 
     /**
      * Name fuer Formularelement fuer Identifier-Id.
      */
-    const ELEMENT_ID = 'Id';
+    public const ELEMENT_ID = 'Id';
 
     /**
      * Name fuer Forumlarelement fuer Identifer-Typ.
      */
-    const ELEMENT_TYPE = 'Type';
+    public const ELEMENT_TYPE = 'Type';
 
     /**
      * Erzeugt Elemente fuer Identifier Formular.
@@ -64,12 +60,13 @@ class Admin_Form_Document_Identifier extends Admin_Form_AbstractModelSubForm
     {
         parent::init();
 
-        $typeElement = $this->createElement('Identifier', self::ELEMENT_TYPE, array('required' => true));
+        $typeElement = $this->createElement('Identifier', self::ELEMENT_TYPE, ['required' => true]);
         $this->addElement($typeElement);
 
-        $valueElement = $this->createElement('text', self::ELEMENT_VALUE, array(
-            'required' => true, 'size' => '80'
-        ));
+        $valueElement = $this->createElement('text', self::ELEMENT_VALUE, [
+            'required' => true,
+            'size'     => '80',
+        ]);
         $valueElement->addValidator(new Application_Form_Validate_Identifier($typeElement));
         $this->addElement($valueElement);
 
@@ -77,8 +74,9 @@ class Admin_Form_Document_Identifier extends Admin_Form_AbstractModelSubForm
     }
 
     /**
-     * Befuehlt Formularelement von Opus_Identifier Instanz.
-     * @param Opus_Identifier $identifier
+     * Befuehlt Formularelement von Identifier Instanz.
+     *
+     * @param IdentifierInterface $identifier
      */
     public function populateFromModel($identifier)
     {
@@ -88,8 +86,9 @@ class Admin_Form_Document_Identifier extends Admin_Form_AbstractModelSubForm
     }
 
     /**
-     * Aktualisiert Opus_Identifier Instanz aus Formularelementen.
-     * @param Opus_Identifier $identifier
+     * Aktualisiert Identifier Instanz aus Formularelementen.
+     *
+     * @param IdentifierInterface $identifier
      */
     public function updateModel($identifier)
     {
@@ -100,22 +99,26 @@ class Admin_Form_Document_Identifier extends Admin_Form_AbstractModelSubForm
         $identifier->setValue($value);
     }
 
+    /**
+     * @return IdentifierInterface
+     * @throws Zend_Exception
+     */
     public function getModel()
     {
         $modelId = $this->getElement(self::ELEMENT_ID)->getValue();
 
         $identifier = null;
 
-        if (strlen(trim($modelId)) > 0) {
+        if ($modelId !== null && strlen(trim($modelId)) > 0) {
             try {
-                $identifier = new Opus_Identifier($modelId);
-            } catch (Opus_Model_NotFoundException $omnfe) {
+                $identifier = Identifier::get($modelId);
+            } catch (NotFoundException $omnfe) {
                 $this->getLogger()->err(__METHOD__ . " Unknown identifier ID = '$modelId'.");
             }
         }
 
-        if (is_null($identifier)) {
-            $identifier = new Opus_Identifier();
+        if ($identifier === null) {
+            $identifier = Identifier::new();
         }
 
         $this->updateModel($identifier);
@@ -129,5 +132,4 @@ class Admin_Form_Document_Identifier extends Admin_Form_AbstractModelSubForm
 
         $this->removeDecorator('Fieldset');
     }
-
 }

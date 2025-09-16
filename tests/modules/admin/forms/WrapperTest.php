@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,22 +25,22 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Unit Tests für Klasse um Unterformulare als Zend_From zu verwenden.
  */
-class Admin_Form_WrapperTest extends ControllerTestCase {
+class Admin_Form_WrapperTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
 
-    public function testGetWrappedForm() {
+    public function testGetWrappedForm()
+    {
         $form = new Admin_Form_Wrapper(new Admin_Form_Document());
-        
+
         $this->assertNotNull($form->getWrappedForm());
     }
-    
 }

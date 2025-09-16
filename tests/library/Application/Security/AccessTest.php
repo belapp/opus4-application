@@ -25,24 +25,29 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_Security_AccessTest extends ControllerTestCase {
+class Application_Security_AccessTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'all';
 
-    public function testLicenceAdminMenuFiltering() {
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->makeConfigurationModifiable();
+    }
+
+    public function testLicenceAdminMenuFiltering()
+    {
         $this->enableSecurity();
         $this->loginUser('security2', 'security2pwd');
 
         $this->dispatch('/admin');
 
         $this->logoutUser();
-        $this->restoreSecuritySetting();
 
         $this->assertQuery('//a[@href="/admin/licence"]');
         $this->assertQuery('//a[@href="/admin/index/info"]');
@@ -56,5 +61,4 @@ class Application_Security_AccessTest extends ControllerTestCase {
         $this->assertNotQuery('//a[@href="/admin/index/security"]');
         $this->assertNotQuery('//a[@href="/admin/dnbinstitute"]');
     }
-
 }

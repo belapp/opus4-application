@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,51 +24,51 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Model\ModelInterface;
 
 /**
  * Formular für die Anzeige der Model-Tabelle (CRUD - indexAction).
  *
- * @category    Application
- * @package     Application_Form_Model
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
- *
  * TODO class is tied to Application_Controller_ActionCRUD - resolve
  */
-class Application_Form_Model_Table extends Application_Form_Abstract {
-
+class Application_Form_Model_Table extends Application_Form_Abstract
+{
     /**
      * Modelle die angezeigt werden sollen.
+     *
      * @var array
      */
-    private $_models = null;
+    private $models;
 
     /**
      * Konfiguration für Spalten.
+     *
      * @var array
      */
-    private $_columns = null;
+    private $columns;
 
     /**
      * ViewScript for rendering table.
+     *
      * @var string
      */
-    private $_viewScript = 'modeltable.phtml';
+    private $viewScript = 'modeltable.phtml';
 
-    /**
-     * @var null
-     */
-    private $_controller = null;
+    /** @var Zend_Controller_Action */
+    private $controller;
 
     /**
      * Initialisiert Formular.
      *
      * Setzt Decorators so, daß das Rendering in einem View Script erfolgt.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
         $this->initDecorators();
     }
@@ -75,122 +76,241 @@ class Application_Form_Model_Table extends Application_Form_Abstract {
     /**
      * Initialisiert die Decorators für die Tabelle.
      */
-    public function initDecorators() {
+    public function initDecorators()
+    {
         $this->setDecorators(
-            array(
-            'PrepareElements',
-            array('ViewScript', array('viewScript' => $this->getViewScript()))
-            )
+            [
+                'PrepareElements',
+                [
+                    'ViewScript',
+                    [
+                        'viewScript' => $this->getViewScript(),
+                    ],
+                ],
+            ]
         );
     }
 
     /**
      * Liefert die Spaltenkonfiguration.
+     *
      * @return array|null
      */
-    public function getColumns() {
-        return $this->_columns;
+    public function getColumns()
+    {
+        return $this->columns;
     }
 
     /**
      * Setzt die Spaltenkonfiguration.
-     * @param $columns
+     *
+     * @param array $columns
      */
-    public function setColumns($columns) {
-        $this->_columns = $columns;
+    public function setColumns($columns)
+    {
+        $this->columns = $columns;
     }
 
     /**
      * Liefert das Label für eine Spalte.
-     * @param $index Index der Spalte angefangen bei 0
+     *
+     * @param int $index Index der Spalte angefangen bei 0
      * @return string|null
      */
-    public function getColumnLabel($index) {
-        if (isset($this->_columns[$index]['label'])) {
-            return $this->_columns[$index]['label'];
-        }
-        else {
+    public function getColumnLabel($index)
+    {
+        if (isset($this->columns[$index]['label'])) {
+            return $this->columns[$index]['label'];
+        } else {
             return null;
         }
     }
 
     /**
      * Liefert gesetzte Modelle.
+     *
      * @return array|null
      */
-    public function getModels() {
-        return $this->_models;
+    public function getModels()
+    {
+        return $this->models;
     }
 
     /**
      * Setzt Modelle für Anzeige.
-     * @param $models
+     *
+     * @param array $models
      */
-    public function setModels($models) {
-        if (!is_null($models) && !is_array($models)) {
+    public function setModels($models)
+    {
+        if ($models !== null && ! is_array($models)) {
             throw new Application_Exception(__METHOD__ . 'Parameter must be array.');
         }
-        $this->_models = $models;
+        $this->models = $models;
     }
 
     /**
      * Setzt ViewScript für die Ausgabe der Modeltabelle.
-     * @param $name
+     *
+     * @param string $name
      */
-    public function setViewScript($name) {
-        if (!is_null($name)) {
-            $this->_viewScript = $name;
-        }
-        else {
-            $this->_viewScript = 'modeltable.phtml';
+    public function setViewScript($name)
+    {
+        if ($name !== null) {
+            $this->viewScript = $name;
+        } else {
+            $this->viewScript = 'modeltable.phtml';
         }
         $this->initDecorators();
     }
 
     /**
      * Liefert Namen des ViewScripts für die Ausgabe der Modeltabelle.
+     *
+     * @return string
      */
-    public function getViewScript() {
-        return $this->_viewScript;
+    public function getViewScript()
+    {
+        return $this->viewScript;
     }
 
     /**
      * Sets controller object for model table.
-     * @param $controller CRUD Controller object for model
+     *
+     * @param Zend_Controller_Action $controller CRUD Controller object for model
      *
      * TODO make independent from controller class
      */
-    public function setController($controller) {
-        $this->_controller = $controller;
+    public function setController($controller)
+    {
+        $this->controller = $controller;
     }
 
     /**
      * Determines if a link for the show action should be rendered.
-     * @param $model Model object
+     *
      * @return bool true - link should be rendered
      */
-    public function isRenderShowActionLink($model) {
-        if (!is_null($this->_controller)) {
-            return $this->_controller->getShowActionEnabled();
+    public function isRenderShowActionLink()
+    {
+        if ($this->controller !== null) {
+            if (! method_exists($this->controller, 'getShowActionEnabled')) {
+                $this->getLogger()->debug('The used controller does not have the method getShowActionEnabled.');
+            } else {
+                return $this->controller->getShowActionEnabled();
+            }
         }
-        else {
-            return true;
-        }
+
+        return true;
     }
 
     /**
      * Determines if an object is modifiable and links for edit and remove should be rendered.
-     * @param $model Model object
+     *
+     * @param ModelInterface $model Model object
      * @return bool true - model can be modified and links should be rendered
      */
-    public function isModifiable($model) {
-        if (!is_null($this->_controller)) {
-            return $this->_controller->isModifiable($model);
+    public function isModifiable($model)
+    {
+        if ($this->controller !== null) {
+            if (! method_exists($this->controller, 'isModifiable')) {
+                $this->getLogger()->debug('The used controller does not have the method isModifiable.');
+            } else {
+                return $this->controller->isModifiable($model);
+            }
         }
-        else {
-            return true;
-        }
+
+        return true;
     }
 
-}
+    /**
+     * Determines if an object can be deleted and a link for removing it should be rendered.
+     *
+     * @param ModelInterface $model Model object
+     * @return bool true - model can be deleted and link should be rendered
+     */
+    public function isDeletable($model)
+    {
+        if ($this->controller !== null) {
+            if (! method_exists($this->controller, 'isDeletable')) {
+                $this->getLogger()->debug('The used controller does not have the method isDeletable.');
+            } else {
+                return $this->controller->isDeletable($model);
+            }
+        }
 
+        return true;
+    }
+
+    /**
+     * @param ModelInterface $model
+     * @return bool
+     * @throws Zend_Exception
+     */
+    public function isUsed($model)
+    {
+        if ($this->controller !== null) {
+            if (! method_exists($this->controller, 'isUsed')) {
+                $this->getLogger()->debug('The used controller does not have the method isUsed.');
+            } else {
+                return $this->controller->isUsed($model);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param ModelInterface $model
+     * @return bool
+     * @throws Zend_Exception
+     */
+    public function isProtected($model)
+    {
+        if ($this->controller !== null) {
+            if (! method_exists($this->controller, 'isProtected')) {
+                $this->getLogger()->debug('The used controller does not have the method isProtected.');
+            } else {
+                return $this->controller->isProtected($model);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param ModelInterface $model
+     * @return string|null
+     * @throws Zend_Exception
+     */
+    public function getRowCssClass($model)
+    {
+        if ($this->controller !== null) {
+            if (! method_exists($this->controller, 'getRowCssClass')) {
+                $this->getLogger()->debug('The used controller does not have the method getRowCssClass.');
+            } else {
+                return $this->controller->getRowCssClass($model);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param ModelInterface $model
+     * @return string|null
+     * @throws Zend_Exception
+     */
+    public function getRowTooltip($model)
+    {
+        if ($this->controller !== null) {
+            if (! method_exists($this->controller, 'getRowTooltip')) {
+                $this->getLogger()->debug('The used controller does not have the method getRowTooltip.');
+            } else {
+                return $this->controller->getRowTooltip($model);
+            }
+        }
+
+        return null;
+    }
+}

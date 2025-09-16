@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,9 +25,7 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
@@ -37,14 +36,19 @@
  *
  * @covers AuthController
  */
-class AuthControllerTest extends ControllerTestCase {
+class AuthControllerTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'mainMenu', 'translation'];
 
-    public function testIndexAction() {
+    public function testIndexAction()
+    {
         $this->dispatch('/auth');
         $this->assertResponseCode(200);
     }
 
-    public function testIndexActionLoggedIn() {
+    public function testIndexActionLoggedIn()
+    {
         $this->loginUser('admin', 'adminadmin');
         $this->dispatch('/auth');
         $this->assertResponseCode(200);
@@ -53,15 +57,17 @@ class AuthControllerTest extends ControllerTestCase {
     /**
      * <input type="hidden" name="hash" value="641c4c9e211577ecdd0bd3fcfc1375b8" id="hash" />
      */
-    public function testGetLoginPage() {
+    public function testGetLoginPage()
+    {
         $this->dispatch('/auth/index/rmodule/home/rcontroller/index/raction/index');
         $this->assertResponseCode(200);
         $response = $this->getResponse();
-        $treffer = preg_match('/<input.*name="hash".*value="(.*?)".*\/>/', $response->getBody(), $matches);
+        $treffer  = preg_match('/<input.*name="hash".*value="(.*?)".*\/>/', $response->getBody(), $matches);
         $this->assertEquals(1, $treffer);
     }
 
-    public function testLoginActionRedirectToHomeIfAlreadyLoggedIn() {
+    public function testLoginActionRedirectToHomeIfAlreadyLoggedIn()
+    {
         $this->loginUser('security1', 'security1pwd');
         $this->dispatch('/auth/login');
         $this->assertRedirectTo('/home');
@@ -70,21 +76,22 @@ class AuthControllerTest extends ControllerTestCase {
     /**
      * @depends testGetLoginPage
      */
-    public function testLoginAction() {
+    public function testLoginAction()
+    {
         $this->dispatch('/auth/index/rmodule/home/rcontroller/index/raction/index');
         $this->assertResponseCode(200);
         $response = $this->getResponse();
-        $treffer = preg_match('/<input.*name="hash".*value="(.*?)".*\/>/', $response->getBody(), $matches);
+        $treffer  = preg_match('/<input.*name="hash".*value="(.*?)".*\/>/', $response->getBody(), $matches);
         $this->assertEquals(1, $treffer);
         $hash = $matches[1];
         $this->resetRequest();
-        $this->request
-                ->setMethod('POST')
-                ->setPost(array(
-                   'hash' => $hash,
-                   'login' => 'admin',
-                   'password' => 'adminadmin'
-                ));
+        $this->getRequest()
+            ->setMethod('POST')
+            ->setPost([
+                'hash'     => $hash,
+                'login'    => 'admin',
+                'password' => 'adminadmin',
+            ]);
         $this->dispatch('/auth/login/rmodule/home/rcontroller/index/raction/index');
         $this->assertRedirect('/home/index/index');
         $this->assertModule('default');
@@ -92,7 +99,8 @@ class AuthControllerTest extends ControllerTestCase {
         $this->assertAction('login');
     }
 
-    public function testLogoutActionAsAdmin() {
+    public function testLogoutActionAsAdmin()
+    {
         $this->loginUser('admin', 'adminadmin');
         $this->dispatch('/auth/logout/rmodule/home/rcontroller/index/raction/index');
         $this->assertResponseLocationHeader($this->response, '/home');
@@ -100,14 +108,16 @@ class AuthControllerTest extends ControllerTestCase {
         $this->assertNull(Zend_Auth::getInstance()->getIdentity());
     }
 
-    public function testLogoutActionAsAnonymous() {
+    public function testLogoutActionAsAnonymous()
+    {
         $this->dispatch('/auth/logout/rmodule/home/rcontroller/index/raction/index');
         $this->assertResponseLocationHeader($this->response, '/home');
         $this->assertResponseCode('302');
         $this->assertNull(Zend_Auth::getInstance()->getIdentity());
     }
 
-    public function testLogoutActionFromAdministrationModule() {
+    public function testLogoutActionFromAdministrationModule()
+    {
         $this->loginUser('admin', 'adminadmin');
         $this->dispatch('/auth/logout/rmodule/admin/rcontroller/index/raction/index');
         $this->assertNotContains('Argument 4 passed to Zend_Controller_Action_Helper_Redirector::direct() must be an array, null given', $this->response->outputBody());
@@ -116,7 +126,8 @@ class AuthControllerTest extends ControllerTestCase {
         $this->assertNull(Zend_Auth::getInstance()->getIdentity());
     }
 
-    public function testLogoutActionFromAnyModule() {
+    public function testLogoutActionFromAnyModule()
+    {
         $this->loginUser('admin', 'adminadmin');
         $this->dispatch('/auth/logout/rmodule/any/rcontroller/index/raction/index');
         $this->assertResponseLocationHeader($this->response, '/home');
@@ -124,4 +135,3 @@ class AuthControllerTest extends ControllerTestCase {
         $this->assertNull(Zend_Auth::getInstance()->getIdentity());
     }
 }
-

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,10 +25,7 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application_Xslt
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
@@ -38,16 +36,24 @@
  */
 class Application_View_Helper_ExportLinks extends Application_View_Helper_Abstract
 {
-
     /**
      * Returns HTMl for rendering export links.
-     * @param null $keys Keys for parameters that should be include in export link
+     *
+     * @param string|string[]|null $keys Keys for parameters that should be include in export link
+     * @param array|null           $context
      * @return string HTML
      */
-    public function exportLinks($keys = null, $context = null) {
+    public function exportLinks($keys = null, $context = null)
+    {
         return $this->toString($keys, $context);
     }
 
+    /**
+     * @param string|string[]|null $keys
+     * @param string|null          $context
+     * @return string
+     * @throws Zend_Exception
+     */
     public function toString($keys = null, $context = null)
     {
         $exporter = Zend_Registry::get('Opus_Exporter'); // TODO use constant
@@ -56,24 +62,20 @@ class Application_View_Helper_ExportLinks extends Application_View_Helper_Abstra
 
         $output = '<ul>';
 
-        foreach ($formats as $format)
-        {
+        foreach ($formats as $format) {
             // if context provided skip format if it has been set to false
-            if (!is_null($context) && $format->get($context) === false) {
+            if ($context !== null && $format->get($context) === false) {
                 continue;
             }
 
             $params = $format->getParams();
 
-            if (!is_null($keys))
-            {
-                if (!is_array($keys))
-                {
-                    $keys = array($keys);
+            if ($keys !== null) {
+                if (! is_array($keys)) {
+                    $keys = [$keys];
                 }
 
-                foreach ($keys as $key)
-                {
+                foreach ($keys as $key) {
                     $params[$key] = $this->view->$key;
                 }
             }
@@ -90,13 +92,16 @@ class Application_View_Helper_ExportLinks extends Application_View_Helper_Abstra
         return $output;
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->toString();
     }
 
     /**
-     * @param $format
+     * @param Zend_Navigation_Page_Mvc $format
      * @return string
      *
      * TODO use translations (register module translation first)
@@ -104,12 +109,11 @@ class Application_View_Helper_ExportLinks extends Application_View_Helper_Abstra
      */
     public function renderLink($format)
     {
-        $name = $format->get('name');
+        $name        = $format->get('name');
         $description = $format->get('description');
         $formatClass = strtolower($name);
         $format->setResetParams(false);
 
         return "<a href=\"{$format->getHref()}\" title=\"$description\" class=\"export $formatClass\">$name</a>";
     }
-
 }

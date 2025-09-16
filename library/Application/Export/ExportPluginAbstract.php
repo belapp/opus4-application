@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,112 +25,151 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Export
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
+use Opus\Common\Security\Realm;
+
 /**
- * Class Application_Export_ExportPluginAbstract
  * TODO in the long run should not be a model and cannot extend Application_Model_Abstract
  * TODO configuration should be limited to plugin (and not the global object)
  */
-abstract class Application_Export_ExportPluginAbstract extends Application_Model_Abstract
-    implements Application_Export_ExportPlugin {
-
+abstract class Application_Export_ExportPluginAbstract extends Application_Model_Abstract implements Application_Export_ExportPluginInterface
+{
     /**
-     * @var Name of plugin.
+     * @var string Name of plugin.
      * TODO Im Augenblick nur von PublistExport verwendet, um im XSLT zwischen Instanzen unterscheiden zu können.
      */
-    private $_name;
+    private $name;
 
-    /**
-     * @var Zend_Controller_Request_Http Current request.
-     */
-    private $_request;
+    /** @var Zend_Controller_Request_Http Current request. */
+    private $request;
 
-    /**
-     * @var Zend_Controller_Response_Http Response object.
-     */
-    private $_response;
+    /** @var Zend_Controller_Response_Http Response object. */
+    private $response;
 
-    /**
-     * @var Zend_View View object for rendering response.
-     */
-    private $_view;
+    /** @var Zend_View View object for rendering response. */
+    private $view;
 
     /**
      * Returns name of plugin instance.
-     * @return Name
+     *
+     * @return string
      */
-    public function getName() {
-        return $this->_name;
+    public function getName()
+    {
+        return $this->name;
     }
 
     /**
      * Sets name of plugin instance.
-     * @param $name
+     *
+     * @param string $name
      */
-    public function setName($name) {
-        $this->_name = $name;
+    public function setName($name)
+    {
+        $this->name = $name;
     }
 
     /**
      * Returns request object.
+     *
      * @return Zend_Controller_Request_Http
      */
-    public function getRequest() {
-        return $this->_request;
+    public function getRequest()
+    {
+        return $this->request;
     }
 
     /**
      * Sets request object.
+     *
      * @param Zend_Controller_Request_Http $request
      */
-    public function setRequest(Zend_Controller_Request_Http $request) {
-        $this->_request = $request;
+    public function setRequest($request)
+    {
+        $this->request = $request;
     }
 
     /**
      * Returns response object.
+     *
      * @return Zend_Controller_Response_Http
      */
-    public function getResponse() {
-        return $this->_response;
+    public function getResponse()
+    {
+        return $this->response;
     }
 
     /**
      * Sets response object.
+     *
      * @param Zend_Controller_Response_Http $response
      */
-    public function setResponse(Zend_Controller_Response_Http $response) {
-        $this->_response = $response;
+    public function setResponse($response)
+    {
+        $this->response = $response;
     }
 
     /**
      * Returns view object.
+     *
      * @return Zend_View
      */
-    public function getView() {
-        return $this->_view;
+    public function getView()
+    {
+        return $this->view;
     }
 
     /**
      * Sets view object.
+     *
      * @param Zend_View $view
      */
-    public function setView(Zend_View $view) {
-        $this->_view = $view;
+    public function setView($view)
+    {
+        $this->view = $view;
+    }
+
+    /**
+     * Checks if access is restricted to adminstrators.
+     *
+     * @return bool true if access is restricted, otherwise false
+     * @throws Zend_Exception
+     */
+    public function isAccessRestricted()
+    {
+        if (
+            isset($this->getConfig()->adminOnly) &&
+            filter_var($this->getConfig()->adminOnly, FILTER_VALIDATE_BOOLEAN)
+        ) {
+            return ! Realm::getInstance()->checkModule('admin');
+        }
+        return false; // keine Einschränkung des Zugriffs
     }
 
     /**
      * Main function performing export.
      *
      * Needs to be implemented by child classes.
+     *
+     * @return int
      */
     abstract public function execute();
 
+    /**
+     * Export of unpublished documents is allowed only if the user has 'resource_documents'
+     * permission.
+     *
+     * @return bool true if export of unpublished documents is allowed
+     */
+    public function isAllowExportOfUnpublishedDocs()
+    {
+        $accessControl = Zend_Controller_Action_HelperBroker::getStaticHelper('accessControl');
+        if ($accessControl === null) {
+            return false;
+        }
+        return $accessControl->accessAllowed('documents');
+    }
 }

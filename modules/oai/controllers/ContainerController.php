@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -25,16 +26,12 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Oai
- * @author      Sascha Szott <szott@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2009 - 2016, OPUS 4 development team
+ * @copyright   Copyright (c) 2009, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 /**
- * Class Oai_ContainerController deliveres files of a document for OAI clients.
+ * Class Oai_ContainerController delivers files of a document for OAI clients.
  *
  * If a document has only one file it is returned.
  *
@@ -43,22 +40,23 @@
  *
  * TODO apparently cannot handle filenames with spaces
  */
-class Oai_ContainerController extends Application_Controller_Action {
-
-    public function indexAction() {
+class Oai_ContainerController extends Application_Controller_Action
+{
+    public function indexAction()
+    {
         $docId = $this->getRequest()->getParam('docId', null);
 
-        $container = null;
+        $container  = null;
         $fileHandle = null;
 
         try {
-            $container = new Oai_Model_Container($docId);
+            $container  = new Oai_Model_Container($docId);
             $fileHandle = $container->getFileHandle();
-        }
-        catch (Application_Exception $ome) {
+        } catch (Application_Exception $ome) {
             $this->view->errorMessage = $ome->getMessage();
             $this->getResponse()->setHttpResponseCode(500);
-            return $this->render('error');
+            $this->render('error');
+            return;
         }
 
         // prepare response
@@ -67,16 +65,17 @@ class Oai_ContainerController extends Application_Controller_Action {
         $this->getResponse()
                 ->setHeader('Content-Type', $fileHandle->getMimeType(), true)
                 ->setHeader(
-                    'Content-Disposition', 'attachment; filename=' . $container->getName()
-                    . $fileHandle->getExtension(), true
+                    'Content-Disposition',
+                    'attachment; filename=' . $container->getName()
+                    . $fileHandle->getExtension(),
+                    true
                 );
 
         $this->_helper->SendFile->setLogger($this->getLogger());
 
         try {
             $this->_helper->SendFile($fileHandle->getPath());
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             $this->getLogger()->err($ex->getMessage());
             $this->getResponse()->clearAllHeaders();
             $this->getResponse()->clearBody();
@@ -85,5 +84,4 @@ class Oai_ContainerController extends Application_Controller_Action {
 
         $fileHandle->delete();
     }
-
 }

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,26 +25,33 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Admin_Model
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\CollectionInterface;
+use Opus\Common\CollectionRole;
+use Opus\Common\CollectionRoleInterface;
+
 class Admin_Model_CollectionsTest extends ControllerTestCase
 {
+    /** @var string[] */
+    protected $additionalResources = ['database', 'view'];
 
+    /** @var int */
     private $collectionRoleId;
 
+    /** @var Admin_Model_Collections */
     private $model;
 
-    private $_docId;
+    /** @var int */
+    private $docId;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
-        $collectionRole = new Opus_CollectionRole();
+        $collectionRole = CollectionRole::new();
         $collectionRole->setName('TestCollectionRole-Name');
         $collectionRole->setOaiName('TestCollectionRole-OaiName');
         $collectionRole->setVisible(1);
@@ -58,16 +66,16 @@ class Admin_Model_CollectionsTest extends ControllerTestCase
         $this->collectionRoleId = $collectionRole->store();
 
         $this->model = new Admin_Model_Collections();
-        $this->model->setView(Zend_Registry::get('Opus_View'));
+        $this->model->setView($this->getView());
 
         $document = $this->createTestDocument();
         $document->addCollection($root);
-        $this->_docId = $document->store();
+        $this->docId = $document->store();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
-        $collectionRole = new Opus_CollectionRole($this->collectionRoleId);
+        $collectionRole = CollectionRole::get($this->collectionRoleId);
         $collectionRole->delete();
 
         parent::tearDown();
@@ -90,14 +98,14 @@ class Admin_Model_CollectionsTest extends ControllerTestCase
             $this->assertArrayHasKey('name', $collection);
             $this->assertArrayHasKey('hasChildren', $collection);
             $this->assertArrayHasKey('visible', $collection);
-            if (strcmp($collection['name'], 'default_collection_role_TestCollectionRole-Name') == 0) {
+            if (strcmp($collection['name'], 'default_collection_role_TestCollectionRole-Name') === 0) {
                 $this->assertEquals(1, $collection['visible']);
             }
             $this->assertArrayHasKey('isRoot', $collection);
             $this->assertArrayHasKey('role', $collection);
-            $this->assertInstanceOf('Opus_CollectionRole', $collection['role']);
+            $this->assertInstanceOf(CollectionRoleInterface::class, $collection['role']);
             $this->assertArrayHasKey('collection', $collection);
-            $this->assertInstanceOf('Opus_Collection', $collection['collection']);
+            $this->assertInstanceOf(CollectionInterface::class, $collection['collection']);
             $this->assertArrayHasKey('assigned', $collection);
             $this->assertFalse($collection['assigned']);
         }
@@ -108,7 +116,7 @@ class Admin_Model_CollectionsTest extends ControllerTestCase
      */
     public function testRoleInvisible()
     {
-        $collectionRole = Opus_CollectionRole::fetchByName('TestCollectionRole-Name');
+        $collectionRole = CollectionRole::fetchByName('TestCollectionRole-Name');
         $collectionRole->setVisible(0);
         $collectionRole->store();
 
@@ -129,9 +137,9 @@ class Admin_Model_CollectionsTest extends ControllerTestCase
             }
             $this->assertArrayHasKey('isRoot', $collection);
             $this->assertArrayHasKey('role', $collection);
-            $this->assertInstanceOf('Opus_CollectionRole', $collection['role']);
+            $this->assertInstanceOf(CollectionRoleInterface::class, $collection['role']);
             $this->assertArrayHasKey('collection', $collection);
-            $this->assertInstanceOf('Opus_Collection', $collection['collection']);
+            $this->assertInstanceOf(CollectionInterface::class, $collection['collection']);
             $this->assertArrayHasKey('assigned', $collection);
             $this->assertFalse($collection['assigned']);
         }
@@ -151,14 +159,14 @@ class Admin_Model_CollectionsTest extends ControllerTestCase
             $this->assertArrayHasKey('name', $collection);
             $this->assertArrayHasKey('hasChildren', $collection);
             $this->assertArrayHasKey('visible', $collection);
-            if (strcmp($collection['name'], 'default_collection_role_no-root-test') == 0) {
+            if (strcmp($collection['name'], 'default_collection_role_no-root-test') === 0) {
                 $this->fail('Collection role no-root-test should not be present in array.');
             }
             $this->assertArrayHasKey('isRoot', $collection);
             $this->assertArrayHasKey('role', $collection);
-            $this->assertInstanceOf('Opus_CollectionRole', $collection['role']);
+            $this->assertInstanceOf(CollectionRoleInterface::class, $collection['role']);
             $this->assertArrayHasKey('collection', $collection);
-            $this->assertInstanceOf('Opus_Collection', $collection['collection']);
+            $this->assertInstanceOf(CollectionInterface::class, $collection['collection']);
             $this->assertArrayHasKey('assigned', $collection);
             $this->assertFalse($collection['assigned']);
         }
@@ -166,20 +174,17 @@ class Admin_Model_CollectionsTest extends ControllerTestCase
 
     public function testCollectionRolesInfoForAssigned()
     {
-        $collections = $this->model->getCollectionRolesInfo($this->_docId);
+        $collections = $this->model->getCollectionRolesInfo($this->docId);
 
         $this->assertNotNull($collections);
         $this->assertInternalType('array', $collections);
 
-        foreach ($collections as $collection)
-        {
+        foreach ($collections as $collection) {
             $this->assertArrayHasKey('assigned', $collection);
 
-            if (strcmp($collection['name'], 'default_collection_role_TestCollectionRole-Name') === 0)
-            {
+            if (strcmp($collection['name'], 'default_collection_role_TestCollectionRole-Name') === 0) {
                 $this->assertTrue($collection['assigned']);
-            }
-            else {
+            } else {
                 $this->assertFalse($collection['assigned']);
             }
         }

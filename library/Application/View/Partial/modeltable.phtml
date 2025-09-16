@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,30 +25,27 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application_View_Partial
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
 ?>
 
 <table>
     <thead>
         <tr>
             <th class="visible"><?= $this->translate($this->element->getColumnLabel(0)) ?>
-                <a class="add" href="<?= $this->url(array('action' => 'new')) ?>"><?=
+                <a class="add" href="<?= $this->url(['action' => 'new']) ?>"><?=
                     $this->translate('admin_button_add') ?></a></th>
             <th colspan="2">&nbsp;</th>
         </tr>
     </thead>
-    <?PHP foreach($this->element->getModels() as $model) : ?>
+    <?PHP foreach ($this->element->getModels() as $model) : ?>
         <tr>
             <td>
-                <?PHP if ($this->element->isRenderShowActionLink($model)) : ?>
-                <a href="<?= $this->url(array('action' => 'show', 'id' => $model->getId())) ?>"
-                    class="displayname<?= (is_null($model->getField('Active')) || $model->getActive()) ? '' : ' invisible'?>"
+                <?PHP if ($this->element->isRenderShowActionLink()) : ?>
+                <a href="<?= $this->url(['action' => 'show', 'id' => $model->getId()]) ?>"
+                    class="displayname<?= $model->getField('Active') === null || $model->getActive() ? '' : ' invisible'?>"
                     ><?= htmlspecialchars($model->getDisplayName()) ?></a>
                 <?PHP else : ?>
                     <?= htmlspecialchars($model->getDisplayName()) ?>
@@ -55,13 +53,13 @@
             </td>
             <td class="edit">
                 <?PHP if ($this->element->isModifiable($model)) : ?>
-                <a href="<?= $this->url(array('action' => 'edit', 'id' => $model->getId())) ?>"
+                <a href="<?= $this->url(['action' => 'edit', 'id' => $model->getId()]) ?>"
                     ><?= $this->translate('admin_button_edit'); ?></a>
                 <?PHP endif ?>
             </td>
             <td class="remove">
-                <?PHP if ($this->element->isModifiable($model)) : ?>
-                <a href="<?= $this->url(array('action' => 'delete', 'id' => $model->getId())) ?>"
+                <?PHP if ($this->element->isDeletable($model)) : ?>
+                <a href="<?= $this->url(['action' => 'delete', 'id' => $model->getId()]) ?>"
                     ><?= $this->translate('admin_button_remove'); ?></a>
                 <?PHP endif ?>
             </td>

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,31 +25,29 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Admin_Form
- * @author      Jens Schwidder <schwidder@zib.de>
- * @author      Maximilian Salomon <salomon@zib.de>
  * @copyright   Copyright (c) 2018, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Admin_Form_Person_ChangesTest extends ControllerTestCase
 {
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
 
     public function testGetPreparedChanges()
     {
         $form = new Admin_Form_Person_Changes();
 
-        $form->setOldValues(array(
-            'LastName' => 'Mueller',
-            'FirstName' => 'Michael',
-            'IdentifierMisc' => null
-        ));
+        $form->setOldValues([
+            'LastName'       => 'Mueller',
+            'FirstName'      => 'Michael',
+            'IdentifierMisc' => null,
+        ]);
 
-        $form->setChanges(array(
-            'FirstName' => 'Thomas',
-            'IdentifierMisc' => 'id1234'
-        ));
+        $form->setChanges([
+            'FirstName'      => 'Thomas',
+            'IdentifierMisc' => 'id1234',
+        ]);
 
         $prepared = $form->getPreparedChanges();
 
@@ -80,16 +79,16 @@ class Admin_Form_Person_ChangesTest extends ControllerTestCase
     {
         $form = new Admin_Form_Person_Changes();
 
-        $form->setOldValues(array(
-            'LastName' => 'Mueller',
-            'FirstName' => 'Michael',
-            'IdentifierMisc' => null
-        ));
+        $form->setOldValues([
+            'LastName'       => 'Mueller',
+            'FirstName'      => 'Michael',
+            'IdentifierMisc' => null,
+        ]);
 
-        $form->setChanges(array(
-            'FirstName' => 'Thomas',
-            'IdentifierMisc' => 'id1234'
-        ));
+        $form->setChanges([
+            'FirstName'      => 'Thomas',
+            'IdentifierMisc' => 'id1234',
+        ]);
 
         $prepared = $form->getPreparedChanges();
 
@@ -120,16 +119,16 @@ class Admin_Form_Person_ChangesTest extends ControllerTestCase
     {
         $form = new Admin_Form_Person_Changes();
 
-        $form->setOldValues(array(
-            'LastName' => 'Mueller',
-            'FirstName' => 'Michael',
-            'IdentifierMisc' => null
-        ));
+        $form->setOldValues([
+            'LastName'       => 'Mueller',
+            'FirstName'      => 'Michael',
+            'IdentifierMisc' => null,
+        ]);
 
-        $form->setChanges(array(
-            'FirstName' => 'Thomas',
-            'IdentifierMisc' => 'id1234'
-        ));
+        $form->setChanges([
+            'FirstName'      => 'Thomas',
+            'IdentifierMisc' => 'id1234',
+        ]);
 
         $prepared = $form->getPreparedChanges();
 
@@ -159,13 +158,13 @@ class Admin_Form_Person_ChangesTest extends ControllerTestCase
     {
         $form = new Admin_Form_Person_Changes();
 
-        $form->setOldValues(array(
-            'FirstName' => array('T.', 'Tom', 'Thomas')
-        ));
+        $form->setOldValues([
+            'FirstName' => ['T.', 'Tom', 'Thomas'],
+        ]);
 
-        $form->setChanges(array(
+        $form->setChanges([
             'FirstName' => 'Thomas',
-        ));
+        ]);
 
         $prepared = $form->getPreparedChanges();
 
@@ -198,16 +197,16 @@ class Admin_Form_Person_ChangesTest extends ControllerTestCase
 
     public function testRender()
     {
-        $this->useEnglish();
+        $this->disableTranslation();
         $form = new Admin_Form_Person_Changes();
 
-        $form->setOldValues(array(
-            'LastName' => array('Muller', 'Mueller')
-        ));
+        $form->setOldValues([
+            'LastName' => ['Muller', 'Mueller'],
+        ]);
 
-        $form->setChanges(array(
-            'LastName' => array('Mueller')
-        ));
+        $form->setChanges([
+            'LastName' => ['Mueller'],
+        ]);
 
         $output = $form->__toString();
 
@@ -217,7 +216,7 @@ class Admin_Form_Person_ChangesTest extends ControllerTestCase
         $this->assertXpathContentContains('//th', 'admin_change_old_value');
         $this->assertXpathContentContains('//th', 'admin_change_new_value');
 
-        $this->assertXpathContentContains('//td[@class = "fieldname"]', 'Last Name');
+        $this->assertXpathContentContains('//td[@class = "fieldname"]', 'LastName');
         $this->assertXpathContentContains('//td[@class = "old-value"]', 'Muller');
         $this->assertXpathContentContains('//td[@class = "old-value"]', 'Mueller');
 
@@ -253,12 +252,11 @@ class Admin_Form_Person_ChangesTest extends ControllerTestCase
     {
         $form = new Admin_Form_Person_Changes();
 
-        $values = $form->forceArray(array('value1', 'value2'));
+        $values = $form->forceArray(['value1', 'value2']);
 
         $this->assertNotNull($values);
         $this->assertInternalType('array', $values);
         $this->assertCount(2, $values);
-        $this->assertEquals(array('value1', 'value2'), $values);
+        $this->assertEquals(['value1', 'value2'], $values);
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,25 +25,30 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Frontdoor
- * @author      Julian Heise <heise@zib.de>
- * @copyright   Copyright (c) 2008-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Frontdoor_Model_FrontdoorDeliveryException extends Exception {
+class Frontdoor_Model_FrontdoorDeliveryException extends Exception
+{
+    /** @var string */
+    protected $translateKey;
 
-    protected $_translateKey;
-
-    public function __construct($key) {
-        $this->_translateKey = $key;
+    /**
+     * @param string $key
+     * @param int    $code
+     */
+    public function __construct($key, $code = 400)
+    {
+        parent::__construct($key, $code);
+        $this->translateKey = $key;
     }
 
-    public function getTranslateKey() {
-        return $this->_translateKey;
+    /**
+     * @return string
+     */
+    public function getTranslateKey()
+    {
+        return $this->translateKey;
     }
-
 }
-

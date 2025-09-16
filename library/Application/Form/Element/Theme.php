@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,17 +25,14 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_Form_Element_Theme extends Application_Form_Element_SelectWithNull {
-
-    public function init() {
+class Application_Form_Element_Theme extends Application_Form_Element_SelectWithNull
+{
+    public function init()
+    {
         parent::init();
 
         $values = $this->getThemes();
@@ -46,35 +44,32 @@ class Application_Form_Element_Theme extends Application_Form_Element_SelectWith
         }
     }
 
-    public function setValue($value) {
-        if (!array_key_exists($value, $this->getMultiOptions())) {
-            parent::setValue('Null');
-        }
-        else {
-            parent::setValue($value);
+    /**
+     * @param string $value
+     * @return $this
+     */
+    public function setValue($value)
+    {
+        if (! array_key_exists($value, $this->getMultiOptions())) {
+            return parent::setValue('Null');
+        } else {
+            return parent::setValue($value);
         }
     }
 
-    /**
-     * Path to location of available themes.
-     *
-     * @var string
-     */
-    private static $_themesPath = '';
+    /** @var array Available themes from directory for themes. */
+    private static $themes;
 
     /**
-     * Available themes from directory self::$_themesPath.
-     *
-     * @var array
+     * @return string[]
      */
-    private static $_themes = null;
-
-    private function getThemes() {
-        if (is_null(self::$_themes)) {
+    private function getThemes()
+    {
+        if (self::$themes === null) {
             $this->findThemes(APPLICATION_PATH . '/public/layouts'); // TODO configurable
         }
 
-        return self::$_themes;
+        return self::$themes;
     }
 
     /**
@@ -82,21 +77,20 @@ class Application_Form_Element_Theme extends Application_Form_Element_SelectWith
      *
      * @param  string $path
      */
-    public static function findThemes($path) {
+    public static function findThemes($path)
+    {
         if (is_dir($path) === false) {
             throw new InvalidArgumentException("Argument should be a valid path.");
         }
 
-        $themes = array();
+        $themes = [];
         foreach (glob($path . '/*') as $entry) {
             if (true === is_dir($entry)) {
-                $theme = basename($entry);
+                $theme          = basename($entry);
                 $themes[$theme] = $theme;
             }
         }
 
-        self::$_themesPath = $path;
-        self::$_themes = $themes;
+        self::$themes = $themes;
     }
-
 }

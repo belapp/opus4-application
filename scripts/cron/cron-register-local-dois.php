@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -25,13 +26,13 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Sascha Szott <szott@zib.de>
  * @copyright   Copyright (c) 2018, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 require_once dirname(__FILE__) . '/../common/bootstrap.php';
+
+use Opus\Doi\DoiManager;
 
 /*
  * Dieses Script sucht nach Dokumenten im ServerState 'published',
@@ -45,13 +46,12 @@ require_once dirname(__FILE__) . '/../common/bootstrap.php';
 // setze auf $printErrors auf true, um Fehlermeldungen auf der Konsole auszugeben
 $printErrors = false;
 
-$doiManager = new Opus_Doi_DoiManager();
-$status = $doiManager->registerPending();
+$doiManager = new DoiManager();
+$status     = $doiManager->registerPending();
 
 if ($status->isNoDocsToProcess()) {
     echo "could not find matching documents for DOI registration\n";
-}
-else {
+} else {
     echo count($status->getDocsWithDoiStatus()) . " documents have been processed\n";
 
     if ($printErrors) {
@@ -62,5 +62,3 @@ else {
         }
     }
 }
-
-

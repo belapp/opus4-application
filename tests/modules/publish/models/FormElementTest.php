@@ -25,44 +25,46 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Publish Unit Test
- * @author      Susanne Gottwald <gottwald@zib.de>
- * @copyright   Copyright (c) 2008-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Publish_Model_FormElementTest extends ControllerTestCase {
 
-    protected $_logger;
+class Publish_Model_FormElementTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
 
-    public function setUp() {
-        $writer = new Zend_Log_Writer_Null;
-        $this->_logger = new Zend_Log($writer);
+    /** @var Zend_Log */
+    protected $logger;
+
+    public function setUp(): void
+    {
+        $writer       = new Zend_Log_Writer_Null();
+        $this->logger = new Zend_Log($writer);
         parent::setUp();
     }
 
-    public function testUnrequiredFirstNames() {
-        $session = new Zend_Session_Namespace('Publish');
+    public function testUnrequiredFirstNames()
+    {
+        $session               = new Zend_Session_Namespace('Publish');
         $session->documentType = 'all';
-        
-        $form = new Publish_Form_PublishingSecond($this->_logger);        
-        $name = 'PersonAuthor';
-        $required = true;
-        $formElement = 'text';
-        $datatype = 'Person';
+
+        $form         = new Publish_Form_PublishingSecond($this->logger);
+        $name         = 'PersonAuthor';
+        $required     = true;
+        $formElement  = 'text';
+        $datatype     = 'Person';
         $multiplicity = 1;
 
         $element = new Publish_Model_FormElement($form, $name, $required, $formElement, $datatype, $multiplicity);
         $element->initGroup();
         $subformElements = $element->getSubFormElements();
 
-        foreach ($subformElements AS $sub) {
-            /* @var $sub Zend_Form_Element */
-            if ($sub->getName() == 'PersonAuthorFirstName')
+        foreach ($subformElements as $sub) {
+            /** @var Zend_Form_Element $sub */
+            if ($sub->getName() === 'PersonAuthorFirstName') {
                 $this->assertFalse($sub->isRequired());
+            }
         }
     }
-
 }
-

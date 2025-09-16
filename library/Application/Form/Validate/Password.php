@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,41 +25,49 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    TODO
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
 /**
  * TODO if password is not set should the result be TRUE?
  */
-class Application_Form_Validate_Password extends Zend_Validate_Abstract {
+class Application_Form_Validate_Password extends Zend_Validate_Abstract
+{
+    public const NOT_MATCH = 'notMatch';
 
-    const NOT_MATCH = 'notMatch';
+    /**
+     * @var string[]
+     * @phpcs:disable
+     */
+    protected $_messageTemplates = [
+        self::NOT_MATCH => 'password_confirmation_error',
+    ];
+    // @phpcs:enable
 
-    protected $_messageTemplates = array(
-        self::NOT_MATCH => 'password_confirmation_error'
-    );
-
-    public function isValid($value, $context = null) {
+    /**
+     * @param string     $value
+     * @param array|null $context
+     * @return bool
+     */
+    public function isValid($value, $context = null)
+    {
         $value = (string) $value;
 
         $this->_setValue($value);
 
         if (is_array($context)) {
-            if (isset($context['password']) &&
-                    ($value == $context['password'])) {
+            if (
+                isset($context['password']) &&
+                    ($value === $context['password'])
+            ) {
                 return true;
             }
-        }
-        elseif (is_string($context) && ($value == $context)) {
+        } elseif (is_string($context) && ($value === $context)) {
             return true;
         }
 
         $this->_error(self::NOT_MATCH);
         return false;
     }
-
 }
-

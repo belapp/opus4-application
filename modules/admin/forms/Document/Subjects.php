@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,74 +25,54 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\DocumentInterface;
 
 /**
  * Unterformular fuer Subjects im Metadaten-Formular.
- * 
+ *
  * Dieses Formular enthaelt die Unterformulare fuer die verschiedenen Schlagwort-Typen und ist dafuer verantwortlich
  * das Feld "Subject" im Dokument zu aktualisieren.
- * 
- * TODO Umgang mit alten Schlagwörtern mit unbekanntem Typ (siehe auch OPUSVIER-2604)
  *
- * @category    Application
- * @package     Module_Admin
+ * TODO Umgang mit alten Schlagwörtern mit unbekanntem Typ (siehe auch OPUSVIER-2604)
  */
-class Admin_Form_Document_Subjects extends Admin_Form_Document_Section {
-    
+class Admin_Form_Document_Subjects extends Admin_Form_Document_Section
+{
     /**
      * Initialisiert Formular und fuegt Unterformulare fuer Schlagworttypen hinzu.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
-        
-        $this->addSubForm(
-            new Admin_Form_Document_SubjectType(
-                'swd', array('columns' => array(
-                array(), array('label' => 'Opus_Subject_Value'), array('label' => 'ExternalKey')))
-            ), 'Swd'
-        );
 
-        $this->addSubForm(
-            new Admin_Form_Document_SubjectType(
-                'psyndex', array('columns' => array(
-                array(), array('label' => 'Opus_Subject_Value'), array('label' => 'ExternalKey')))
-            ), 'Psyndex'
-        );
-
-        $this->addSubForm(
-            new Admin_Form_Document_SubjectType(
-                'uncontrolled', array('columns' => array(
-                array(), array('label' => 'Opus_Subject_Value'), array('label' => 'ExternalKey')))
-            ), 'Uncontrolled'
-        );
+        $this->addSubForm(new Admin_Form_Document_GndSubjects(), 'Swd');
+        $this->addSubForm(new Admin_Form_Document_Tags('psyndex'), 'Psyndex');
+        $this->addSubForm(new Admin_Form_Document_Tags('uncontrolled'), 'Uncontrolled');
 
         // TODO Unterformular fuer unbekannte Typen hinzufügen?
-        
-        $this->setDecorators(array('FormElements'));
+
+        $this->setDecorators(['FormElements']);
     }
-    
+
     /**
      * Sammelt Schlagwoerter von Unterformularen ein und aktualisiert Dokument.
-     * @param Opus_Document $document
+     *
+     * @param DocumentInterface $document
      */
-    public function updateModel($document) {
+    public function updateModel($document)
+    {
         $subforms = $this->getSubForms();
-        
-        $subjects = array();
-        
+
+        $subjects = [];
+
         foreach ($subforms as $subform) {
             $subjectsWithType = $subform->getSubFormModels();
-            $subjects = array_merge($subjects, $subjectsWithType);
+            $subjects         = array_merge($subjects, $subjectsWithType);
         }
-        
+
         $document->setSubject($subjects);
     }
-    
 }

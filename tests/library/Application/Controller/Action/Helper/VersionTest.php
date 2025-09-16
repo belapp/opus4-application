@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,26 +25,23 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Application_Controller_Action_Helper
- * @author      Michael Lang <lang@zib.de>
  * @copyright   Copyright (c) 2014, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Controller_Action_Helper_VersionTest extends ControllerTestCase {
 
-    public function testDirect() {
+class Application_Controller_Action_Helper_VersionTest extends TestCase
+{
+    public function testDirect()
+    {
         $helper = Zend_Controller_Action_HelperBroker::getStaticHelper('version');
         $helper->setVersion('Opus-noVersion');
         $this->assertEquals('Opus-noVersion', $helper->direct());
     }
 
-    public function testSetGetVersion() {
+    public function testSetGetVersion()
+    {
         $helper = Zend_Controller_Action_HelperBroker::getStaticHelper('version');
         $helper->setVersion('Opus-noVersion');
         $this->assertEquals('Opus-noVersion', $helper->getVersion());
     }
-
 }
- 

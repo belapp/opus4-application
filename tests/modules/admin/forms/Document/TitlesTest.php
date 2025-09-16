@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,28 +25,25 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Unit Tests fuer Unterformular fuer Titel eines Dokuments.
  */
-class Admin_Form_Document_TitlesTest extends ControllerTestCase {
-    
-    public function testCreateForm() {
+class Admin_Form_Document_TitlesTest extends ControllerTestCase
+{
+    public function testCreateForm()
+    {
         $form = new Admin_Form_Document_Titles();
-        
+
         $this->assertNotNull($form->getSubForm('Main'));
         $this->assertNotNull($form->getSubForm('Parent'));
         $this->assertNotNull($form->getSubForm('Sub'));
         $this->assertNotNull($form->getSubForm('Additional'));
-        
+
         $this->assertNotNull($form->getLegend()); // Formular hat Überschrift
         $this->assertFalse($form->getDecorator('FormErrors')); // Formular soll selber keine Fehler anzeigen
     }
-    
 }

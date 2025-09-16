@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,20 +25,23 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Application_Form_Decorator
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Form_Decorator_FieldsetWithButtonsTest extends ControllerTestCase {
 
-    private $decorator = null;
+class Application_Form_Decorator_FieldsetWithButtonsTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'view';
 
-    private $form = null;
+    /** @var Application_Form_Decorator_FieldsetWithButtons */
+    private $decorator;
 
-    public function setUp() {
+    /** @var Zend_Form_SubForm */
+    private $form;
+
+    public function setUp(): void
+    {
         parent::setUp();
 
         $this->form = new Zend_Form_SubForm();
@@ -48,31 +52,39 @@ class Application_Form_Decorator_FieldsetWithButtonsTest extends ControllerTestC
         $this->decorator->setElement($this->form);
     }
 
-    public function testRender() {
-        $this->assertEquals('<fieldset><legend>Test</legend>' . PHP_EOL . 'content</fieldset>',
-            $this->decorator->render('content'));
+    public function testRender()
+    {
+        $this->assertEquals(
+            '<fieldset><legend>Test</legend>' . PHP_EOL . 'content</fieldset>',
+            $this->decorator->render('content')
+        );
     }
 
-    public function testRenderWithButton() {
+    public function testRenderWithButton()
+    {
         $this->form->addElement('submit', 'Add');
 
         $this->decorator->setLegendButtons('Add');
 
-        $this->assertEquals('<fieldset><legend>Test<span class="button-group">'
+        $this->assertEquals(
+            '<fieldset><legend>Test<span class="button-group">'
             . '<span class="data-wrapper Add-data">'
             . '<span class="field" id="Add-element">' . PHP_EOL
             . '<input type="submit" name="Add" id="Add" value="Add" /></span></span>'
             . '</span></legend>' . PHP_EOL . 'content</fieldset>',
-            $this->decorator->render('content'));
+            $this->decorator->render('content')
+        );
     }
 
-    public function testRenderWithTwoButtons() {
+    public function testRenderWithTwoButtons()
+    {
         $this->form->addElement('submit', 'Add');
         $this->form->addElement('submit', 'Import');
 
-        $this->decorator->setLegendButtons(array('Import', 'Add'));
+        $this->decorator->setLegendButtons(['Import', 'Add']);
 
-        $this->assertEquals('<fieldset><legend>Test<span class="button-group">'
+        $this->assertEquals(
+            '<fieldset><legend>Test<span class="button-group">'
             . '<span class="data-wrapper Import-data">'
             . '<span class="field" id="Import-element">' . PHP_EOL
             . '<input type="submit" name="Import" id="Import" value="Import" /></span></span>'
@@ -80,7 +92,7 @@ class Application_Form_Decorator_FieldsetWithButtonsTest extends ControllerTestC
             . '<span class="field" id="Add-element">' . PHP_EOL
             . '<input type="submit" name="Add" id="Add" value="Add" /></span></span>'
             . '</span></legend>' . PHP_EOL . 'content</fieldset>',
-            $this->decorator->render('content'));
+            $this->decorator->render('content')
+        );
     }
-
 }

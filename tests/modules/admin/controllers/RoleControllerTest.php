@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,23 +25,27 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\UserRole;
 
 /**
  * Basic unit tests for Admin_RoleController class.
  *
  * @covers Admin_RoleController
  */
-class Admin_RoleControllerTest extends ControllerTestCase {
+class Admin_RoleControllerTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'all';
 
     /**
      * Test showing index page.
      */
-    public function testIndexAction() {
+    public function testIndexAction()
+    {
         $this->dispatch('/admin/role');
         $this->assertResponseCode(200);
         $this->assertModule('admin');
@@ -51,7 +56,8 @@ class Admin_RoleControllerTest extends ControllerTestCase {
     /**
      * Test show role information.
      */
-    public function testShowAction() {
+    public function testShowAction()
+    {
         $this->dispatch('/admin/role/show/id/1');
         $this->assertResponseCode(200);
         $this->assertModule('admin');
@@ -59,7 +65,8 @@ class Admin_RoleControllerTest extends ControllerTestCase {
         $this->assertAction('show');
     }
 
-    public function testShowActionWithoutId() {
+    public function testShowActionWithoutId()
+    {
         $this->dispatch('/admin/role/show');
         $this->assertRedirect('/admin/role/index');
         $this->assertModule('admin');
@@ -70,7 +77,8 @@ class Admin_RoleControllerTest extends ControllerTestCase {
     /**
      * Test showing form for new role.
      */
-    public function testNewAction() {
+    public function testNewAction()
+    {
         $this->dispatch('/admin/role/new');
         $this->assertResponseCode(200);
         $this->assertModule('admin');
@@ -81,15 +89,17 @@ class Admin_RoleControllerTest extends ControllerTestCase {
     /**
      * Test showing form for editing role.
      */
-    public function testEditAction() {
-        $this->dispatch('/admin/role/edit/id/1');
+    public function testEditAction()
+    {
+        $this->dispatch('/admin/role/edit/id/10');
         $this->assertResponseCode(200);
         $this->assertModule('admin');
         $this->assertController('role');
         $this->assertAction('edit');
     }
 
-    public function testEditActionWithoutId() {
+    public function testEditActionWithoutId()
+    {
         $this->dispatch('/admin/role/edit');
         $this->assertRedirect('/admin/role/index');
         $this->assertModule('admin');
@@ -97,79 +107,83 @@ class Admin_RoleControllerTest extends ControllerTestCase {
         $this->assertAction('edit');
     }
 
-    public function testCreateAction() {
-        $this->request
+    public function testCreateAction()
+    {
+        $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'name' => 'testrole',
+                ->setPost([
+                    'Name'                  => 'testrole',
                     'privilegeadministrate' => '1',
-                    'metadatadeleted' => '1',
-                    'submit' => 'submit'
-                ));
+                    'metadatadeleted'       => '1',
+                    'Save'                  => 'Save',
+                ]);
 
-        $this->dispatch('/admin/role/create');
+        $this->dispatch('/admin/role/new');
         $this->assertModule('admin');
         $this->assertController('role');
-        $this->assertAction('create');
+        $this->assertAction('new');
         $this->assertRedirect('/admin/role/index');
-        $this->assertNotNull(Opus_UserRole::fetchByName('testrole'));
+        $this->assertNotNull(UserRole::fetchByName('testrole'));
     }
 
-    public function testCreateActionCancel() {
-         $this->request
+    public function testCreateActionCancel()
+    {
+         $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'name' => 'testrole',
+                ->setPost([
+                    'name'                  => 'testrole',
                     'privilegeadministrate' => '1',
-                    'metadatadeleted' => '1',
-                    'cancel' => 'cancel'
-                ));
+                    'metadatadeleted'       => '1',
+                    'Cancel'                => 'Cancel',
+                ]);
 
-        $this->dispatch('/admin/role/create');
+        $this->dispatch('/admin/role/new');
         $this->assertModule('admin');
         $this->assertController('role');
-        $this->assertAction('create');
+        $this->assertAction('new');
         $this->assertRedirect('/admin/role/index');
     }
 
-    public function testCreateActionMissingInput() {
-         $this->request
+    public function testCreateActionMissingInput()
+    {
+         $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
+                ->setPost([
                     'privilegeadministrate' => '1',
-                    'metadatadeleted' => '1',
-                    'submit' => 'submit'
-                ));
+                    'metadatadeleted'       => '1',
+                    'Save'                  => 'Save',
+                ]);
 
-        $this->dispatch('/admin/role/create');
+        $this->dispatch('/admin/role/new');
         $this->assertModule('admin');
         $this->assertController('role');
-        $this->assertAction('create');
+        $this->assertAction('new');
         $this->assertResponseCode(200);
     }
 
     /**
      * @depends testCreateAction
      */
-    public function testUpdateAction() {
-        $role = Opus_UserRole::fetchByName('testrole');
+    public function testUpdateAction()
+    {
+        $role = UserRole::fetchByName('testrole');
 
-         $this->request
+         $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'name' => 'testrole2',
+                ->setPost([
+                    'Name'               => 'testrole2',
                     'privilegeclearance' => '1',
-                    'metadatapublished' => '1',
-                    'metadatadeleted' => '1',
-                    'submit' => 'submit'
-                ));
+                    'metadatapublished'  => '1',
+                    'metadatadeleted'    => '1',
+                    'Save'               => 'Save',
+                ]);
 
-        $this->dispatch('/admin/role/update/id/' . $role->getId());
+        $this->dispatch('/admin/role/edit/id/' . $role->getId());
         $this->assertModule('admin');
         $this->assertController('role');
-        $this->assertAction('update');
+        $this->assertAction('edit');
         $this->assertRedirect();
-        $role = Opus_UserRole::fetchByName('testrole2');
+        $role = UserRole::fetchByName('testrole2');
         $this->assertNotNull($role);
         $this->assertNotNull($role->getId());
         $this->assertEquals('testrole2', $role->getDisplayName());
@@ -178,38 +192,44 @@ class Admin_RoleControllerTest extends ControllerTestCase {
     /**
      * @depends testUpdateAction
      */
-    public function testUpdateActionInvalidInput() {
-        $role = Opus_UserRole::fetchByName('testrole2');
+    public function testUpdateActionInvalidInput()
+    {
+        $role = UserRole::fetchByName('testrole2');
 
-         $this->request
+         $this->getRequest()
                 ->setMethod('POST')
-                ->setPost(array(
-                    'name' => '',
+                ->setPost([
+                    'Name'               => '',
                     'privilegeclearance' => '1',
-                    'metadatapublished' => '1',
-                    'metadatadeleted' => '1',
-                    'submit' => 'submit'
-                ));
+                    'metadatapublished'  => '1',
+                    'metadatadeleted'    => '1',
+                    'Save'               => 'Save',
+                ]);
 
-        $this->dispatch('/admin/role/update/id/' . $role->getId());
+        $this->dispatch('/admin/role/edit/id/' . $role->getId());
         $this->assertResponseCode(200);
         $this->assertModule('admin');
         $this->assertController('role');
-        $this->assertAction('update');
+        $this->assertAction('edit');
     }
 
     /**
      * @depends testUpdateActionInvalidInput
      */
-    public function testDeleteAction() {
-        $role = Opus_UserRole::fetchByName('testrole2');
+    public function testDeleteAction()
+    {
+        $role = UserRole::fetchByName('testrole2');
         $this->assertNotNull($role);
+        $this->getRequest()->setMethod('POST')
+            ->setPost([
+                'Id'         => $role->getId(),
+                'ConfirmYes' => 'Yes',
+            ]);
+
         $this->dispatch('/admin/role/delete/id/' . $role->getId());
         $this->assertModule('admin');
         $this->assertController('role');
         $this->assertAction('delete');
         $this->assertRedirect();
     }
-
 }
-

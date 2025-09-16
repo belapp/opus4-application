@@ -26,12 +26,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_CitationExport
- * @author      Oliver Marahrens <o.marahrens@tu-harburg.de>
  * @copyright   Copyright (c) 2010, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 -->
 
@@ -127,8 +123,8 @@
            <xsl:apply-templates select="Subject" />
        </xsl:if>
        <xsl:choose>
-         <xsl:when test="normalize-space(ComletedDate/@Year)">
-             <xsl:text>Y1  - </xsl:text><xsl:value-of select="ComletedDate/@Year" />
+         <xsl:when test="normalize-space(CompletedDate/@Year)">
+             <xsl:text>Y1  - </xsl:text><xsl:value-of select="CompletedDate/@Year" />
          </xsl:when>
          <xsl:when test="string-length(PublishedDate/@Year)>0">
              <xsl:text>Y1  - </xsl:text><xsl:value-of select="PublishedDate/@Year" />
@@ -148,18 +144,18 @@
         <xsl:value-of select="@Id" />
         <xsl:text>&#10;</xsl:text>
 
-        <xsl:if test="string-length(IdentifierUrn/@Value)>0">
-            <xsl:apply-templates select="IdentifierUrn" />
+        <xsl:if test="string-length(Identifier[@Type = 'urn']/@Value)>0">
+            <xsl:apply-templates select="Identifier[@Type = 'urn']" />
         </xsl:if>
 
-        <xsl:if test="string-length(IdentifierUrl/@Value)>0">
-            <xsl:apply-templates select="IdentifierUrl" />
+        <xsl:if test="string-length(Identifier[@Type = 'url']/@Value)>0">
+            <xsl:apply-templates select="Identifier[@Type = 'url']" />
         </xsl:if>
-        <xsl:if test="string-length(IdentifierIsbn/@Value)>0">
-            <xsl:apply-templates select="IdentifierIsbn" />
+        <xsl:if test="string-length(Identifier[@Type = 'isbn']/@Value) > 0">
+            <xsl:apply-templates select="Identifier[@Type = 'isbn']" />
         </xsl:if>
-        <xsl:if test="string-length(IdentifierIssn/@Value)>0">
-            <xsl:apply-templates select="IdentifierIssn" />
+        <xsl:if test="string-length(Identifier[@Type='issn']/@Value) > 0">
+            <xsl:apply-templates select="Identifier[@Type = 'issn']" />
         </xsl:if>
         <xsl:if test="string-length(Note/@Message)>0">
             <xsl:apply-templates select="Note" />
@@ -199,26 +195,26 @@
 
     <!-- here begins the special templates for the fields -->
     <!-- Templates for "external fields". -->
-    <xsl:template match="IdentifierUrl">
+    <xsl:template match="Identifier[@Type = 'url']">
         <xsl:text>UR  - </xsl:text>
         <xsl:value-of select="@Value" />
         <xsl:text>&#10;</xsl:text>
     </xsl:template>
 
-    <xsl:template match="IdentifierUrn">
+    <xsl:template match="Identifier[@Type = 'urn']">
         <xsl:text>UR  - </xsl:text>
         <xsl:value-of select="$urnResolverUrl" />
         <xsl:value-of select="@Value" />
         <xsl:text>&#10;</xsl:text>
     </xsl:template>
 
-    <xsl:template match="IdentifierIsbn">
+    <xsl:template match="Identifier[@Type = 'isbn']">
         <xsl:text>SN  - </xsl:text>
         <xsl:value-of select="@Value" />
         <xsl:text>&#10;</xsl:text>
     </xsl:template>
 
-    <xsl:template match="IdentifierIssn">
+    <xsl:template match="Identifier[@Type = 'issn']">
         <xsl:text>SN  - </xsl:text>
         <xsl:value-of select="@Value" />
         <xsl:text>&#10;</xsl:text>

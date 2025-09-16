@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,12 +25,12 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\DocumentInterface;
+use Opus\Common\Language;
 
 /**
  * Helper for printing the abstract of a OPUS document.
@@ -38,31 +39,26 @@
  */
 class Application_View_Helper_DocumentAbstract extends Application_View_Helper_Document_HelperAbstract
 {
-
     /**
      * Prints escaped main title of document.
+     *
+     * @param DocumentInterface|null $document
      * @return null|string
      */
     public function documentAbstract($document = null)
     {
-        if ($this->isPreferUserInterfaceLanguage())
-        {
-            $language = Opus_Language::getPart2tForPart1(Zend_Registry::get('Zend_Translate')->getLocale());
+        if ($this->isPreferUserInterfaceLanguage()) {
+            $language = Language::getPart2tForPart1(Application_Translate::getInstance()->getLocale());
 
             $abstract = $document->getMainAbstract($language);
-        }
-        else {
+        } else {
             $abstract = $document->getMainAbstract();
         }
 
-        if (!is_null($abstract))
-        {
+        if ($abstract !== null) {
             return htmlspecialchars($abstract->getValue());
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
-
 }

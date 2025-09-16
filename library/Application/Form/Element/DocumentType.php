@@ -1,5 +1,6 @@
 <?PHP
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,21 +25,17 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
- *
  * TODO override setLabel for more robust translation
  */
-class Application_Form_Element_DocumentType extends Application_Form_Element_Select {
-
-    public function init() {
+class Application_Form_Element_DocumentType extends Application_Form_Element_Select
+{
+    public function init()
+    {
         parent::init();
 
         $this->setLabel($this->getView()->translate($this->getName()));
@@ -48,11 +45,40 @@ class Application_Form_Element_DocumentType extends Application_Form_Element_Sel
 
         $options = $docTypeHelper->getDocumentTypes();
 
-        foreach ($options as $index => $type) {
-            $this->addMultiOption($index, $index);
-        }
+        $this->setDisableTranslator(true);
 
-        $this->setDisableTranslator(true); // document types already translated after addMultiOption
+        $translator = Application_Translate::getInstance();
+
+        foreach ($options as $index => $type) {
+            if ($translator !== null && $translator->isTranslated($index)) {
+                $label = $translator->translate($index);
+            } else {
+                $label = $index;
+            }
+            $this->addMultiOption($index, $label);
+        }
     }
 
+    /**
+     * @param string $value
+     * @return $this
+     */
+    public function setValue($value)
+    {
+        $option = $this->getMultiOption($value);
+
+        $translator = Application_Translate::getInstance();
+
+        if ($translator !== null && $translator->isTranslated($value)) {
+            $label = $translator->translate($value);
+        } else {
+            $label = $value;
+        }
+
+        if ($option === null) {
+            $this->addMultiOption($value, $label);
+        }
+
+        return parent::setValue($value);
+    }
 }

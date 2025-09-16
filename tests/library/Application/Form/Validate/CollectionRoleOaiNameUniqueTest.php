@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,60 +25,68 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Form_Validate
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Form_Validate_CollectionRoleOaiNameUniqueTest extends ControllerTestCase {
 
+use Opus\Common\CollectionRole;
+
+class Application_Form_Validate_CollectionRoleOaiNameUniqueTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'database';
+
+    /** @var Application_Form_Validate_CollectionRoleOaiNameUnique */
     private $validator;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
 
         $this->validator = new Application_Form_Validate_CollectionRoleOaiNameUnique();
     }
 
-    public function tearDown() {
-        $collectionRole = Opus_CollectionRole::fetchByName('NewTestColRoleName');
-        if (!is_null($collectionRole)) {
+    public function tearDown(): void
+    {
+        $collectionRole = CollectionRole::fetchByName('NewTestColRoleName');
+        if ($collectionRole !== null) {
             $collectionRole->delete();
         }
         parent::tearDown();
     }
 
-    public function testIsValidTrue() {
+    public function testIsValidTrue()
+    {
         $this->assertTrue($this->validator->isValid('newTestColRole'));
-        $this->assertTrue($this->validator->isValid('newTestColRole', array()));
-        $this->assertTrue($this->validator->isValid('newTestColRole', array('Id' => 1)));
+        $this->assertTrue($this->validator->isValid('newTestColRole', []));
+        $this->assertTrue($this->validator->isValid('newTestColRole', ['Id' => 1]));
     }
 
-    public function testIsValidTrueForUpdate() {
-        $this->assertTrue($this->validator->isValid('ddc', array('Id' => 2)));
+    public function testIsValidTrueForUpdate()
+    {
+        $this->assertTrue($this->validator->isValid('ddc', ['Id' => 2]));
     }
 
-    public function testIsValidFalse() {
+    public function testIsValidFalse()
+    {
         $this->assertFalse($this->validator->isValid('ddc'));
-        $this->assertFalse($this->validator->isValid('ddc', array()));
-        $this->assertFalse($this->validator->isValid('ddc', array('Id' => 1)));
+        $this->assertFalse($this->validator->isValid('ddc', []));
+        $this->assertFalse($this->validator->isValid('ddc', ['Id' => 1]));
     }
 
-    public function testGetModel() {
-        $collectionRole = new Opus_CollectionRole();
+    public function testGetModel()
+    {
+        $collectionRole = CollectionRole::new();
         $collectionRole->setName('NewTestColRoleName');
         $collectionRole->setOaiName('NewTestColRoleOaiName');
         $collectionRole->store();
 
-        $method = new ReflectionMethod('Application_Form_Validate_CollectionRoleOaiNameUnique', '_getModel');
+        $method = new ReflectionMethod(Application_Form_Validate_CollectionRoleOaiNameUnique::class, 'getModel');
         $method->setAccessible(true);
 
-        $model = $method->invoke($this->validator, array('NewTestColRoleOaiName'));
+        $model = $method->invoke($this->validator, ['NewTestColRoleOaiName']);
 
         $this->assertNotNull($model);
         $this->assertEquals('NewTestColRoleOaiName', $model->getOaiName());
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,23 +25,27 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Solrsearch_Model_Search
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Solrsearch_Model_Search_BasicTest extends ControllerTestCase
 {
+    /** @var string[] */
+    protected $additionalResources = ['database'];
+
+    /** @var bool */
+    protected $configModifiable = true;
 
     public function testCreateQueryBuilderInputFromRequest()
     {
         $request = $this->getRequest();
-        $request->setParams(array('searchtype' => 'all',
-            'start' => '0',
-            'rows' => '1337',
-            'sortOrder' => 'desc'));
+        $request->setParams([
+            'searchtype' => 'all',
+            'start'      => '0',
+            'rows'       => '1337',
+            'sortOrder'  => 'desc',
+        ]);
 
         $queryBuilder = new Solrsearch_Model_Search_Basic();
 
@@ -56,20 +61,20 @@ class Solrsearch_Model_Search_BasicTest extends ControllerTestCase
      */
     public function testGetRowsFromConfig()
     {
-        $config = Zend_Registry::get('Zend_Config');
-        $oldParamRows = $config->searchengine->solr->numberOfDefaultSearchResults;
-        $config->searchengine->solr->numberOfDefaultSearchResults = 1337;
+        $config = $this->getConfig();
+        $config->searchengine->solr->numberOfDefaultSearchResults = '1337';
 
         $request = $this->getRequest();
-        $request->setParams(array('searchtype' => 'all'));
+        $request->setParams(['searchtype' => 'all']);
 
         $queryBuilder = new Solrsearch_Model_Search_Basic();
-        $result = $queryBuilder->createQueryBuilderInputFromRequest($request);
-
-        //clean-up
-        $config->searchengine->solr->numberOfDefaultSearchResults = $oldParamRows;
+        $result       = $queryBuilder->createQueryBuilderInputFromRequest($request);
 
         $this->assertEquals($result['rows'], 1337);
     }
 
+    public function testFilterByPublishedYearInverted()
+    {
+        $this->markTestIncomplete();
+    }
 }

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,9 +25,7 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
@@ -35,12 +34,16 @@
  *
  * @covers Admin_IndexController
  */
-class Admin_IndexControllerTest extends ControllerTestCase {
+class Admin_IndexControllerTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'all';
 
     /**
      * Test routing to and successfull execution of 'index' action.
      */
-    public function testIndexAction() {
+    public function testIndexAction()
+    {
         $this->dispatch('/admin');
         $this->assertResponseCode(200);
         $this->assertController('index');
@@ -52,7 +55,8 @@ class Admin_IndexControllerTest extends ControllerTestCase {
     /**
      * Test routing and successfull execution of 'index' action.
      */
-    public function testSecurityAction() {
+    public function testSecurityAction()
+    {
         $this->dispatch('/admin/index/security');
         $this->assertResponseCode(200);
         $this->assertController('index');
@@ -62,7 +66,8 @@ class Admin_IndexControllerTest extends ControllerTestCase {
     /**
      * Test routing and successfull execution of 'index' action.
      */
-    public function testSetupAction() {
+    public function testSetupAction()
+    {
         $this->dispatch('/admin/index/setup');
         $this->assertResponseCode(200);
         $this->assertController('index');
@@ -72,12 +77,11 @@ class Admin_IndexControllerTest extends ControllerTestCase {
     /**
      * Test routing and successfull execution of 'index' action.
      */
-    public function testInfoAction() {
+    public function testInfoAction()
+    {
         $this->dispatch('/admin/index/info');
         $this->assertResponseCode(200);
         $this->assertController('index');
         $this->assertAction('info');
     }
-
 }
-

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,6 +24,9 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 /**
@@ -31,16 +35,9 @@
  * Die Klasse kann mit einem Array von Standardnachrichten instanziert werden. Danach können diese Nachrichten
  * modifiziert werden. Ein einmal angelegter Nachrichtenschlüssel kann aber nicht auf null gesetzt werden, um
  * sicherzustellen, daß kein Nachrichtenschlüssel jemals fehlt.
- *
- * @category    Application
- * @package     Application_Controller
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Controller_MessageTemplates {
-
+class Application_Controller_MessageTemplates
+{
     /**
      * Nachrichten.
      *
@@ -59,18 +56,20 @@ class Application_Controller_MessageTemplates {
      *
      * @var array
      */
-    private $_messages = null;
+    private $messages;
 
     /**
      * Konstruiert Instanz mit Basisnachrichten.
+     *
      * @param array $messages
      */
-    public function __construct($messages) {
-        if (is_null($messages) || !is_array($messages)) {
+    public function __construct($messages)
+    {
+        if ($messages === null || ! is_array($messages)) {
             throw new Application_Exception(__METHOD__ . ' Parameter \'messages\' is required and must be an array.');
         }
 
-        $this->_messages = $messages;
+        $this->messages = $messages;
     }
 
     /**
@@ -78,34 +77,37 @@ class Application_Controller_MessageTemplates {
      *
      * @return array
      */
-    public function getMessages() {
-        return $this->_messages;
+    public function getMessages()
+    {
+        return $this->messages;
     }
 
     /**
      * Setzt mehrere Nachrichten.
+     *
      * @param array $messages
      */
-    public function setMessages($messages) {
+    public function setMessages($messages)
+    {
         if (is_array($messages)) {
             foreach ($messages as $key => $message) {
                 $this->setMessage($key, $message);
             }
         }
-
     }
 
     /**
      * Liefert eine Nachricht.
-     * @param $key Schlüssel für Nachricht
-     * @throws Application_Exception
+     *
+     * @param string $key Schlüssel für Nachricht
      * @return string
+     * @throws Application_Exception
      */
-    public function getMessage($key) {
-        if (array_key_exists($key, $this->_messages)) {
-            return $this->_messages[$key];
-        }
-        else {
+    public function getMessage($key)
+    {
+        if (array_key_exists($key, $this->messages)) {
+            return $this->messages[$key];
+        } else {
             throw new Application_Exception("Message key '$key' is not defined.");
         }
     }
@@ -115,19 +117,19 @@ class Application_Controller_MessageTemplates {
      *
      * Wenn der Schlüssel noch nicht existiert wird er hinzugefügt.
      *
-     * @param $key Nachrichtenschlüssel
-     * @param $message Nachricht
+     * @param string $key Nachrichtenschlüssel
+     * @param string $message Nachricht
      */
-    public function setMessage($key, $message) {
-        if (!is_array($this->_messages)) {
-            $this->_messages = array();
+    public function setMessage($key, $message)
+    {
+        if (! is_array($this->messages)) {
+            $this->messages = [];
         }
 
-        if (is_null($message)) {
+        if ($message === null) {
             throw new Application_Exception("Message key '$key' must not be null.");
         }
 
-        $this->_messages[$key] = $message;
+        $this->messages[$key] = $message;
     }
-
 }

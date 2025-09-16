@@ -1,5 +1,6 @@
 <?PHP
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,81 +25,99 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\DocumentInterface;
 
 /**
  * Unterformular fuer die Aktions im Metadaten-Formular.
  *
  * TODO Unit Tests
  */
-class Admin_Form_Document_Actions extends Admin_Form_AbstractDocumentSubForm {
+class Admin_Form_Document_Actions extends Admin_Form_AbstractDocumentSubForm
+{
+    public const ELEMENT_ID = 'Id';
 
-    const ELEMENT_ID = 'Id';
-    
-    const ELEMENT_HASH = 'OpusHash';
-    
+    public const ELEMENT_HASH = 'OpusHash';
+
     /**
      * Name für Button zum Speichern.
      */
-    const ELEMENT_SAVE = 'Save';
-    
+    public const ELEMENT_SAVE = 'Save';
+
     /**
      * Name für Button zum Speichern und im Metadaten-Formular bleiben.
      */
-    const ELEMENT_SAVE_AND_CONTINUE = 'SaveAndContinue';
-    
+    public const ELEMENT_SAVE_AND_CONTINUE = 'SaveAndContinue';
+
     /**
      * Name für Button um das Editieren abzubrechen.
      */
-    const ELEMENT_CANCEL = 'Cancel';
-    
-    public function init() {
+    public const ELEMENT_CANCEL = 'Cancel';
+
+    public function init()
+    {
         parent::init();
-        
+
         $this->addElement('hidden', self::ELEMENT_ID);
-        $this->addElement('hash', self::ELEMENT_HASH, array('salt' => 'unique')); // TODO salt?
-        $this->addElement('submit', self::ELEMENT_SAVE, array('decorators' => array('ViewHelper')));
-        $this->addElement('submit', self::ELEMENT_SAVE_AND_CONTINUE, array('decorators' => array('ViewHelper')));
-        $this->addElement('submit', self::ELEMENT_CANCEL, array('decorators' => array('ViewHelper')));
-        
-        $this->setDecorators(
-            array(
+        $this->addElement('hash', self::ELEMENT_HASH, ['salt' => 'unique']); // TODO salt?
+        $this->addElement('submit', self::ELEMENT_SAVE, ['decorators' => ['ViewHelper']]);
+        $this->addElement('submit', self::ELEMENT_SAVE_AND_CONTINUE, ['decorators' => ['ViewHelper']]);
+        $this->addElement('submit', self::ELEMENT_CANCEL, ['decorators' => ['ViewHelper']]);
+
+        $this->getElement(self::ELEMENT_SAVE)->setDisableTranslator(true);
+        $this->getElement(self::ELEMENT_SAVE_AND_CONTINUE)->setDisableTranslator(true);
+        $this->getElement(self::ELEMENT_CANCEL)->setDisableTranslator(true);
+
+        $this->setDecorators([
             'PrepareElements',
-            array('ViewScript', array('viewScript' => 'form/documentActions.phtml')),
-            array(array('fieldsWrapper' => 'HtmlTag'), array('tag' => 'div', 'class' => 'fields-wrapper')),
-            array(array('divWrapper' => 'HtmlTag'), array('tag' => 'div', 'class' => 'subform',
-                'id' => 'subform-Actions'))
-            )
-        );
+            ['ViewScript', ['viewScript' => 'form/documentActions.phtml']],
+            [['fieldsWrapper' => 'HtmlTag'], ['tag' => 'div', 'class' => 'fields-wrapper']],
+            [
+                ['divWrapper' => 'HtmlTag'],
+                [
+                    'tag'   => 'div',
+                    'class' => 'subform',
+                    'id'    => 'subform-Actions',
+                ],
+            ],
+        ]);
     }
-    
-    public function populateFromModel($document) {
-        $this->getElement(self::ELEMENT_ID)->setValue($document->getId());        
+
+    /**
+     * @param DocumentInterface $document
+     */
+    public function populateFromModel($document)
+    {
+        $this->getElement(self::ELEMENT_ID)->setValue($document->getId());
     }
-    
-    public function processPost($post, $context) {
+
+    /**
+     * @param array $post
+     * @param array $context
+     * @return string|null
+     */
+    public function processPost($post, $context)
+    {
         // Prüfen, ob "Speichern" geklickt wurde
         if (array_key_exists(self::ELEMENT_SAVE, $post)) {
             return Admin_Form_Document::RESULT_SAVE;
-        }
-        else if (array_key_exists(self::ELEMENT_SAVE_AND_CONTINUE, $post)) {
+        } elseif (array_key_exists(self::ELEMENT_SAVE_AND_CONTINUE, $post)) {
             return Admin_Form_Document::RESULT_SAVE_AND_CONTINUE;
-        }
-        else if (array_key_exists(self::ELEMENT_CANCEL, $post)) {
+        } elseif (array_key_exists(self::ELEMENT_CANCEL, $post)) {
             return Admin_Form_Document::RESULT_CANCEL;
         }
-        
+
         return null;
     }
-    
-    public function isEmpty() {
+
+    /**
+     * @return true
+     */
+    public function isEmpty()
+    {
         return true;
     }
-
 }

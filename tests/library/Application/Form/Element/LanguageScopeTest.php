@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,48 +25,59 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_Form_Element_LanguageScopeTest extends FormElementTestCase {
+class Application_Form_Element_LanguageScopeTest extends FormElementTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'translation';
 
-    private $keys = null;
+    /** @var string[] */
+    private $keys;
 
-    public function setUp() {
-        $this->keys = array('Null', 'I', 'M', 'S');
+    public function setUp(): void
+    {
+        $this->keys = ['Null', 'I', 'M', 'S'];
 
-        $this->_formElementClass = 'Application_Form_Element_LanguageScope';
-        $this->_expectedDecoratorCount = 6;
-        $this->_expectedDecorators = array('ViewHelper', 'Errors', 'Description', 'ElementHtmlTag', 'LabelNotEmpty',
-            'dataWrapper');
-        $this->_staticViewHelper = 'viewFormSelect';
+        $this->formElementClass       = 'Application_Form_Element_LanguageScope';
+        $this->expectedDecorators     = [
+            'ViewHelper',
+            'Errors',
+            'Description',
+            'ElementHtmlTag',
+            'LabelNotEmpty',
+            'dataWrapper',
+            'ElementHint',
+        ];
+        $this->expectedDecoratorCount = count($this->expectedDecorators);
+        $this->staticViewHelper       = 'viewFormSelect';
         parent::setUp();
     }
 
-    public function testOptions() {
+    public function testOptions()
+    {
         $element = $this->getElement();
 
         $options = $element->getMultiOptions();
 
         $this->assertEquals(count($this->keys), count($options));
 
-        foreach($this->keys as $key) {
+        foreach ($this->keys as $key) {
             $this->assertTrue(array_key_exists($key, $options), "Key '$key' is missing.");
         }
     }
 
-    public function testOptionsTranslated() {
-        $translator = Zend_Registry::get('Zend_Translate');
+    public function testOptionsTranslated()
+    {
+        $translator = Application_Translate::getInstance();
 
         foreach ($this->keys as $key) {
-            $this->assertTrue($translator->isTranslated('Opus_Language_Scope_Value_' . $key),
-                "Key '$key' not translated.");
+            $this->assertTrue(
+                $translator->isTranslated('Opus_Language_Scope_Value_' . $key),
+                "Key '$key' not translated."
+            );
         }
     }
-
 }

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,47 +25,53 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Unit Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Unit Tests fuer die Ausgabe des Hauptmenues.
  */
-class MainMenuTest extends ControllerTestCase {
-    
-    function testAdminIndex() {
+class MainMenuTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'mainMenu', 'translation'];
+
+    public function testAdminIndex()
+    {
         $this->dispatch("/admin");
         $this->assertQuery('li.active[@id="primary-nav-administration"]', "Admin Eintrag sollte aktiviert sein.");
     }
-    
-    function testAdminDocuments() {
+
+    public function testAdminDocuments()
+    {
         $this->dispatch("/admin/documents");
         $this->assertQuery('li.active[@id="primary-nav-administration"]', "Admin Eintrag sollte aktiviert sein.");
     }
-    
-    function testAdminDocument() {
+
+    public function testAdminDocument()
+    {
         $this->dispatch("/admin/document/index/id/146");
         $this->assertQuery('li.active[@id="primary-nav-administration"]', "Admin Eintrag sollte aktiviert sein.");
     }
-    
-    function testAdminFileManager() {
+
+    public function testAdminFileManager()
+    {
         $this->dispatch("/admin/filemanager/index/id/146");
         $this->assertQuery('li.active[@id="primary-nav-administration"]', "Admin Eintrag sollte aktiviert sein.");
     }
-    
-    function testAdminReview() {
+
+    public function testAdminReview()
+    {
         $this->dispatch("/review");
         $this->assertQuery('li.active[@id="primary-nav-administration"]', "Admin Eintrag sollte aktiviert sein.");
     }
-    
-    function testAdminControllerIndexPages() {
-        $pages = array(
-            "/setup/help-page",
-            "/setup/static-page",
+
+    public function testAdminControllerIndexPages()
+    {
+        $pages = [
+            "/setup/helppage",
+            "/setup/translation",
             "/setup/language",
             "/admin/account",
             "/admin/licence",
@@ -76,39 +83,45 @@ class MainMenuTest extends ControllerTestCase {
             "/admin/oailink",
             "/admin/dnbinstitute",
             "/admin/enrichmentkey",
-            "/admin/info"
-        );
-        
+            "/admin/info",
+        ];
+
         foreach ($pages as $page) {
             $this->dispatch($page);
-            $this->assertQuery('li.active[@id="primary-nav-administration"]',
-                "Admin Eintrag sollte für '$page' aktiviert sein.");
+            $this->assertQuery(
+                'li.active[@id="primary-nav-administration"]',
+                "Admin Eintrag sollte für '$page' aktiviert sein."
+            );
         }
-    } 
-    
-    function testHome() {
+    }
+
+    public function testHome()
+    {
         $this->dispatch("/home");
         $this->assertQuery('li.active[@id="primary-nav-home"]', "Home Eintrag sollte aktiviert sein.");
     }
-    
-    function testSearch() {
+
+    public function testSearch()
+    {
         $this->dispatch("/solrsearch");
         $this->assertQuery('li.active[@id="primary-nav-search"]', "Search Eintrag sollte aktiviert sein.");
     }
-    
-    function testBrowse() {
+
+    public function testBrowse()
+    {
         $this->dispatch("/solrsearch/browse");
         $this->assertQuery('li.active[@id="primary-nav-browsing"]', "Browse Eintrag sollte aktiviert sein.");
     }
-    
-    function testPublish() {
+
+    public function testPublish()
+    {
         $this->dispatch("/publish");
         $this->assertQuery('li.active[@id="primary-nav-publish"]', "Publish Eintrag sollte aktiviert sein.");
     }
-    
-    function testFAQ() {
+
+    public function testFAQ()
+    {
         $this->dispatch("/home/index/help");
         $this->assertQuery('li.active[@id="primary-nav-help"]', "FAQ Eintrag sollte aktiviert sein.");
     }
-
 }

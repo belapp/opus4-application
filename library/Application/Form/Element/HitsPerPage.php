@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,32 +25,29 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2015, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
+use Opus\Search\Query;
+
 /**
- * Class Application_Form_Element_HitsPerPage
- *
  * TODO make options configurable?
  * TODO limit configurable default value?
  */
-class Application_Form_Element_HitsPerPage extends Application_Form_Element_Select {
-
-    public function init() {
+class Application_Form_Element_HitsPerPage extends Application_Form_Element_Select
+{
+    public function init()
+    {
         parent::init();
 
         $this->setLabel('advanced_search_form_hits_per_page');
 
-        $options = array('10', '20', '50', '100');
+        $options = ['10', '20', '50', '100'];
 
-        $defaultRows = Opus_Search_Query::getDefaultRows();
+        $defaultRows = Query::getDefaultRows();
 
-        if (!in_array($defaultRows, $options)) {
+        if (! in_array($defaultRows, $options)) {
             $options[] = $defaultRows;
             sort($options);
         }
@@ -60,12 +58,11 @@ class Application_Form_Element_HitsPerPage extends Application_Form_Element_Sele
 
         $this->setValue($defaultRows);
 
-        $this->setDecorators(array(
+        $this->setDecorators([
             'ViewHelper',
             'Errors',
             'Description',
-            'Label'
-        ));
+            'Label',
+        ]);
     }
-
 }

@@ -25,26 +25,24 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Publish
- * @author      Thoralf Klein <thoralf.klein@zib.de>
- * @copyright   Copyright (c) 2011-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2011, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Publish_Model_DocumentWorkflowMatheon extends Publish_Model_DocumentWorkflow {
-    
+
+use Opus\Common\Log;
+
+class Publish_Model_DocumentWorkflowMatheon extends Publish_Model_DocumentWorkflow
+{
     /**
      * Initialize custom document fields.
-     *
-     * @return void
      */
-    protected function initializeDocument() {
+    protected function initializeDocument()
+    {
         $loggedUserModel = new Publish_Model_LoggedUser();
-        $userId = trim($loggedUserModel->getUserId());
+        $userId          = trim($loggedUserModel->getUserId());
 
         if (empty($userId)) {
-            $logger = Zend_Registry::get('Zend_Log');
+            $logger = Log::get();
             $logger->debug("No user logged in.  Skipping enrichment.");
             return;
         }
@@ -53,5 +51,4 @@ class Publish_Model_DocumentWorkflowMatheon extends Publish_Model_DocumentWorkfl
                 ->setKeyName('submitter.user_id')
                 ->setValue($userId);
     }
-
 }

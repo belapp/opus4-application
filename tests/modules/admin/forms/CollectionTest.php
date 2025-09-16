@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,59 +25,59 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Admin_Form
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Admin_Form_CollectionTest extends ControllerTestCase {
+use Opus\Common\Collection;
 
-    public function testConstructForm() {
+class Admin_Form_CollectionTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database'];
+
+    public function testConstructForm()
+    {
         $form = new Admin_Form_Collection();
 
-        $this->assertEquals('8', count($form->getElements()));
-
+        $this->assertCount(7, $form->getElements());
         $this->assertNotNull($form->getElement('Name'));
         $this->assertNotNull($form->getElement('Number'));
         $this->assertNotNull($form->getElement('Visible'));
         $this->assertNotNull($form->getElement('VisiblePublish'));
         $this->assertNotNull($form->getElement('OaiSubset'));
-        $this->assertNotNull($form->getElement('Theme'));
-
+        //$this->assertNotNull($form->getElement('Theme'));
         $this->assertNotNull($form->getElement('Save'));
         $this->assertNull($form->getElement('Cancel'));
         $this->assertNotNull($form->getElement('Id'));
     }
 
-    public function testPopulateFromModel() {
+    public function testPopulateFromModel()
+    {
         $form = new Admin_Form_Collection();
 
-        $model = new Opus_Collection();
+        $model = Collection::new();
 
         $model->setName('TestName');
         $model->setNumber('50');
         $model->setVisible(1);
         $model->setVisiblePublish(1);
         $model->setOaiSubset('TestSubset');
-        $model->setTheme('plain');
-
+        // $model->setTheme('plain');
         $form->populateFromModel($model);
-
         $this->assertEquals('TestName', $form->getElement('Name')->getValue());
         $this->assertEquals(50, $form->getElement('Number')->getValue());
         $this->assertEquals(1, $form->getElement('Visible')->getValue());
         $this->assertEquals(1, $form->getElement('VisiblePublish')->getValue());
         $this->assertEquals('TestSubset', $form->getElement('OaiSubset')->getValue());
-        $this->assertEquals('plain', $form->getElement('Theme')->getValue());
+        // $this->assertEquals('plain', $form->getElement('Theme')->getValue());
     }
 
-    public function testHandlingOfNullValue() {
+    public function testHandlingOfNullValue()
+    {
         $form = new Admin_Form_Collection();
 
-        $model = new Opus_Collection();
+        $model = Collection::new();
 
         $model->setName('TestName');
         $model->setNumber(null);
@@ -89,17 +90,19 @@ class Admin_Form_CollectionTest extends ControllerTestCase {
         $this->assertNull($form->getElement('OaiSubset')->getValue());
     }
 
-    public function testPopulateFromModelWithId() {
+    public function testPopulateFromModelWithId()
+    {
         $form = new Admin_Form_Collection();
 
-        $model = new Opus_Collection(3);
+        $model = Collection::get(3);
 
         $form->populateFromModel($model);
 
         $this->assertEquals(3, $form->getElement('Id')->getValue());
     }
 
-    public function testUpdateModel() {
+    public function testUpdateModel()
+    {
         $form = new Admin_Form_Collection();
 
         $form->getElement('Id')->setValue(99);
@@ -108,9 +111,9 @@ class Admin_Form_CollectionTest extends ControllerTestCase {
         $form->getElement('Visible')->setValue('1');
         $form->getElement('VisiblePublish')->setValue('1');
         $form->getElement('OaiSubset')->setValue('TestSubset');
-        $form->getElement('Theme')->setValue('plain');
+        // $form->getElement('Theme')->setValue('plain');
 
-        $model = new Opus_Collection();
+        $model = Collection::new();
 
         $form->updateModel($model);
 
@@ -120,30 +123,32 @@ class Admin_Form_CollectionTest extends ControllerTestCase {
         $this->assertEquals('1', $model->getVisible());
         $this->assertEquals('1', $model->getVisiblePublish());
         $this->assertEquals('TestSubset', $model->getOaiSubset());
-        $this->assertEquals('plain', $model->getTheme());
+        //$this->assertEquals('plain', $model->getTheme());
     }
 
-    public function testValidationSuccess() {
+    public function testValidationSuccess()
+    {
         $form = new Admin_Form_Collection();
 
-        $this->assertTrue($form->isValid(array(
-            'Name' => 'ColName'
-        )));
-
-        $this->assertTrue($form->isValid(array(
-            'Number' => 'ColNumber'
-        )));
-
-        $this->assertTrue($form->isValid(array(
+        $this->assertTrue($form->isValid([
             'Name' => 'ColName',
-            'Number' => 'ColNumber'
-        )));
+        ]));
+
+        $this->assertTrue($form->isValid([
+            'Number' => 'ColNumber',
+        ]));
+
+        $this->assertTrue($form->isValid([
+            'Name'   => 'ColName',
+            'Number' => 'ColNumber',
+        ]));
     }
 
-    public function testValidationFailure() {
+    public function testValidationFailure()
+    {
         $form = new Admin_Form_Collection();
 
-        $this->assertFalse($form->isValid(array()));
+        $this->assertFalse($form->isValid([]));
 
         $errors = $form->getErrors('Name');
         $this->assertNotNull($errors);
@@ -153,5 +158,4 @@ class Admin_Form_CollectionTest extends ControllerTestCase {
         $this->assertNotNull($errors);
         $this->assertContains('allElementsEmpty', $errors);
     }
-
 }

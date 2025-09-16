@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,64 +25,69 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Tests
- * @package     Application_Form_Model
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_Form_Model_TableTest extends ControllerTestCase {
+use Opus\Common\Licence;
 
-    public function testConstructForm() {
+class Application_Form_Model_TableTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'database';
+
+    public function testConstructForm()
+    {
         $form = new Application_Form_Model_Table();
 
         $this->assertEquals(2, count($form->getDecorators()));
     }
 
-    public function testGetColumnLabel() {
+    public function testGetColumnLabel()
+    {
         $form = new Application_Form_Model_Table();
 
-        $form->setColumns(array(array('label' => 'Opus_Licence')));
+        $form->setColumns([['label' => 'Opus_Licence']]);
 
         $this->assertEquals('Opus_Licence', $form->getColumnLabel(0));
     }
 
-    public function testgetColumnLabelUnknownIndex() {
+    public function testgetColumnLabelUnknownIndex()
+    {
         $form = new Application_Form_Model_Table();
 
-        $form->setColumns(array(array('label' => 'Opus_Licence')));
+        $form->setColumns([['label' => 'Opus_Licence']]);
 
         $this->assertNull($form->getColumnLabel(1));
     }
 
-    public function testSetGetModels() {
+    public function testSetGetModels()
+    {
         $form = new Application_Form_Model_Table();
 
-        $models = Opus_Licence::getAll();
+        $models = Licence::getAll();
 
         $form->setModels($models);
 
         $this->assertEquals($models, $form->getModels());
     }
 
-    /**
-     * @expectedException Application_Exception
-     * @expectedExceptionMessage Parameter must be array.
-     */
-    public function testSetModelNotArray() {
+    public function testSetModelNotArray()
+    {
         $form = new Application_Form_Model_Table();
 
-        $models = Opus_Licence::getAll();
+        $models = Licence::getAll();
 
+        $this->expectException(Application_Exception::class);
+        $this->expectExceptionMessage('Parameter must be array.');
         $form->setModels('notanarray');
     }
 
-    public function testSetGetModelsNull() {
+    public function testSetGetModelsNull()
+    {
         $form = new Application_Form_Model_Table();
 
-        $form->setModels(Opus_Licence::getAll());
+        $form->setModels(Licence::getAll());
 
         $this->assertNotNull($form->getModels());
 
@@ -90,23 +96,26 @@ class Application_Form_Model_TableTest extends ControllerTestCase {
         $this->assertNull($form->getModels());
     }
 
-    public function testSetGetColumns() {
+    public function testSetGetColumns()
+    {
         $form = new Application_Form_Model_Table();
 
-        $columns = array(array('label' => 'col1'));
+        $columns = [['label' => 'col1']];
 
         $form->setColumns($columns);
 
         $this->assertEquals($columns, $form->getColumns());
     }
 
-    public function testGetViewScript() {
+    public function testGetViewScript()
+    {
         $form = new Application_Form_Model_Table();
 
         $this->assertEquals('modeltable.phtml', $form->getViewScript());
     }
 
-    public function testSetViewScript() {
+    public function testSetViewScript()
+    {
         $form = new Application_Form_Model_Table();
 
         $form->setViewScript('series/modeltable.phtml');
@@ -118,16 +127,171 @@ class Application_Form_Model_TableTest extends ControllerTestCase {
         $this->assertEquals('modeltable.phtml', $form->getViewScript());
     }
 
-    public function testIsRenderShowActionLinkDefault() {
+    public function testIsRenderShowActionLinkDefault()
+    {
         $form = new Application_Form_Model_Table();
 
-        $this->assertTrue($form->isRenderShowActionLink(null));
+        $this->assertTrue($form->isRenderShowActionLink());
     }
 
-    public function testIsModifiableDefault() {
+    public function testIsModifiableDefault()
+    {
         $form = new Application_Form_Model_Table();
 
         $this->assertTrue($form->isModifiable(null));
     }
 
+    public function testIsUsedDefault()
+    {
+        $form = new Application_Form_Model_Table();
+
+        $this->assertFalse($form->isUsed(null));
+    }
+
+    public function testIsProtectedDefault()
+    {
+        $form = new Application_Form_Model_Table();
+
+        $this->assertFalse($form->isUsed(null));
+    }
+
+    public function testGetRowCssClassDefault()
+    {
+        $form = new Application_Form_Model_Table();
+
+        $this->assertNull($form->getRowCssClass(null));
+    }
+
+    public function testGetRowTooltipDefault()
+    {
+        $form = new Application_Form_Model_Table();
+
+        $this->assertNull($form->getRowTooltip(null));
+    }
+
+    public function testIsRenderShowActionLinkLog()
+    {
+        $logger = new MockLogger();
+        $form   = new Application_Form_Model_Table();
+
+        $form->setLogger($logger);
+
+        $mock = $this->getControllerMock();
+        $form->setController($mock);
+        $this->assertTrue($form->isRenderShowActionLink());
+
+        $this->assertEquals('The used controller does not have the method getShowActionEnabled.', $logger->getMessages()[0]);
+    }
+
+    public function testIsModifiableLog()
+    {
+        $logger = new MockLogger();
+        $form   = new Application_Form_Model_Table();
+
+        $form->setLogger($logger);
+
+        $mock = $this->getControllerMock();
+        $form->setController($mock);
+        $this->assertTrue($form->isModifiable(null));
+
+        $this->assertEquals('The used controller does not have the method isModifiable.', $logger->getMessages()[0]);
+    }
+
+    public function testIsDeletableLog()
+    {
+        $logger = new MockLogger();
+        $form   = new Application_Form_Model_Table();
+
+        $form->setLogger($logger);
+
+        $mock = $this->getControllerMock();
+        $form->setController($mock);
+        $this->assertTrue($form->isDeletable(null));
+
+        $this->assertEquals('The used controller does not have the method isDeletable.', $logger->getMessages()[0]);
+    }
+
+    public function testIsUsedLog()
+    {
+        $logger = new MockLogger();
+        $form   = new Application_Form_Model_Table();
+
+        $form->setLogger($logger);
+
+        $mock = $this->getControllerMock();
+        $form->setController($mock);
+        $this->assertFalse($form->isUsed(null));
+
+        $this->assertEquals('The used controller does not have the method isUsed.', $logger->getMessages()[0]);
+    }
+
+    public function testIsProtectedLog()
+    {
+        $logger = new MockLogger();
+        $form   = new Application_Form_Model_Table();
+
+        $form->setLogger($logger);
+
+        $mock = $this->getControllerMock();
+        $form->setController($mock);
+        $this->assertFalse($form->isProtected(null));
+
+        $this->assertEquals('The used controller does not have the method isProtected.', $logger->getMessages()[0]);
+    }
+
+    public function testGetRowCssClassLog()
+    {
+        $logger = new MockLogger();
+        $form   = new Application_Form_Model_Table();
+
+        $form->setLogger($logger);
+
+        $mock = $this->getControllerMock();
+        $form->setController($mock);
+        $this->assertNull($form->getRowCssClass(null));
+
+        $this->assertEquals('The used controller does not have the method getRowCssClass.', $logger->getMessages()[0]);
+    }
+
+    public function testGetRowTooltipLog()
+    {
+        $logger = new MockLogger();
+        $form   = new Application_Form_Model_Table();
+
+        $form->setLogger($logger);
+
+        $mock = $this->getControllerMock();
+        $form->setController($mock);
+        $this->assertNull($form->getRowTooltip(null));
+
+        $this->assertEquals('The used controller does not have the method getRowTooltip.', $logger->getMessages()[0]);
+    }
+
+    /**
+     * @return Zend_Controller_Action_Interface
+     */
+    protected function getControllerMock()
+    {
+        // TODO PHPUNIT $this->getMockBuilder(Zend_Controller_Action_Interface::class)->getMock();
+        //      Aufgrund von Problemen mit PHPUnit 5 ist folgendes notwendig - mit PHPUnit 8 sollte das nicht mehr
+        //      notwendig sein.
+        $request  = new Zend_Controller_Request_Http();
+        $response = new Zend_Controller_Response_Http();
+        return new class ($request, $response, []) implements Zend_Controller_Action_Interface
+        {
+            public function __construct(
+                Zend_Controller_Request_Abstract $request,
+                Zend_Controller_Response_Abstract $response,
+                array $invokeArgs = []
+            ) {
+            }
+
+            /**
+             * @param string $action
+             */
+            public function dispatch($action)
+            {
+            }
+        };
+    }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,36 +25,59 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Application_Update
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2018, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
+use Opus\Common\Date;
+use Opus\Common\Document;
+use Opus\Common\Identifier;
+use Opus\Common\Model\ModelException;
+use Opus\Db\Documents;
+use Opus\Db\TableGateway;
+
 class Application_Update_SetStatusOfExistingDoiTest extends ControllerTestCase
 {
+    /** @var string */
+    protected $additionalResources = 'database';
 
     /**
-     * @throws Opus_Model_Exception
+     * @throws ModelException
      *
      * TODO test sets Status of all DOI identifier of published documents to 'registered' (side effect)
+     * TODO Remove debug code no longer needed.
      */
     public function testRunDoesNotModifyServerDateModified()
     {
         $doc = $this->createTestDocument();
         $doc->setServerState('published');
 
-        $doi = new Opus_Identifier();
+        $doi = Identifier::new();
         $doi->setType('doi');
         $doi->setValue('testdoi');
 
         $doc->addIdentifier($doi);
         $docId = $doc->store();
 
+        // ServerDateModified wird manchmal gerundet beim Speichern = deshalb muss das Dokument noch mal geladen werden
+        // TODO https://github.com/OPUS4/framework/issues/228
+        $doc = Document::get($docId);
+
         $modified = $doc->getServerDateModified();
 
+        $debug = "$modified (before)" . PHP_EOL;
+
+        $doc       = Document::get($docId);
+        $modified2 = $doc->getServerDateModified();
+
+        $debug .= "$modified2 (before - from new object)" . PHP_EOL;
+
+        $time1 = Date::getNow();
         sleep(2);
+        $time2 = Date::getNow();
+
+        $debug .= "$time1 - sleep(2) - $time2" . PHP_EOL;
+        $debug .= $this->getServerDateModifiedFromDatabase($docId) . ' (before - from database)' . PHP_EOL;
 
         $update = new Application_Update_SetStatusOfExistingDoi();
         $update->setLogger(new MockLogger());
@@ -61,9 +85,28 @@ class Application_Update_SetStatusOfExistingDoiTest extends ControllerTestCase
 
         $update->run();
 
-        $doc = new Opus_Document($docId);
+        $debug .= $this->getServerDateModifiedFromDatabase($docId) . ' (after - from database)' . PHP_EOL;
 
-        $this->assertEquals(0, $doc->getServerDateModified()->compare($modified));
+        $doc = Document::get($docId);
+
+        $debug .= "{$doc->getServerDateModified()} (after - from new object)" . PHP_EOL;
+
+        $this->assertEquals(0, $doc->getServerDateModified()->compare($modified), $debug);
         $this->assertEquals('registered', $doc->getIdentifierDoi(0)->getStatus());
+    }
+
+    /**
+     * @param int $docId
+     * @return string
+     */
+    protected function getServerDateModifiedFromDatabase($docId)
+    {
+        $table  = TableGateway::getInstance(Documents::class);
+        $select = $table->select()
+            ->from($table, ['server_date_modified'])
+            ->where("id = $docId");
+        $result = $table->getAdapter()->fetchCol($select);
+
+        return $result[0];
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,25 +25,27 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Frontdoor
- * @author      Michael Lang <lang@zib.de>
  * @copyright   Copyright (c) 2014, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Frontdoor_Model_DocumentBuilder {
-
-    public function buildDomDocument($xsltFileName) {
-        $xslt = new DomDocument;
-        if (file_exists($xsltFileName . '_custom.xslt')) {
+/**
+ * Loads XSLT file as DomDocument.
+ */
+class Frontdoor_Model_DocumentBuilder
+{
+    /**
+     * @param string $xsltFileName
+     * @return DOMDocument
+     */
+    public function buildDomDocument($xsltFileName)
+    {
+        $xslt = new DOMDocument();
+        if (is_readable($xsltFileName . '_custom.xslt')) {
             $xslt->load($xsltFileName . '_custom.xslt');
-        }
-        else {
+        } else {
             $xslt->load($xsltFileName . '.xslt');
         }
         return $xslt;
     }
-
-} 
+}

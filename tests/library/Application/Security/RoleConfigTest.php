@@ -25,42 +25,43 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    TODO
- * @package     TODO
- * @author      Edouard Simon (edouard.simon@zib.de)
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-/**
- * 
- */
-class Application_Security_RoleConfigTest extends ControllerTestCase {
+use Opus\Common\UserRole;
 
+class Application_Security_RoleConfigTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'database';
+
+    /** @var UserRole */
     private $guestRole;
-    
-    public function setUp() {
+
+    public function setUp(): void
+    {
         parent::setUp();
-        $this->guestRole = new Opus_UserRole(2);
+        $this->guestRole = UserRole::get(2);
         $this->guestRole->appendAccessModule('documents');
     }
-    
-    public function tearDown() {
+
+    public function tearDown(): void
+    {
         parent::tearDown();
         $this->guestRole->removeAccessModule('documents');
     }
-    
-    public function testApplyPermissions() {
+
+    public function testApplyPermissions()
+    {
         $acl = new Zend_Acl();
-        $this->setExpectedException('Zend_Acl_Role_Registry_Exception');
+        $this->expectException(Zend_Acl_Role_Registry_Exception::class);
         $acl->isAllowed($this->guestRole, 'documents');
         $roleConfig = new Application_Security_RoleConfig('guest');
         $roleConfig->applyPermissions($acl);
-        $this->assertTrue($acl->isAllowed($this->guestRole, 'documents'), "Expected role 'guest' can access resource 'documents'");
-        
+        $this->assertTrue(
+            $acl->isAllowed($this->guestRole, 'documents'),
+            "Expected role 'guest' can access resource 'documents'"
+        );
     }
-    
 }
-
-?>

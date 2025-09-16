@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,107 +25,123 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Formular für das Hinzufügen einer Person zu einem Dokument.
  */
-class Admin_Form_Document_PersonAdd extends Admin_Form_Person {
-    
+class Admin_Form_Document_PersonAdd extends Admin_Form_Person
+{
     /**
      * Name für Button, um weitere Person einzugeben.
      */
-    const ELEMENT_NEXT = 'Next';
-    
+    public const ELEMENT_NEXT = 'Next';
+
     /**
      * Name für Unterformlar mit Dokument-Link Feldern.
      */
-    const SUBFORM_DOCUMENT = 'Document';
-    
-    
+    public const SUBFORM_DOCUMENT = 'Document';
+
     /**
      * Konstante für Ergebnis nach Klicken auf 'Next' Button.
      */
-    const RESULT_NEXT = 'next';
-    
+    public const RESULT_NEXT = 'next';
+
     /**
      * Erzeugt die Formularelemente.
-     * 
+     *
      * Die Informationen für den Link mit dem Dokument werden als Unterformular hinzugefügt.
      */
-    public function init() {
-        parent::init();                
-        
+    public function init()
+    {
+        parent::init();
+
         $linkForm = new Admin_Form_PersonLink();
         $linkForm->setLegend('admin_person_assign_document_options');
-        
+
         // Für neue Personen kann das Link-Formular noch keine ID haben
         $linkForm->getElement(Admin_Form_Person::ELEMENT_PERSON_ID)->setRequired(false);
-        
+
         $this->addSubForm($linkForm, self::SUBFORM_DOCUMENT, 20);
-        
+
         $next = $this->createElement(
-            'submit', self::ELEMENT_NEXT, array(
-            'decorators' => array(
-                'ViewHelper',
-                array(array('liWrapper' => 'HtmlTag'), array('tag' => 'li', 'class' => 'save-element')),
-            )
-            )
+            'submit',
+            self::ELEMENT_NEXT,
+            [
+                'decorators' => [
+                    'ViewHelper',
+                    [['liWrapper' => 'HtmlTag'], ['tag' => 'li', 'class' => 'save-element']],
+                ],
+            ]
         );
-        
+
         $this->getDisplayGroup('actions')->setElements(
-            array(
-            $this->getElement(self::ELEMENT_SAVE), $next, $this->getElement(self::ELEMENT_CANCEL))
+            [
+                $this->getElement(self::ELEMENT_SAVE),
+                $next,
+                $this->getElement(self::ELEMENT_CANCEL),
+            ]
         );
     }
-    
-    public function processPost($post, $context) {
+
+    /**
+     * @param array $post
+     * @param array $context
+     * @return string|null
+     */
+    public function processPost($post, $context)
+    {
         $result = parent::processPost($post, $context);
-        
-        if (is_null($result)) {
+
+        if ($result === null) {
             if (array_key_exists(self::ELEMENT_NEXT, $post)) {
                 $result = self::RESULT_NEXT;
             }
         }
-        
+
         return $result;
     }
-    
-    public function getSelectedRole() {
+
+    /**
+     * @return string|null
+     */
+    public function getSelectedRole()
+    {
         return $this->getSubForm(self::SUBFORM_DOCUMENT)->getElementValue(Admin_Form_PersonLink::ELEMENT_ROLE);
     }
-    
+
     /**
      * Setzt die ausgewählte Rolle.
-     * 
+     *
      * Wenn eine unbekannte Rolle übergeben wird, wird die 'author' Rolle verwendet.
-     * 
+     *
      * @param string $role Rolle der Person für Dokument
      */
-    public function setSelectedRole($role) {
-        if (!in_array($role, Admin_Form_Document_Persons::getRoles())) {
-            $this->getLog()->err(__METHOD__ . " Called with unknown role '$role'.");
+    public function setSelectedRole($role)
+    {
+        if (! in_array($role, Admin_Form_Document_Persons::getRoles())) {
+            $this->getLogger()->err(__METHOD__ . " Called with unknown role '$role'.");
             $role = 'author';
         }
-        
+
         $this->getSubForm(self::SUBFORM_DOCUMENT)->getElement(Admin_Form_PersonLink::ELEMENT_ROLE)->setValue($role);
     }
-    
-    public function getPersonLinkProperties($personId) {
+
+    /**
+     * @param array $personId
+     * @return array
+     */
+    public function getPersonLinkProperties($personId)
+    {
         $linkForm = $this->getSubForm(self::SUBFORM_DOCUMENT);
-        
-        return array(
-            'person' => $personId,
-            'role' => $linkForm->getElementValue(Admin_Form_PersonLink::ELEMENT_ROLE),
+
+        return [
+            'person'  => $personId,
+            'role'    => $linkForm->getElementValue(Admin_Form_PersonLink::ELEMENT_ROLE),
             'contact' => $linkForm->getElementValue(Admin_Form_PersonLink::ELEMENT_ALLOW_CONTACT),
-            'order' => $linkForm->getElementValue(Admin_Form_PersonLink::ELEMENT_SORT_ORDER)
-        );
+            'order'   => $linkForm->getElementValue(Admin_Form_PersonLink::ELEMENT_SORT_ORDER),
+        ];
     }
-    
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,47 +24,53 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Licence;
+use Opus\Common\LicenceInterface;
+use Opus\Document;
+use Opus\EnrichmentKey;
 
 /**
- * Class Application_Controller_ActionCRUDTest
- *
  * Erstellt und löscht Lizenzen.
- *
- * @category    Application Unit Test
- * @package     Application_Controller_Action
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Controller_ActionCRUDTest extends ControllerTestCase {
+class Application_Controller_ActionCRUDTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'view', 'mainMenu', 'navigation', 'translation'];
 
-    private $controller = null;
+    /** @var Application_Controller_ActionCRUD */
+    private $controller;
 
-    private $licenceIds = null;
+    /** @var int[] */
+    private $licenceIds;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
 
         $this->controller = $this->getController();
         $this->controller->setFormClass('Admin_Form_Licence');
 
-        $licences = Opus_Licence::getAll();
+        $licences = Licence::getAll();
 
-        $this->licenceIds = array();
+        $this->licenceIds = [];
 
         foreach ($licences as $licence) {
             $this->licenceIds[] = $licence->getId();
         }
     }
 
-    public function tearDown() {
-        $licences = Opus_Licence::getAll();
+    public function tearDown(): void
+    {
+        $licences = Licence::getAll();
 
         if (count($this->licenceIds) < count($licences)) {
             foreach ($licences as $licence) {
-                if (!in_array($licence->getId(), $this->licenceIds)) {
+                if (! in_array($licence->getId(), $this->licenceIds)) {
                     $licence->delete();
                 }
             }
@@ -72,7 +79,11 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         parent::tearDown();
     }
 
-    private function verifyMessages($messages) {
+    /**
+     * @param array $messages
+     */
+    private function verifyMessages($messages)
+    {
         $this->assertArrayHasKey(Application_Controller_ActionCRUD::SAVE_SUCCESS, $messages);
         $this->assertArrayHasKey(Application_Controller_ActionCRUD::SAVE_FAILURE, $messages);
         $this->assertArrayHasKey(Application_Controller_ActionCRUD::DELETE_SUCCESS, $messages);
@@ -80,11 +91,16 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertArrayHasKey(Application_Controller_ActionCRUD::INVALID_ID, $messages);
     }
 
-    private function getController() {
+    /**
+     * @return Application_Controller_ActionCRUD
+     */
+    private function getController()
+    {
         return new Application_Controller_ActionCRUD($this->getRequest(), $this->getResponse());
     }
 
-    public function testSetGetFormClass() {
+    public function testSetGetFormClass()
+    {
         $controller = $this->getController();
 
         $this->assertNull($controller->getFormClass());
@@ -94,83 +110,93 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertEquals('Admin_Form_Licence', $controller->getFormClass());
     }
 
-    /**
-     * @expectedException Application_Exception
-     * @expectedExceptionMessage not instance of Application_Form_IModel
-     */
-    public function testSetFormClassBadClass() {
-        $this->controller->setFormClass('Opus_Document');
+    public function testSetFormClassBadClass()
+    {
+        $this->expectException(Application_Exception::class);
+        $this->expectExceptionMessage('not instance of Application_Form_IModel');
+        $this->controller->setFormClass(Document::class);
     }
 
-    public function testIsClassSupportedTrue() {
+    public function testIsClassSupportedTrue()
+    {
         $this->assertTrue($this->controller->isClassSupported('Admin_Form_Licence'));
     }
 
-    public function testIsClassSupportedFalse() {
+    public function testIsClassSupportedFalse()
+    {
         $this->assertFalse($this->controller->isClassSupported('Admin_Form_Document_Licences'));
     }
 
-    public function testGetAllModels() {
-        $licences = Opus_Licence::getAll();
+    public function testGetAllModels()
+    {
+        $licences = Licence::getAll();
 
         $models = $this->controller->getAllModels();
 
         $this->assertEquals(count($licences), count($models));
     }
 
-    public function testGetModel() {
+    public function testGetModel()
+    {
         $model = $this->controller->getModel(2);
 
         $this->assertNotNull($model);
-        $this->assertInstanceOf('Opus_Licence', $model);
+        $this->assertInstanceOf(LicenceInterface::class, $model);
         $this->assertEquals(2, $model->getId());
     }
 
-    public function testGetModelUnkownId() {
+    public function testGetModelUnkownId()
+    {
         $model = $this->controller->getModel(1000);
 
         $this->assertNull($model);
     }
 
-    public function testGetModelBadId() {
+    public function testGetModelBadId()
+    {
         $model = $this->controller->getModel('notAnId');
 
         $this->assertNull($model);
     }
 
-    public function testGetModelWithStringId() {
+    public function testGetModelWithStringId()
+    {
         $this->controller->setVerifyModelIdIsNumeric(false);
         $this->controller->setFormClass('Admin_Form_EnrichmentKey');
 
         $model = $this->controller->getModel('City');
 
         $this->assertNotNull($model);
-        $this->assertInstanceOf('Opus_EnrichmentKey', $model);
+        $this->assertInstanceOf(EnrichmentKey::class, $model);
         $this->assertEquals('City', $model->getName());
     }
 
-    public function testGetModelEmptyId() {
+    public function testGetModelEmptyId()
+    {
         $model = $this->controller->getModel('');
 
         $this->assertNull($model);
     }
 
-    public function testGetNewModel() {
+    public function testGetNewModel()
+    {
         $model = $this->controller->getNewModel();
 
         $this->assertNotNull($model);
-        $this->assertInstanceOf('Opus_Licence', $model);
+        $this->assertInstanceOf(LicenceInterface::class, $model);
         $this->assertNull($model->getId());
     }
 
-    public function testGetModelForm() {
+    public function testGetModelForm()
+    {
         $form = $this->controller->getModelForm();
 
         $this->assertNotNull($form);
         $this->assertInstanceOf('Admin_Form_Licence', $form);
     }
 
-    public function testGetNewModelForm() {
+    public function testGetNewModelForm()
+    {
         $form = $this->controller->getNewModelForm();
 
         $this->assertNotNull($form);
@@ -178,8 +204,9 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertNull($form->getElement(Application_Form_Model_Abstract::ELEMENT_MODEL_ID)->getValue());
     }
 
-    public function testGetEditModelForm() {
-        $model = new Opus_Licence(2);
+    public function testGetEditModelForm()
+    {
+        $model = Licence::get(2);
 
         $form = $this->controller->getEditModelForm($model);
 
@@ -188,58 +215,65 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertEquals(2, $form->getElement(Application_Form_Model_Abstract::ELEMENT_MODEL_ID)->getValue());
     }
 
-    public function testGetMessages() {
+    public function testGetMessages()
+    {
         $messages = $this->controller->getMessages();
 
-        $this->assertEquals(6, count($messages));
+        $this->assertEquals(7, count($messages));
         $this->verifyMessages($messages);
     }
 
-    public function testSetMessages() {
-        $this->controller->setMessages(array(
+    public function testSetMessages()
+    {
+        $this->controller->setMessages([
             'saveSuccess' => 'success',
-            'saveFailure' => 'failure'
-        ));
+            'saveFailure' => 'failure',
+        ]);
     }
 
-    public function testLoadDefaultMessages() {
+    public function testLoadDefaultMessages()
+    {
         $messages = $this->controller->getMessages();
 
-        $this->assertEquals(6, count($messages));
+        $this->assertEquals(7, count($messages));
         $this->verifyMessages($messages);
     }
 
-    public function testGetConfirmationForm() {
-        $model = new Opus_Licence(2);
-        $form = $this->controller->getConfirmationForm($model);
+    public function testGetConfirmationForm()
+    {
+        $model = Licence::get(2);
+        $form  = $this->controller->getConfirmationForm($model);
         $this->assertNotNull($form);
         $this->assertInstanceOf('Application_Form_Confirmation', $form);
         $this->assertEquals(2, $form->getModelId());
     }
 
-    public function testGetConfirmationFormNull() {
+    public function testGetConfirmationFormNull()
+    {
         $form = $this->controller->getConfirmationForm(null);
         $this->assertNotNull($form);
         $this->assertInstanceOf('Application_Form_Confirmation', $form);
     }
 
-    public function testHandlePostCancel() {
-        $result = $this->controller->handleModelPost(array(
-            'Cancel' => 'Abbrechen'
-        ));
+    public function testHandlePostCancel()
+    {
+        $result = $this->controller->handleModelPost([
+            'Cancel' => 'Abbrechen',
+        ]);
 
         $this->assertNotNull($result);
         $this->assertInternalType('array', $result);
         $this->assertEmpty($result);
     }
 
-    public function testHandlePostSave() {
-        $result = $this->controller->handleModelPost(array(
-            'Save' => 'Abspeichern',
-            'NameLong' => 'New Test Licence',
-            'Language' => 'deu',
-            'LinkLicence' => 'www.example.org/licence'
-        ));
+    public function testHandlePostSave()
+    {
+        $result = $this->controller->handleModelPost([
+            'Save'        => 'Abspeichern',
+            'NameLong'    => 'New Test Licence',
+            'Language'    => 'deu',
+            'LinkLicence' => 'www.example.org/licence',
+        ]);
 
         $this->assertNotNull($result);
         $this->assertInternalType('array', $result);
@@ -254,21 +288,22 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
 
         $licenceId = $params['id'];
 
-        $licence = new Opus_Licence($licenceId);
+        $licence = Licence::get($licenceId);
         $licence->delete();
     }
 
-    public function testHandlePostSaveShowDisabled() {
+    public function testHandlePostSaveShowDisabled()
+    {
         $this->controller->setShowActionEnabled(false);
 
         $this->assertFalse($this->controller->getShowActionEnabled());
 
-        $result = $this->controller->handleModelPost(array(
-            'Save' => 'Abspeichern',
-            'NameLong' => 'New Test Licence',
-            'Language' => 'deu',
-            'LinkLicence' => 'www.example.org/licence'
-        ));
+        $result = $this->controller->handleModelPost([
+            'Save'        => 'Abspeichern',
+            'NameLong'    => 'New Test Licence',
+            'Language'    => 'deu',
+            'LinkLicence' => 'www.example.org/licence',
+        ]);
 
         $this->assertNotNull($result);
         $this->assertInternalType('array', $result);
@@ -277,29 +312,31 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertEquals(Application_Controller_ActionCRUD::SAVE_SUCCESS, $result['message']);
     }
 
-    public function testHandlePostSaveInvalid() {
-        $result = $this->controller->handleModelPost(array(
-            'Save' => 'Abspeichern',
-            'NameLong' => '', // is required
-            'Language' => 'abc',
-            'LinkLicence' => 'www.example.org/licence'
-        ));
+    public function testHandlePostSaveInvalid()
+    {
+        $result = $this->controller->handleModelPost([
+            'Save'        => 'Abspeichern',
+            'NameLong'    => '', // is required
+            'Language'    => 'abc',
+            'LinkLicence' => 'www.example.org/licence',
+        ]);
 
         $this->assertNotNull($result);
-        $this->assertInstanceOf('Application_Form_IModel', $result);
+        $this->assertInstanceOf(Application_Form_ModelFormInterface::class, $result);
 
         $this->assertEquals('abc', $result->getElement('Language')->getValue());
         $this->assertEquals('www.example.org/licence', $result->getElement('LinkLicence')->getValue());
     }
 
-    public function testHandlePostSaveInvalidId() {
-        $result = $this->controller->handleModelPost(array(
-            'Save' => 'Abspeichern',
-            'Id' => 1000,
-            'NameLong' => 'Test Licence',
-            'Language' => 'deu',
-            'LinkLicence' => 'www.example.org/licence'
-        ));
+    public function testHandlePostSaveInvalidId()
+    {
+        $result = $this->controller->handleModelPost([
+            'Save'        => 'Abspeichern',
+            'Id'          => 1000,
+            'NameLong'    => 'Test Licence',
+            'Language'    => 'deu',
+            'LinkLicence' => 'www.example.org/licence',
+        ]);
 
         $this->assertNotNull($result);
         $this->assertInternalType('array', $result);
@@ -308,22 +345,24 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertEquals(Application_Controller_ActionCRUD::INVALID_ID, $result['message']);
     }
 
-    public function testHandlePostNoSaveOrCancel() {
-        $result = $this->controller->handleModelPost(array());
+    public function testHandlePostNoSaveOrCancel()
+    {
+        $result = $this->controller->handleModelPost([]);
 
         $this->assertNotNull($result);
         $this->assertInternalType('array', $result);
         $this->assertEmpty($result);
     }
 
-    public function testHandlePostGetPostIfParamNull() {
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'Save' => 'Abspeichern',
-            'Id' => 1000,
-            'NameLong' => 'Test Licence',
-            'Language' => 'deu',
-            'LinkLicence' => 'www.example.org/licence'
-        ));
+    public function testHandlePostGetPostIfParamNull()
+    {
+        $this->getRequest()->setMethod('POST')->setPost([
+            'Save'        => 'Abspeichern',
+            'Id'          => 1000,
+            'NameLong'    => 'Test Licence',
+            'Language'    => 'deu',
+            'LinkLicence' => 'www.example.org/licence',
+        ]);
 
         $result = $this->controller->handleModelPost();
 
@@ -334,8 +373,9 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertEquals(Application_Controller_ActionCRUD::INVALID_ID, $result['message']);
     }
 
-    public function testHandleConfirmationPostInvalid() {
-        $result = $this->controller->handleConfirmationPost(array());
+    public function testHandleConfirmationPostInvalid()
+    {
+        $result = $this->controller->handleConfirmationPost([]);
 
         $this->assertNotNull($result);
         $this->assertInternalType('array', $result);
@@ -344,22 +384,24 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertEquals(Application_Controller_ActionCRUD::INVALID_ID, $result['message']);
     }
 
-    public function testHandleConfirmationPostNo() {
-        $result = $this->controller->handleConfirmationPost(array(
-            'Id' => '1',
-            'ConfirmNo' => 'Nein'
-        ));
+    public function testHandleConfirmationPostNo()
+    {
+        $result = $this->controller->handleConfirmationPost([
+            'Id'        => '1',
+            'ConfirmNo' => 'Nein',
+        ]);
 
         $this->assertNotNull($result);
         $this->assertInternalType('array', $result);
         $this->assertEmpty($result);
     }
 
-    public function testHandleConfirmationPostInvalidId() {
-        $result = $this->controller->handleConfirmationPost(array(
-            'Id' => '1000',
-            'ConfirmYes' => 'Ja'
-        ));
+    public function testHandleConfirmationPostInvalidId()
+    {
+        $result = $this->controller->handleConfirmationPost([
+            'Id'         => '1000',
+            'ConfirmYes' => 'Ja',
+        ]);
 
         $this->assertNotNull($result);
         $this->assertInternalType('array', $result);
@@ -368,11 +410,12 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertEquals(Application_Controller_ActionCRUD::INVALID_ID, $result['message']);
     }
 
-    public function testHandleConfirmationPostNoParamNull() {
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'Id' => '1',
-            'ConfirmNo' => 'Nein'
-        ));
+    public function testHandleConfirmationPostNoParamNull()
+    {
+        $this->getRequest()->setMethod('POST')->setPost([
+            'Id'        => '1',
+            'ConfirmNo' => 'Nein',
+        ]);
 
         $result = $this->controller->handleConfirmationPost();
 
@@ -381,8 +424,9 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertEmpty($result);
     }
 
-    public function testHandleConfirmationPostYes() {
-        $licence = new Opus_Licence();
+    public function testHandleConfirmationPostYes()
+    {
+        $licence = Licence::new();
 
         $licence->setNameLong(__METHOD__);
         $licence->setLanguage('deu');
@@ -390,10 +434,10 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
 
         $licenceId = $licence->store();
 
-        $result = $this->controller->handleConfirmationPost(array(
-            'Id' => $licenceId,
-            'ConfirmYes' => 'Ja'
-        ));
+        $result = $this->controller->handleConfirmationPost([
+            'Id'         => $licenceId,
+            'ConfirmYes' => 'Ja',
+        ]);
 
         $this->assertNotNull($result);
         $this->assertInternalType('array', $result);
@@ -402,17 +446,17 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertEquals(Application_Controller_ActionCRUD::DELETE_SUCCESS, $result['message']);
     }
 
-    public function testMessagesTranslated() {
+    public function testMessagesTranslated()
+    {
         $messages = $this->controller->getMessages();
 
-        $translate = Zend_Registry::get('Zend_Translate');
+        $translate = Application_Translate::getInstance();
 
         foreach ($messages as $message) {
             if (is_array($message)) {
                 $this->assertArrayHasKey('failure', $message);
                 $key = $message['failure'];
-            }
-            else {
+            } else {
                 $key = $message;
             }
 
@@ -420,10 +464,11 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         }
     }
 
-    public function testSetGetFunctionNameForGettingModels() {
+    public function testSetGetFunctionNameForGettingModels()
+    {
         $this->assertEquals('getAll', $this->controller->getFunctionNameForGettingModels());
 
-        $this->controller->setFormClass('Admin_Form_Series');
+        $this->controller->setFormClass(Admin_Form_Series::class);
 
         $series = $this->controller->getAllModels();
 
@@ -448,10 +493,10 @@ class Application_Controller_ActionCRUDTest extends ControllerTestCase {
         $this->assertEquals('getAll', $this->controller->getFunctionNameForGettingModels());
     }
 
-    public function testGetIndexForm() {
+    public function testGetIndexForm()
+    {
         $form = $this->controller->getIndexForm();
 
-        $this->assertInstanceOf('Application_Form_Model_Table', $form);
+        $this->assertInstanceOf(Application_Form_Model_Table::class, $form);
     }
-
 }

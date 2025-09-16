@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,13 +25,12 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\DocumentInterface;
+use Opus\Common\Licence;
 
 /**
  * Formular fuer das Editieren der Lizenzen eines Dokuments.
@@ -41,36 +41,37 @@
  * Das Metadaten-Formular in der Administration zeigt alle Lizenzen, unabhängig davon ob sie aktiv sind, da bei
  * nachträglicher Deaktivierung einer Lizenz, immer noch Dokumente damit verknüpft sein können.
  */
-class Admin_Form_Document_Licences extends Admin_Form_AbstractDocumentSubForm {
-
+class Admin_Form_Document_Licences extends Admin_Form_AbstractDocumentSubForm
+{
     /**
      * Name für Formularelement für ID der Lizenz.
      */
-    const ELEMENT_NAME_PREFIX = 'licence';
+    public const ELEMENT_NAME_PREFIX = 'licence';
 
     /**
      * CSS Klasse für aktive Lizenzen.
      */
-    const ACTIVE_CSS_CLASS = 'active';
+    public const ACTIVE_CSS_CLASS = 'active';
 
     /**
      * CSS Klasse für inaktive Lizenzen.
      */
-    const INACTIVE_CSS_CLASS = 'disabled';
+    public const INACTIVE_CSS_CLASS = 'disabled';
 
     /**
      * Erzeugt Checkbox Formularelemente für alle Lizenzen.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
-        $licences = Opus_Licence::getAll();
+        $licences = Licence::getAll();
 
         foreach ($licences as $licence) {
             $element = new Application_Form_Element_Checkbox(self::ELEMENT_NAME_PREFIX . $licence->getId());
             $element->setDisableTranslator(true); // Lizenzen werden nicht übersetzt
             $element->setLabel($licence->getNameLong());
-            $cssClass = ($licence->getActive()) ? self::ACTIVE_CSS_CLASS : self::INACTIVE_CSS_CLASS;
+            $cssClass       = $licence->getActive() ? self::ACTIVE_CSS_CLASS : self::INACTIVE_CSS_CLASS;
             $labelDecorator = $element->getDecorator('Label');
             $labelDecorator->setOption('class', $cssClass);
             $element->setCheckedValue($licence->getId());
@@ -82,14 +83,16 @@ class Admin_Form_Document_Licences extends Admin_Form_AbstractDocumentSubForm {
 
     /**
      * Setzt die dem Dokument zugewiesenen Lizenzen als ausgewählt im Formular.
-     * @param Opus_Document $document
+     *
+     * @param DocumentInterface $document
      */
-    public function populateFromModel($document) {
+    public function populateFromModel($document)
+    {
         $licences = $this->getElements();
 
         foreach ($licences as $element) {
             if ($element instanceof Zend_Form_Element_Checkbox) {
-                $licenceId = $element->getCheckedValue();
+                $licenceId = (int) $element->getCheckedValue();
                 $element->setChecked($this->hasLicence($document, $licenceId));
             }
         }
@@ -97,18 +100,20 @@ class Admin_Form_Document_Licences extends Admin_Form_AbstractDocumentSubForm {
 
     /**
      * Aktualisiert die Liste der Lizenzen fuer ein Dokument.
-     * @param Opus_Document $document
+     *
+     * @param DocumentInterface $document
      */
-    public function updateModel($document) {
+    public function updateModel($document)
+    {
         $licences = $this->getElements();
 
-        $docLicences = array();
+        $docLicences = [];
 
         foreach ($licences as $element) {
             if ($element instanceof Zend_Form_Element_Checkbox) {
                 $licenceId = $element->getCheckedValue();
                 if ($element->getValue() !== '0') {
-                    $docLicences[] = new Opus_Licence($licenceId);
+                    $docLicences[] = Licence::get($licenceId);
                 }
             }
         }
@@ -119,15 +124,16 @@ class Admin_Form_Document_Licences extends Admin_Form_AbstractDocumentSubForm {
     /**
      * Prueft, ob eine Lizenz einem Dokument zugewiesen ist.
      *
-     * @param Opus_Document $document
-     * @param Opus_Licence $licence
-     * @return boolean true - Lizenz zugewiesen; false - Lizenz nicht zugewiesen
+     * @param DocumentInterface $document
+     * @param int               $licenceId
+     * @return bool true - Lizenz zugewiesen; false - Lizenz nicht zugewiesen
      */
-    public function hasLicence($document, $licenceId) {
+    public function hasLicence($document, $licenceId)
+    {
         $licences = $document->getLicence();
 
         foreach ($licences as $docLicence) {
-            if ($docLicence->getModel()->getId() == $licenceId) {
+            if ($docLicence->getModel()->getId() === $licenceId) {
                 return true;
             }
         }
@@ -141,9 +147,10 @@ class Admin_Form_Document_Licences extends Admin_Form_AbstractDocumentSubForm {
      * Die Funktion wird für die Ausgabe des Metadaten-Formulars als Metadaten-Übersicht verwendet, um zu entscheiden,
      * ob das Unterformular für Lizenzen angezeigt werden soll oder nicht.
      *
-     * @return boolean
+     * @return bool
      */
-    public function isEmpty() {
+    public function isEmpty()
+    {
         $elements = $this->getElements();
 
         foreach ($elements as $element) {
@@ -160,7 +167,8 @@ class Admin_Form_Document_Licences extends Admin_Form_AbstractDocumentSubForm {
      *
      * Durch das Entfernen der Dekoratoren wird nur noch das Label der ausgewählten Lizenzen ausgegeben.
      */
-    public function prepareRenderingAsView() {
+    public function prepareRenderingAsView()
+    {
         parent::prepareRenderingAsView();
 
         $elements = $this->getElements();
@@ -171,5 +179,4 @@ class Admin_Form_Document_Licences extends Admin_Form_AbstractDocumentSubForm {
             $element->getDecorator('Label')->setOption('disableFor', true);
         }
     }
-
 }

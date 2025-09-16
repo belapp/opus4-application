@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,12 +25,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2015, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
@@ -37,41 +34,54 @@
  *
  * TODO Application_Form_Abstract should be enough (not ID element needed)
  */
-class Admin_Form_Configuration extends Application_Form_Model_Abstract {
-
+class Admin_Form_Configuration extends Application_Form_Model_Abstract
+{
     /**
      * Prefix for translation keys of configuration options.
      *
      * TODO wird auf von Admin_Model_Option verwendet
      */
-    const LABEL_TRANSLATION_PREFIX = 'admin_config_';
+    public const LABEL_TRANSLATION_PREFIX = 'admin_config_';
+
+    /** @var array Configured options for form. */
+    private $options;
 
     /**
-     * Configured options for form.
-     * @var array
+     * @param null|Zend_Config $config
      */
-    private $_options;
+    public function __construct($config = null)
+    {
+        if ($config !== null) {
+            $options       = new Admin_Model_Options($config);
+            $this->options = $options->getOptions();
+        }
+
+        parent::__construct();
+    }
 
     /**
      * Configures form and creates form elements.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
-        $options = new Admin_Model_Options();
+        if ($this->options === null) {
+            $options       = new Admin_Model_Options();
+            $this->options = $options->getOptions();
+        }
 
-        $this->_options = $options->getOptions();
-
-        foreach ($this->_options as $name => $option) {
+        foreach ($this->options as $name => $option) {
             $section = $option->getSection();
 
             $element = $this->createElement(
                 $option->getElementType(),
                 $name,
-                array_merge(array(
-                    'label' => $option->getLabel(),
-                    'description' => $option->getDescription()
-                    ),
+                array_merge(
+                    [
+                        'label'       => $option->getLabel(),
+                        'description' => $option->getDescription(),
+                    ],
                     $option->getOptions()
                 )
             );
@@ -81,13 +91,18 @@ class Admin_Form_Configuration extends Application_Form_Model_Abstract {
         }
 
         $this->removeElement(self::ELEMENT_MODEL_ID);
+
+        $this->setAttrib('class', 'admin_config');
     }
 
     /**
      * Initializes values of form elements from configuration.
+     *
+     * @param Zend_Config $config
      */
-    public function populateFromModel($config) {
-        foreach ($this->_options as $name => $option) {
+    public function populateFromModel($config)
+    {
+        foreach ($this->options as $name => $option) {
             $value = Application_Configuration::getValueFromConfig($config, $option->getKey());
             $this->getElement($name)->setValue($value);
         }
@@ -95,9 +110,12 @@ class Admin_Form_Configuration extends Application_Form_Model_Abstract {
 
     /**
      * Updates configuration with values from form elements.
+     *
+     * @param Zend_Config $config
      */
-    public function updateModel($config) {
-        foreach ($this->_options as $name => $option) {
+    public function updateModel($config)
+    {
+        foreach ($this->options as $name => $option) {
             $value = $this->getElement($name)->getValue();
 
             // TODO move into Admin_Model_Option?
@@ -114,27 +132,25 @@ class Admin_Form_Configuration extends Application_Form_Model_Abstract {
      *
      * If necessary a new display group is created.
      *
-     * @param $element Form element
-     * @param $section Name of section
+     * @param Zend_Form_Element $element Form element
+     * @param string            $section Name of section
      * @throws Zend_Form_Exception
      */
     public function addElementToSection($element, $section)
     {
         $group = $this->getDisplayGroup($section);
 
-        if (is_null($group)) {
+        if ($group === null) {
             $this->addDisplayGroup(
-                array($element),
+                [$element],
                 $section,
-                array(
-                    'legend' => self::LABEL_TRANSLATION_PREFIX . 'section_' . $section,
-                    'decorators' => array('FormElements', 'Fieldset')
-                )
+                [
+                    'legend'     => self::LABEL_TRANSLATION_PREFIX . 'section_' . $section,
+                    'decorators' => ['FormElements', 'Fieldset'],
+                ]
             );
-        }
-        else {
+        } else {
             $group->addElement($element);
         }
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,23 +25,19 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Tests
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * @coversNothing
  */
-class TranslationKeyDuplicatesTest extends ControllerTestCase {
-
-    public function testDetectDuplicateKeys() {
+class TranslationKeyDuplicatesTest extends ControllerTestCase
+{
+    public function testDetectDuplicateKeys()
+    {
         $modulesDir = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'modules';
-        $output = shell_exec("find $modulesDir -name '*tmx' -print0 |xargs -r0 grep -h 'tuid=' |sed -e 's/^.*tuid=\"([^\"]+)\".*$/\1/g' |sort |uniq -d");
-        $this->assertNull($output, $output);
+        $output     = shell_exec("find $modulesDir -name '*tmx' -print0 |xargs -r0 grep -h 'tuid=' |sed -e 's/^.*tuid=\"([^\"]+)\".*$/\1/g' |sort |uniq -d");
+        $this->assertNull($output, $output ?? '');
     }
-
 }

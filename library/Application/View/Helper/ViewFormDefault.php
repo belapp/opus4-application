@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,30 +25,37 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application_View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_View_Helper_ViewFormDefault extends Zend_View_Helper_FormElement {
 
-    public function viewFormDefault($name, $value = null, $attribs = null) {
+class Application_View_Helper_ViewFormDefault extends Zend_View_Helper_FormElement
+{
+    /**
+     * @param string      $name
+     * @param string|null $value
+     * @param array|null  $attribs
+     * @return string
+     */
+    public function viewFormDefault($name, $value = null, $attribs = null)
+    {
         $info = $this->_getInfo($name, $value, $attribs);
+        // @phpcs:disable
         extract($info);
+        // @phpcs:enable
 
-        $markup = '<div'
-            . ' id="' . $this->view->escape($id) . '"'
-            . ' class="' . $this->getElementClass() . '">'
-            . $this->view->escape($value)
-            . '</div>';
+        $escapedId    = $this->view->escape($id);
+        $escapedValue = $value !== null ? htmlspecialchars($value, ENT_DISALLOWED) : '';
+        $elementClass = $this->getElementClass();
 
-        return $markup;
+        return "<div id=\"$escapedId\" class=\"$elementClass\">$escapedValue</div>";
     }
 
-    public function getElementClass() {
+    /**
+     * @return string
+     */
+    public function getElementClass()
+    {
         return 'field';
     }
-
 }

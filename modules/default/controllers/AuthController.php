@@ -25,28 +25,30 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Default
- * @author      Ralf Claussnitzer (ralf.claussnitzer@slub-dresden.de)
- * @author      Pascal-Nicolas Becker <becker@zib.de>
  * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Security\AuthAdapter;
+use Opus\Security\Ldap\LdapAuthAdapter;
 
 /**
  * Provides actions for basic authenticating login and logout.
- *
- * @category    Application
- * @package     Module_Default
  */
-class AuthController extends Application_Controller_Action {
+class AuthController extends Application_Controller_Action
+{
+    public function init()
+    {
+        parent::init();
+
+        $this->view->robots = 'noindex, nofollow';
+    }
 
     /**
      * Always allow access to this controller; Override check in parent method.
      */
-    protected function checkAccessModulePermissions() {
-
+    protected function checkAccessModulePermissions()
+    {
     }
 
     /**
@@ -54,48 +56,50 @@ class AuthController extends Application_Controller_Action {
      *
      * @var array
      */
-    protected $_loginUrl = array('action' => 'index', 'controller' => 'index', 'module' => 'home', 'params' => array());
+    protected $loginUrl = ['action' => 'index', 'controller' => 'index', 'module' => 'home', 'params' => []];
     /**
      * Default URL to goto after successful logout. Maybe overwritten by findRemoteParameters().
      *
      * @var array
      */
-    protected $_logoutUrl = array(
-        'action' => 'index', 'controller' => 'index', 'module' => 'default', 'params' => array()
-    );
+    protected $logoutUrl = [
+        'action'     => 'index',
+        'controller' => 'index',
+        'module'     => 'default',
+        'params'     => [],
+    ];
 
     /**
      * Index action shows login form or logout link respectively.
-     *
-     * @return void
      */
-    public function indexAction() {
+    public function indexAction()
+    {
         $identity = Zend_Auth::getInstance()->getIdentity();
         if (empty($identity) === true) {
-            return $this->loginAction();
+            $this->loginAction();
+            return;
         }
 
-        $this->view->logout_url = $this->view->url(array('action' => 'logout'));
-        $this->view->identity = htmlspecialchars($identity);
+        $this->view->logout_url = $this->view->url(['action' => 'logout']);
+        $this->view->identity   = htmlspecialchars($identity);
     }
 
     /**
      * Login action performs login attempt with login form data. After a successful login
      * it redirects to the page configured by $_login_url.
-     *
-     * @return void
      */
-    public function loginAction() {
+    public function loginAction()
+    {
         // Redirect to start page if user is already logged in
         $identity = Zend_Auth::getInstance()->getIdentity();
         if (empty($identity) !== true) {
-            $this->_helper->_redirector('index', 'index', 'home', array());
+            $this->_helper->_redirector('index', 'index', 'home', []);
             return;
         }
 
         // Initialize form.
         $form = $this->getLoginForm();
-        /* @var $logger Zend_Log */
+        /** @var Zend_Log $logger */
         $logger = $this->getLogger();
 
         // check for return module, controller, action and parameteres, overwrite $_login_url.
@@ -104,12 +108,13 @@ class AuthController extends Application_Controller_Action {
         if ($this->getRequest()->isPost() !== true) {
             // Do not forget return parameters.
             $url = $this->view->url(
-                array_merge(array('action' => 'login', 'controller' => 'auth', 'module' => 'default'), $rparams)
+                array_merge(['action' => 'login', 'controller' => 'auth', 'module' => 'default'], $rparams)
             );
             $form->setAction($url);
 
             $this->view->form = $form;
-            return $this->render('login');
+            $this->render('login');
+            return;
         }
 
         // Credentials coming in via POST operation.
@@ -125,16 +130,17 @@ class AuthController extends Application_Controller_Action {
             $form->populate($data);
 
             $this->view->form = $form;
-            return $this->render('login');
+            $this->render('login');
+            return;
         }
 
         // Form data is valid (including the hash field)
-        $auth = new Opus_Security_AuthAdapter();
+        $auth = new AuthAdapter();
 
         // Overwrite auth adapter if config-key is set.
         $config = $this->getConfig();
-        if (isset($config, $config->authenticationModule) and ($config->authenticationModule === 'Ldap')) {
-            $auth = new Opus_Security_AuthAdapter_Ldap();
+        if (isset($config, $config->authenticationModule) && ($config->authenticationModule === 'Ldap')) {
+            $auth = new LdapAuthAdapter();
         }
 
         // Perfom authentication attempt
@@ -145,45 +151,46 @@ class AuthController extends Application_Controller_Action {
 
         if ($authResult->isValid() !== true) {
             // Put authentication failure message to the view.
-            $message = $authResult->getMessages();
+            $message                     = $authResult->getMessages();
             $this->view->auth_failed_msg = $this->view->translate($message[0]);
 
             // Populate the form again to trigger validator decorators.
-            $logger->notice("Failed login attempt of user '" . ($login) . "'.");
+            $logger->notice("Failed login attempt of user '" . $login . "'.");
             $form->populate($data);
 
             $this->view->form = $form;
-            return $this->render('login');
+            $this->render('login');
+            return;
         }
 
         // Persistent the successful authenticated identity.
-        $logger->notice("Successful login attempt of user '" . ($login) . "'.");
+        $logger->notice("Successful login attempt of user '" . $login . "'.");
         Zend_Auth::getInstance()->getStorage()->write(strtolower($login));
 
         // Redirect to post login url.
-        $action = $this->_loginUrl['action'];
-        $controller = $this->_loginUrl['controller'];
-        $module = $this->_loginUrl['module'];
-        $params = $this->_loginUrl['params'];
+        $action     = $this->loginUrl['action'];
+        $controller = $this->loginUrl['controller'];
+        $module     = $this->loginUrl['module'];
+        $params     = $this->loginUrl['params'];
         $this->_helper->_redirector($action, $controller, $module, $params);
     }
 
     /**
      * Logout action performs logout and redirects to home module.
-     *
-     * @return void
      */
-    public function logoutAction() {
+    public function logoutAction()
+    {
         Zend_Auth::getInstance()->clearIdentity();
-        return $this->_helper->_redirector('index', 'index', 'home');
+        $this->_helper->_redirector('index', 'index', 'home');
     }
 
     /**
      * Assembles and returns a login form.
      *
-     * @return unknown
+     * @return Zend_Form
      */
-    protected function getLoginForm() {
+    protected function getLoginForm()
+    {
         $form = new Zend_Form();
 
         // Add hash element to detect counterfeit formular data via validation.
@@ -195,9 +202,9 @@ class AuthController extends Application_Controller_Action {
                 ->setRequired()
                 ->setLabel('auth_field_login');
         $login->addErrorMessages(
-            array(
-            Zend_Validate_NotEmpty::IS_EMPTY => 'auth_error_no_username'
-            )
+            [
+                Zend_Validate_NotEmpty::IS_EMPTY => 'auth_error_no_username',
+            ]
         );
 
         // Password element.
@@ -205,9 +212,9 @@ class AuthController extends Application_Controller_Action {
         $password->setRequired()
                 ->setLabel('auth_field_password');
         $password->addErrorMessages(
-            array(
-            Zend_Validate_NotEmpty::IS_EMPTY => 'auth_error_no_password'
-            )
+            [
+                Zend_Validate_NotEmpty::IS_EMPTY => 'auth_error_no_password',
+            ]
         );
 
         // Submit button.
@@ -215,7 +222,7 @@ class AuthController extends Application_Controller_Action {
         $submit->setLabel('Login');
 
         $form->setMethod('POST');
-        $form->addElements(array($hash, $login, $password, $submit));
+        $form->addElements([$hash, $login, $password, $submit]);
 
         return $form;
     }
@@ -226,61 +233,65 @@ class AuthController extends Application_Controller_Action {
      * Ignores following parameters: module, controller, action, hash, login, password and SubmitCredentials.
      *
      * returns mixed Associative array containing parameters that should be added to urls referencing this controller.
+     *
+     * @return array
      */
-    protected function findReturnParameters() {
-        $params = $this->getRequest()->getUserParams();
-        $rparams = array();
-        $rmodule = null;
+    protected function findReturnParameters()
+    {
+        $params      = $this->getRequest()->getUserParams();
+        $rparams     = [];
+        $rmodule     = null;
         $rcontroller = null;
-        $raction = null;
-        foreach ($params as $key=>$value) {
+        $raction     = null;
+        foreach ($params as $key => $value) {
             switch ($key) {
                 // ignore default parameters
-                case 'module' :
-                case 'controller' :
-                case 'action' :
+                case 'module':
+                case 'controller':
+                case 'action':
                 // do not forward login credentials
-                case 'hash' :
-                case 'login' :
-                case 'password' :
-                case 'SubmitCredentials' :
+                case 'hash':
+                case 'login':
+                case 'password':
+                case 'SubmitCredentials':
                     break;
                 // find return module, controller, action and parameters
-                case 'rmodule' :
+                case 'rmodule':
                     $rmodule = $value;
                     break;
-                case 'rcontroller' :
+                case 'rcontroller':
                     $rcontroller = $value;
                     break;
-                case 'raction' :
+                case 'raction':
                     $raction = $value;
                     break;
-                default :
+                default:
                     // parameter of old url
                     $rparams[$key] = $value;
                     break;
             }
         }
 
-        if (is_null($rmodule) || is_null($rcontroller) || is_null($raction)) {
-            return array();
+        if ($rmodule === null || $rcontroller === null || $raction === null) {
+            return [];
         }
 
         // store return address and parameters
-        $this->_loginUrl = array(
-            'action' => $raction,
+        $this->loginUrl  = [
+            'action'     => $raction,
             'controller' => $rcontroller,
-            'module' => $rmodule,
-            'params' => $rparams,
-        );
-        $this->_logoutUrl = array(
-            'action' => $raction,
+            'module'     => $rmodule,
+            'params'     => $rparams,
+        ];
+        $this->logoutUrl = [
+            'action'     => $raction,
             'controller' => $rcontroller,
-            'module' => $rmodule,
-            'params' => $rparams,
-        );
+            'module'     => $rmodule,
+            'params'     => $rparams,
+        ];
         return array_merge(
-            array('rmodule' => $rmodule, 'rcontroller' => $rcontroller, 'raction' => $raction), $rparams
+            ['rmodule' => $rmodule, 'rcontroller' => $rcontroller, 'raction' => $raction],
+            $rparams
         );
     }
 }

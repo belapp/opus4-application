@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,15 +25,17 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Export
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Export_BootstrapTest extends ControllerTestCase
 {
+    /** @var bool */
+    protected $configModifiable = true;
+
+    /** @var string */
+    protected $additionalResources = 'all';
 
     public function testInitExport()
     {
@@ -41,19 +44,18 @@ class Export_BootstrapTest extends ControllerTestCase
         $this->dispatch('/frontdoor/index/index/docId/1');
 
         // TODO configuration change has no influence at this point
-        Zend_Registry::get('Zend_Config')->merge(new Zend_Config(array(
-            'export' => array(
-                'stylesheet' => array(
-                    'frontdoor' => null
-                )
-            )
-        )));
+        $this->adjustConfiguration([
+            'export' => [
+                'stylesheet' => [
+                    'frontdoor' => null,
+                ],
+            ],
+        ]);
 
         $this->assertResponseCode(200);
         $this->assertQuery('a.export.bibtex');
         $this->assertQuery('a.export.ris');
         $this->assertNotQuery('a.export.xml'); // not for 'guest' user
-
     }
 
     public function testInitExportRegisterXML()
@@ -69,5 +71,4 @@ class Export_BootstrapTest extends ControllerTestCase
         $this->assertQuery('a.export.ris');
         $this->assertQuery('a.export.xml');
     }
-
 }

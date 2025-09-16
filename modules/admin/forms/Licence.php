@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,116 +24,121 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright Copyright (c) 2008, OPUS 4 development team
+ * @license   http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Licence;
+use Opus\Common\LicenceInterface;
 
 /**
  * Formular fuer das Editieren und Anzeigen einer Lizenz.
  *
- * Die Klasse Opus_Licence enthaelt auch noch das Feld 'LinkSign'. Es gibt Ticket OPUSVIER-1492 fuer das Entfernen
+ * Die Klasse Licence enthaelt auch noch das Feld 'LinkSign'. Es gibt Ticket OPUSVIER-1492 fuer das Entfernen
  * dieses Feldes, daher wurde es in diesem Formular nicht mehr verwendet. TODO Kommentar entfernen
- *
- * @category    Application
- * @package     Admin_Form
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
-class Admin_Form_Licence extends Application_Form_Model_Abstract {
-
+class Admin_Form_Licence extends Application_Form_Model_Abstract
+{
     /**
      * Name von Formularelement fuer Aktivierungsstatus einer Lizenz.
      */
-    const ELEMENT_ACTIVE = 'Active';
+    public const ELEMENT_ACTIVE = 'Active';
 
     /**
      * Name von Formularelement fuer interne Kommentare zur Lizenz (Feld: CommentInternal).
      */
-    const ELEMENT_COMMENT_INTERNAL = 'CommentInternal';
+    public const ELEMENT_COMMENT_INTERNAL = 'CommentInternal';
 
     /**
-     * Name von Formularelement fuer Feld 'DescMarkup' von Opus_Licence.
+     * Name von Formularelement fuer Feld 'DescMarkup' von Licence.
      */
-    const ELEMENT_DESC_MARKUP = 'DescMarkup';
+    public const ELEMENT_DESC_MARKUP = 'DescMarkup';
 
     /**
-     * Name von Formularelement fuer Feld 'DescText' von Opus_Licence.
+     * Name von Formularelement fuer Feld 'DescText' von Licence.
      */
-    const ELEMENT_DESC_TEXT = 'DescText';
+    public const ELEMENT_DESC_TEXT = 'DescText';
 
     /**
-     * Name von Formularelement fuer Feld 'Language' von Opus_Licence.
+     * Name von Formularelement fuer Feld 'Language' von Licence.
      */
-    const ELEMENT_LANGUAGE = 'Language';
+    public const ELEMENT_LANGUAGE = 'Language';
 
     /**
-     * Name von Formularelement fuer Feld 'LinkLicence' von Opus_Licence.
+     * Name von Formularelement fuer Feld 'LinkLicence' von Licence.
      */
-    const ELEMENT_LINK_LICENCE = 'LinkLicence';
+    public const ELEMENT_LINK_LICENCE = 'LinkLicence';
 
     /**
-     * Name von Formularelement fuer Feld 'LinkLogo' von Opus_Licence.
+     * Name von Formularelement fuer Feld 'LinkLogo' von Licence.
      */
-    const ELEMENT_LINK_LOGO = 'LinkLogo';
+    public const ELEMENT_LINK_LOGO = 'LinkLogo';
 
     /**
      * Name of form element for link to contract document for licence.
      */
-    const ELEMENT_LINK_SIGN = 'LinkSign';
+    public const ELEMENT_LINK_SIGN = 'LinkSign';
 
     /**
-     * Name von Formularelement fuer Feld 'MimeType' von Opus_Licence.
+     * Name von Formularelement fuer Feld 'MimeType' von Licence.
      */
-    const ELEMENT_MIME_TYPE = 'MimeType';
+    public const ELEMENT_MIME_TYPE = 'MimeType';
 
     /**
-     * Name von Formularelement fuer Feld 'Name' von Opus_Licence.
+     * Name von Formularelement fuer Feld 'Name' von Licence.
      */
-    const ELEMENT_NAME = 'Name';
+    public const ELEMENT_NAME = 'Name';
 
     /**
-     * Name von Formularelement fuer Feld 'NameLong' von Opus_Licence.
+     * Name von Formularelement fuer Feld 'NameLong' von Licence.
      */
-    const ELEMENT_NAME_LONG = 'NameLong';
+    public const ELEMENT_NAME_LONG = 'NameLong';
 
     /**
-     * Name von Formularelement fuer Feld 'SortOrder' von Opus_Licence.
+     * Name von Formularelement fuer Feld 'SortOrder' von Licence.
      */
-    const ELEMENT_SORT_ORDER = 'SortOrder';
+    public const ELEMENT_SORT_ORDER = 'SortOrder';
 
     /**
-     * Name von Formularelement fuer Feld 'PodAllowed' von Opus_Licence.
+     * Name von Formularelement fuer Feld 'PodAllowed' von Licence.
      */
-    const ELEMENT_POD_ALLOWED = 'PodAllowed';
+    public const ELEMENT_POD_ALLOWED = 'PodAllowed';
 
     /**
      * Erzeugt die Formularelemente.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->setRemoveEmptyCheckbox(false);
         $this->setUseNameAsLabel(true);
-        $this->setModelClass('Opus_Licence');
+        $this->setModelClass(Licence::class);
 
         $this->addElement('checkbox', self::ELEMENT_ACTIVE);
-        $this->addElement('text', self::ELEMENT_NAME);
-        $this->addElement('text', self::ELEMENT_NAME_LONG, array('required' => true, 'size' => 70));
-        $this->addElement('Language', self::ELEMENT_LANGUAGE, array('required' => true));
-        $this->addElement('text', self::ELEMENT_LINK_LICENCE, array('required' => true, 'size' => 70));
-        $this->addElement('text', self::ELEMENT_LINK_LOGO, array('size' => 70));
+        $this->addElement('text', self::ELEMENT_NAME, [
+            'maxlength' => Licence::describeField(Licence::FIELD_NAME)->getMaxSize(),
+        ]);
+        $this->addElement('text', self::ELEMENT_NAME_LONG, ['required' => true, 'size' => 70]);
+        $this->addElement('Language', self::ELEMENT_LANGUAGE, ['required' => true]);
+        $this->addElement('text', self::ELEMENT_LINK_LICENCE, ['required' => true, 'size' => 70]);
+        $this->addElement('text', self::ELEMENT_LINK_LOGO, ['size' => 70]);
         $this->addElement('textarea', self::ELEMENT_DESC_TEXT);
         $this->addElement('textarea', self::ELEMENT_DESC_MARKUP);
         $this->addElement('textarea', self::ELEMENT_COMMENT_INTERNAL);
-        $this->addElement('text', self::ELEMENT_MIME_TYPE, array('size' => 30));
+        $this->addElement('text', self::ELEMENT_MIME_TYPE, ['size' => 30]);
         $this->addElement('checkbox', self::ELEMENT_POD_ALLOWED);
         $this->addElement('SortOrder', self::ELEMENT_SORT_ORDER);
     }
 
     /**
-     * Initialisiert Formular von Opus_Licence Instanz.
-     * @param Opus_Model_Licence $licence
+     * Initialisiert Formular von Licence Instanz.
+     *
+     * @param LicenceInterface $licence
      */
-    public function populateFromModel($licence) {
+    public function populateFromModel($licence)
+    {
         $this->getElement(self::ELEMENT_MODEL_ID)->setValue($licence->getId());
         $this->getElement(self::ELEMENT_ACTIVE)->setValue($licence->getActive());
         $this->getElement(self::ELEMENT_COMMENT_INTERNAL)->setValue($licence->getCommentInternal());
@@ -149,10 +155,12 @@ class Admin_Form_Licence extends Application_Form_Model_Abstract {
     }
 
     /**
-     * Aktualisiert Instanz von Opus_Licence mit Werte aus Formular.
-     * @param Opus_Model_AbstractDb $licence
+     * Aktualisiert Instanz von Licence mit Werte aus Formular.
+     *
+     * @param LicenceInterface $licence
      */
-    public function updateModel($licence) {
+    public function updateModel($licence)
+    {
         $licence->setActive($this->getElementValue(self::ELEMENT_ACTIVE));
         $licence->setCommentInternal($this->getElementValue(self::ELEMENT_COMMENT_INTERNAL));
         $licence->setDescMarkup($this->getElementValue(self::ELEMENT_DESC_MARKUP));
@@ -166,5 +174,4 @@ class Admin_Form_Licence extends Application_Form_Model_Abstract {
         $licence->setSortOrder($this->getElementValue(self::ELEMENT_SORT_ORDER));
         $licence->setPodAllowed($this->getElementValue(self::ELEMENT_POD_ALLOWED));
     }
-
 }

@@ -22,12 +22,7 @@
 ; along with OPUS; if not, write to the Free Software Foundation, Inc., 51
 ; Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 ;
-; @category    Application
-; @author      Ralf Claussnitzer <ralf.claussnitzer@slub-dresden.de>
-; @author      Thoralf Klein <thoralf.klein@zib.de>
-; @author      Pascal-Nicolas Becker <becker@zib.de>
-; @author      Jens Schwidder <schwidder@zib.de>
-; @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+; @copyright   Copyright (c) 2008, OPUS 4 development team
 ; @license     http://www.gnu.org/licenses/gpl.html General Public License
 
 [production]
@@ -37,6 +32,10 @@
 
 ; Name of OPUS 4 Repository
 name = 'OPUS 4'
+
+; Base URL of OPUS 4 (used for generating absolute URLs)
+; This needs to be configured if OPUS 4 is running behind a proxy.
+url =
 
 ; Link for main logo
 logoLink = home
@@ -54,20 +53,20 @@ db.params.dbname   = @db.name@
 ;SEARCH ENGINE SETTINGS
 searchengine.solr.default.service.default.endpoint.localhost.host = @searchengine.index.host@
 searchengine.solr.default.service.default.endpoint.localhost.port = @searchengine.index.port@
-searchengine.solr.default.service.default.endpoint.localhost.path = @searchengine.index.app@
+searchengine.solr.default.service.default.endpoint.localhost.path = @searchengine.index.path@
+searchengine.solr.default.service.default.endpoint.localhost.core = @searchengine.index.core@
+searchengine.solr.default.service.default.endpoint.localhost.timeout = 10
 ; The text extraction can run on a different solr server as the metadata indexer
 ; does. You can also use the same solr server, then you would have to enter
 ; the same connection as above.
 searchengine.solr.default.service.extract.endpoint.localhost.host = @searchengine.extract.host@
 searchengine.solr.default.service.extract.endpoint.localhost.port = @searchengine.extract.port@
-searchengine.solr.default.service.extract.endpoint.localhost.path = @searchengine.extract.app@
+searchengine.solr.default.service.extract.endpoint.localhost.path = @searchengine.extract.path@
+searchengine.solr.default.service.extract.endpoint.localhost.core = @searchengine.extract.core@
+searchengine.solr.default.service.extract.endpoint.localhost.timeout = 10
 
 ; Turn on to display document titles of search results in user interface language if possible
 search.result.display.preferUserInterfaceLanguage = 0
-
-; SUPPORTED LANGUAGES
-; Change the setting to 'de' or 'en' in order to disable language selection.
-; supportedLanguages = de
 
 ;MAIL SETTINGS
 ; mail.opus.smtp = localhost; SMTP server for sending email
@@ -99,6 +98,14 @@ search.result.display.preferUserInterfaceLanguage = 0
 ; Use to specify default XSLT stylesheet for exports in search or frontdoor
 ; export.stylesheet.frontdoor = example
 ; export.stylesheet.search = example
+
+; MARC21 XML EXPORT
+; used to set MARC field 003
+marc21.isil=
+; default value used to set subfield a of MARC field 264
+marc21.publisherCity=
+; default value used to set subfield b of MARC field 264
+marc21.publisherName=
 
 ;ERROR CONTROLLER SETTINGS - who should receive error mails?
 ; errorController.mailTo.name = root
@@ -197,12 +204,12 @@ oai.sample.identifier = oai:opus4.demo:90
 runjobs.asynchronous = 0
 ; configuration of specific jobs
 ; asynchronous execution of index maintenance jobs
-runjobs.indexmaintenance.asynchronous = 0
+; runjobs.indexmaintenance.asynchronous = 0
 
 ; SETUP CONFIGURATION SETTINGS
-; Define for which modules translation resources may be edited through
+; Defines which modules translation resources may be edited through
 ; the web interface
-setup.translation.modules.allowed = default,publish
+; setup.translation.modules.allowed = default,publish
 
 ; PUBLICATION LIST SETTINGS
 ; Per default publication lists are rendered by the default stylehseet.
@@ -259,7 +266,16 @@ filetypes.html.mimeType = 'text/html'
 ; Allow displaying of PDF directly in browser (default for other types 'attachment')
 filetypes.pdf.contentDisposition = 'inline'
 
-; The following is needed even if sections are empty.
+; PDF COVER SETTINGS
+; if set to `1` PDF cover pages may be added in front of downloaded PDF files
+pdf.covers.generate = 0
+; path relative to the covers directory pointing to a default cover template
+pdf.covers.default = 'demo-cover.md'
+; path relative to the covers directory pointing to the cover template to be used
+; (instead of the default cover template) for documents in a certain collection
+;collection.15982.cover = ''
+
+; !!! The following is needed even if sections are empty. !!!
 [staging : production]
 
 [testing : production]

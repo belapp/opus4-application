@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,46 +25,41 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Statistic
- * @author      Birgit Dressler (b.dressler@sulb.uni-saarland.de)
  * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Statistic_IndexController extends Application_Controller_Action {
+use Opus\Common\Document;
+use Opus\Statistic\LocalCounter;
 
+class Statistic_IndexController extends Application_Controller_Action
+{
     /**
      * Just for manual testing, not for final opus version
-     *
-     * @return void
-     *
      */
-    public function testAction() {
+    public function testAction()
+    {
         $this->view->title = 'statistic';
-        $counter = Opus_Statistic_LocalCounter::getInstance();
-        $form = new Test();
+        $counter           = LocalCounter::getInstance();
+        $form              = new Test();
         print_r($_POST);
         $form->populate($_POST);
         $this->view->form = $form;
 
         $documentId = $form->getValue('document_id');
-        $fileId = $form->getValue('file_id');
-        $ip = $form->getValue('ip');
-        $userAgent = $form->getValue('user_agent');
-        $result = $counter->count($documentId, $fileId, 'files', $ip, $userAgent);
-        if ($result === FALSE) {
+        $fileId     = $form->getValue('file_id');
+        $ip         = $form->getValue('ip');
+        $userAgent  = $form->getValue('user_agent');
+        $result     = $counter->count($documentId, $fileId, 'files', $ip, $userAgent);
+        if ($result === false) {
             $this->view->doubleClick = true;
-        }
-        else {
+        } else {
             $this->view->doubleClick = false;
-            $this->view->count = $result;
+            $this->view->count       = $result;
         }
-        $this->view->userAgent = $_SERVER['HTTP_USER_AGENT'];
+        $this->view->userAgent      = $_SERVER['HTTP_USER_AGENT'];
         $this->view->redirectStatus = $_SERVER['REDIRECT_STATUS'];
-        $this->view->baseUrl = $counter->readYears('280');
-
+        $this->view->baseUrl        = $counter->readYears('280');
 
         //$this->view->pathToGraph = Zend_Registry::getInstance()->;
 
@@ -72,54 +68,53 @@ class Statistic_IndexController extends Application_Controller_Action {
         //print_r($registry);
     }
 
-    public function indexAction() {
+    public function indexAction()
+    {
         $docId = $this->getRequest()->getParam("docId");
-        if (isset($docId) === FALSE) {
+        if (isset($docId) === false) {
             throw new Exception("docId must be set");
         }
         $this->view->docId = $docId;
 
-        $document = new Opus_Document($docId);
+        $document = Document::get($docId);
 
-        $titles = $document->getTitleMain();
+        $titles  = $document->getTitleMain();
         $authors = $document->getPersonAuthor();
 
         $session = new Zend_Session_Namespace();
 
         if (isset($session->language)) {
             $language = $session->language;
-        }
-        else {
+        } else {
             $language = 'en';
         }
 
         foreach ($titles as $title) {
-            if ($title->getLanguage() == $language) {
+            if ($title->getLanguage() === $language) {
                 $this->view->title = $title->getValue();
             }
         }
 
-        $authorsArray = array();
+        $authorsArray = [];
         foreach ($authors as $author) {
             $authorsArray[] = $author->getName();
         }
         $this->view->authors = implode(', ', $authorsArray);
 
         //get statistics from db for total count and for image tag (accessibility)
-        $statistic = Opus_Statistic_LocalCounter::getInstance();
+        $statistic         = LocalCounter::getInstance();
         $totalAbstractPage = $statistic->readTotal($docId, 'frontdoor');
-        $totalFiles = $statistic->readTotal($docId, 'files');
-
+        $totalFiles        = $statistic->readTotal($docId, 'files');
 
         $yearAbstractPage = $statistic->readYears($docId, 'frontdoor');
-        $yearFiles = $statistic->readYears($docId, 'files');
+        $yearFiles        = $statistic->readYears($docId, 'files');
 
         $this->view->totalAbstractPage = $totalAbstractPage;
-        $this->view->totalFiles = $totalFiles;
+        $this->view->totalFiles        = $totalFiles;
 
         $years = array_merge(array_keys($yearAbstractPage), array_keys($yearFiles));
-        if (count($years) == 0) {
-            $years = array(date('Y'));
+        if (count($years) === 0) {
+            $years = [date('Y')];
         }
         foreach ($years as $year) {
             if (isset($yearFiles[$year]) === false) {
@@ -133,10 +128,8 @@ class Statistic_IndexController extends Application_Controller_Action {
         ksort($yearAbstractPage);
 
         foreach (array_keys($yearAbstractPage) as $year) {
-            $lines[] = $year.': ' . $yearAbstractPage[$year].', ' . $yearFiles[$year];
+            $lines[] = $year . ': ' . $yearAbstractPage[$year] . ', ' . $yearFiles[$year];
         }
         $this->view->altTextStat = implode('; ', $lines);
     }
-
-
 }

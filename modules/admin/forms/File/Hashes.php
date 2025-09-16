@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,7 +24,13 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\FileInterface;
+use Opus\Common\HashValueInterface;
 
 /**
  * Formular fuer die Anzeige der Hash-Werte einer Datei.
@@ -33,27 +40,25 @@
  * Anzeige:
  *
  * Hash Typ      Wert
- *
- * @category    Application
- * @package     Admin_Form_File
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Admin_Form_File_Hashes extends Admin_Form_AbstractDocumentSubForm {
-
-    public function init() {
+class Admin_Form_File_Hashes extends Admin_Form_AbstractDocumentSubForm
+{
+    public function init()
+    {
         parent::init();
 
-        $this->setDecorators(array('FormElements'));
+        $this->setDecorators(['FormElements']);
     }
 
-    public function populateFromModel($file) {
+    /**
+     * @param FileInterface $file
+     */
+    public function populateFromModel($file)
+    {
         foreach ($file->getHashValue() as $hashValue) {
-            $hash = new Admin_Model_Hash($file, $hashValue);
+            $hash     = new Admin_Model_Hash($file, $hashValue);
             $hashType = $hash->getHashType();
-            if (!empty($hashType)) {
+            if (! empty($hashType)) {
                 $signType = $hash->getSignatureType();
                 switch ($signType) {
                     case 'gpg':
@@ -67,14 +72,15 @@ class Admin_Form_File_Hashes extends Admin_Form_AbstractDocumentSubForm {
     }
 
     /**
-     * @param $hash
+     * @param FileInterface      $file
+     * @param HashValueInterface $hash
      */
-    public function addHashElement($file, $hash) {
-        $index = count($this->getElements());
+    public function addHashElement($file, $hash)
+    {
+        $index   = count($this->getElements());
         $element = $this->createElement('fileHash', 'Hash' . $index);
         $element->setValue($hash);
         $element->setFile($file);
         $this->addElement($element);
     }
-
 }

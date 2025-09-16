@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,51 +25,55 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class JavascriptTest extends ControllerTestCase {
+class JavascriptTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'mainMenu', 'translation'];
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
 
         $helper = new Application_View_Helper_JQueryEnabled();
 
-        if (!$helper->jQueryEnabled()) {
+        if (! $helper->jQueryEnabled()) {
             $this->markTestSkipped('Javascript not enabled (JQuery missing).');
         }
     }
 
-    public function testThemeJsInAdminModule() {
+    public function testThemeJsInAdminModule()
+    {
         $this->dispatch('/admin');
         $this->assertResponseCode(200);
 
         $this->assertXpath('//head/script[@src="/layouts/opus4/js/theme.js"]');
     }
 
-    public function testThemeJsInReviewModule() {
+    public function testThemeJsInReviewModule()
+    {
         $this->dispatch('/review');
         $this->assertResponseCode(200);
 
         $this->assertXpath('//head/script[@src="/layouts/opus4/js/theme.js"]');
     }
 
-    public function testThemeJsInSetupModule() {
-        $this->dispatch('/setup/static-page');
+    public function testThemeJsInSetupModule()
+    {
+        $this->dispatch('/setup/translation');
         $this->assertResponseCode(200);
 
         $this->assertXpath('//head/script[@src="/layouts/opus4/js/theme.js"]');
     }
 
-    public function testThemeJsNotInSearchModule() {
+    public function testThemeJsNotInSearchModule()
+    {
         $this->dispatch('/solrsearch');
         $this->assertResponseCode(200);
 
         $this->assertNotXpath('//head/script[@src="/layouts/opus4/js/theme.js"]');
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,25 +25,35 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Form_Element_DateTest extends FormElementTestCase {
 
-    public function setUp() {
-        $this->_formElementClass = 'Application_Form_Element_Date';
-        $this->_expectedDecoratorCount = 8;
-        $this->_expectedDecorators = array('ViewHelper', 'Placeholder', 'Description', 'ElementHint', 'Errors',
-            'ElementHtmlTag', 'LabelNotEmpty', 'dataWrapper');
-        $this->_staticViewHelper = 'viewFormDefault';
+class Application_Form_Element_DateTest extends FormElementTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'translation';
+
+    public function setUp(): void
+    {
+        $this->formElementClass       = 'Application_Form_Element_Date';
+        $this->expectedDecoratorCount = 8;
+        $this->expectedDecorators     = [
+            'ViewHelper',
+            'Placeholder',
+            'Description',
+            'ElementHint',
+            'Errors',
+            'ElementHtmlTag',
+            'LabelNotEmpty',
+            'dataWrapper',
+        ];
+        $this->staticViewHelper       = 'viewFormDefault';
         parent::setUp();
     }
 
-    public function testValidationEnglish() {
+    public function testValidationEnglish()
+    {
         $this->useEnglish();
 
         $element = $this->getElement();
@@ -61,7 +72,8 @@ class Application_Form_Element_DateTest extends FormElementTestCase {
         $this->assertTrue($element->isValid('2012/02/29')); // Schaltjahr
     }
 
-    public function testValidationGerman() {
+    public function testValidationGerman()
+    {
         $this->useGerman();
 
         $element = $this->getElement();
@@ -80,7 +92,8 @@ class Application_Form_Element_DateTest extends FormElementTestCase {
         $this->assertTrue($element->isValid('29.02.2012')); // Schaltjahr
     }
 
-    public function testTranslation() {
+    public function testTranslation()
+    {
         $translator = $this->getElement()->getTranslator();
 
         $this->assertTrue($translator->isTranslated('validation_error_date_invalid'));
@@ -88,5 +101,4 @@ class Application_Form_Element_DateTest extends FormElementTestCase {
         $this->assertTrue($translator->isTranslated('validation_error_date_falseformat'));
         $this->assertTrue($translator->isTranslated('date_format'));
     }
-
 }

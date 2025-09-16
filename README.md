@@ -7,14 +7,10 @@ redevelopment that was created as part of a DFG ([Deutsche Forschungsgemeinschaf
 Since then the development has been continued at KOBV ([Kooperativer Bibliotheksverbund Berlin-Brandenburg][KOBV])
 mostly.
 
-## OPUS 4 at GitHub
+## OPUS 4
 
-In 2015 the development was moved to GitHub in order to better support collaboration in the continued development
-efforts. The first OPUS 4 version developed at GitHub is 4.5. Starting with this version OPUS 4 should be installed
-using Git, since this will make updates for bug fixes and new features easier. More information can be found online.
-
-The current version of OPUS is 4.5. It is available using the 4.5 tag and on the master branch. The master branch 
-will be updated for releases or if urgent bugs have been fixed.
+The current version of OPUS 4 is __4.8.0.16__. It is available on the [master][MASTER] branch and compatible with 
+PHP 7.1 to 8.1. 
 
 [Documentation][DOC]
 : Information on setting up a repository, for users and administrators.
@@ -22,20 +18,46 @@ will be updated for releases or if urgent bugs have been fixed.
 [Developers][DEVDOC]
 : Information for developers.
 
-## Previous (non-GitHub) Version:
+_We are in the process to moving the developer information into the GitHub Wiki. Specific information about OPUS 4
+packages, might be found in the Wiki pages of their repositories._
 
-The last non-Git release of OPUS 4 is Version 4.4.5 and can be [downloaded][OPUS445] from the
-[OPUS 4 Homepage][OPUS4] as a tarball. The [documentation][OPUS445DOC] for this version can
-be found there as well.
-Version 4.4.5 can be installed without Git. It is recommended to use the GitHub version of
-OPUS 4 for setting up new repositories. However if you are looking at migrating an existing OPUS 3
-repository to OPUS 4 using this version would currently be a necessary step since there is at the moment
-no working migration script for the Git version.
+## Testing OPUS 4
 
-[OPUS4]: https://opus4.kobv.de
-[DEVDOC]: https://opus4.github.io/
-[DOC]: https://opus4.github.io/userdoc
+You can run OPUS 4 using Vagrant. This makes it easy to create a VM running OPUS 4 for testing or even development.
+More information in the Wiki:
+
+https://github.com/OPUS4/application/wiki/Vagrant
+
+## Questions & Issues
+
+Questions should be asked through the [OPUS 4 mailing list][OPUSTESTER]. We are sending out release announcements and 
+other information using the mailing list. 
+
+Bugs and suggestions can be communicated to the development team as [issues][ISSUES] here on GitHub. For suggestions
+of new features or changes in OPUS 4 it is important to communicate the reason from a user perspective, the use case. 
+We need to understand *why* to make the best decision for *how* to implement something new.  
+
+If you have made modifications to OPUS 4 that could be useful for the entire community feel free to submit a [pull
+request][PULLREQUESTS]. We won't always be able to respond immediately, but we will take a look at your changes. 
+It is important to communicate the idea behind a modification.    
+
+## More Information
+
+Currently, we are using an internal Jira-System at KOBV to manage the tasks for the OPUS 4 development. We are starting
+to use GitHub more and more to communicate the development goals and progress. 
+At the moment, the [milestones][MILESTONES] here on GitHub mostly reflect larger technical debts that need to be fixed
+in order to continue to expand the functionality of OPUS 4 in the future. The [projects][PROJECTS] are meant to show
+currently ongoing efforts. However, we are still experimenting and trying to figure out how to use the GitHub features
+in the best possible way without it taking too much time away from the developing work.
+
+[OPUS4]: https://www.kobv.de/entwicklung/software/opus-4/
+[DEVDOC]: https://www.opus-repository.org
+[DOC]: https://www.opus-repository.org/userdoc
 [KOBV]: https://www.kobv.de
 [DFG]: http://www.dfg.de
-[OPUS445]: https://www.kobv.de/entwicklung/software/opus-4/download/
-[OPUS445DOC]: https://www.kobv.de/entwicklung/software/opus-4/dokumentation/
+[OPUSTESTER]: http://listserv.zib.de/mailman/listinfo/kobv-opus-tester/
+[ISSUES]: http://github.com/OPUS4/application/issues
+[MASTER]: https://github.com/OPUS4/application/tree/master
+[PULLREQUESTS]: https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests
+[MILESTONES]: https://github.com/OPUS4/application/milestones
+[PROJECTS]: https://github.com/OPUS4/application/projects

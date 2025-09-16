@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,59 +25,52 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_CitationExport
- * @author      Sascha Szott <szott@zib.de>
- * @author      Michael Lang <lang@zib.de>
- * @author      Pascal-Nicolas Becker <becker@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2015, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class CitationExport_IndexController extends Application_Controller_Action {
-
+class CitationExport_IndexController extends Application_Controller_Action
+{
     /**
      * Helper for handling citation export requests.
+     *
      * @var CitationExport_Model_Helper
      */
-    private $_exportHelper;
+    private $exportHelper;
 
     /**
      * Initializes common controller variables.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
-        $this->_exportHelper = new CitationExport_Model_Helper(
+        $this->exportHelper = new CitationExport_Model_Helper(
             $this->view->fullUrl(),
             $this->view->getScriptPath('index')
         );
-        $this->view->title = $this->view->translate('citationExport_modulename');
+        $this->view->title  = $this->view->translate('citationExport_modulename');
     }
 
     /**
      * Output data to index view.
-     *
-     * @return void
      */
-    public function indexAction() {
+    public function indexAction()
+    {
         $this->handleRequest();
-        $this->view->downloadUrl = $this->view->url(array('action' => 'download'), false, null);
+        $this->view->downloadUrl = $this->view->url(['action' => 'download'], false, null);
     }
 
     /**
      * Output data as downloadable file.
-     *
-     * @return void
      */
-    public function downloadAction() {
+    public function downloadAction()
+    {
         $request = $this->getRequest();
 
-        if (!$this->handleRequest()) {
+        if (! $this->handleRequest()) {
             return;
-        };
+        }
 
         $this->disableViewRendering();
 
@@ -87,20 +81,18 @@ class CitationExport_IndexController extends Application_Controller_Action {
 
         $outputFormat = $request->getParam('output');
 
-        $extension = $this->_exportHelper->getExtension($outputFormat);
+        $extension = $this->exportHelper->getExtension($outputFormat);
 
         $config = $this->getConfig();
 
         $download = true;
 
-        if (isset($config->export->download))
-        {
-            $value = $config->export->download;
+        if (isset($config->export->download)) {
+            $value    = $config->export->download;
             $download = $value !== '0' && $value !== false && $value !== '';
         }
 
-        if ($download)
-        {
+        if ($download) {
             $response->setHeader(
                 'Content-Disposition',
                 'attachment; filename=' . $outputFormat . '-' . $request->getParam('docId') . '.' . $extension,
@@ -111,16 +103,20 @@ class CitationExport_IndexController extends Application_Controller_Action {
         $response->setBody($this->view->output);
     }
 
-    public function handleRequest() {
+    /**
+     * @return int
+     * @throws Application_Exception
+     * @throws Zend_Controller_Response_Exception
+     */
+    public function handleRequest()
+    {
         try {
-            $this->view->output = $this->_exportHelper->getOutput($this->getRequest());
-        }
-        catch (CitationExport_Model_Exception $ceme) {
+            $this->view->output = $this->exportHelper->getOutput($this->getRequest());
+        } catch (CitationExport_Model_Exception $ceme) {
             $this->view->output = $this->view->translate($ceme->getMessage());
             $this->getResponse()->setHttpResponseCode(400);
             return 0;
         }
         return 1;
     }
-
 }

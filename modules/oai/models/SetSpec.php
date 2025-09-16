@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,20 +25,24 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Oai
- * @author      Thoralf Klein <thoralf.klein@zib.de>
  * @copyright   Copyright (c) 2011, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Oai_Model_SetSpec {
 
-    public static function getSetSpecsFromCollections($collections) {
-        $sets = array();
+use Opus\Common\CollectionInterface;
 
-        foreach ($collections AS $collection) {
-            if ($collection->getVisible() != 1) {
+class Oai_Model_SetSpec
+{
+    /**
+     * @param CollectionInterface[] $collections
+     * @return array
+     */
+    public static function getSetSpecsFromCollections($collections)
+    {
+        $sets = [];
+
+        foreach ($collections as $collection) {
+            if (! $collection->getVisible()) {
                 continue;
             }
 
@@ -47,7 +52,7 @@ class Oai_Model_SetSpec {
             }
 
             $role = $collection->getRole();
-            if ($role->getVisibleOai() != 1 or $role->getVisible() != 1) {
+            if (! $role->getVisibleOai() || ! $role->getVisible()) {
                 continue;
             }
 
@@ -61,7 +66,5 @@ class Oai_Model_SetSpec {
         }
 
         return array_unique($sets);
-
     }
-
 }

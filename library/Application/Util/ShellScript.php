@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -23,45 +24,38 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 /**
  * Parses values of variables from shell scripts.
- *
- * @category    Application
- * @package     Application_Util
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2016, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 class Application_Util_ShellScript
 {
+    /** @var array Key -> Value pairs found in shell script */
+    private $properties;
 
     /**
-     * @var array Key -> Value pairs found in shell script
-     */
-    private $_properties;
-
-    /**
-     * Application_Util_ShellScript constructor.
-     * @param $path
+     * @param string $path
      */
     public function __construct($path)
     {
-        $this->_properties = self::getPropertiesFromScript($path);
+        $this->properties = self::getPropertiesFromScript($path);
     }
 
     /**
      * Returns value for property if found in shell script.
-     * @param $name Property name
+     *
+     * @param string $name Property name
      * @return null|string
      */
     public function getProperty($name)
     {
-        if (array_key_exists($name, $this->_properties)) {
-            return $this->_properties[$name];
-        }
-        else {
+        if (array_key_exists($name, $this->properties)) {
+            return $this->properties[$name];
+        } else {
             return null;
         }
     }
@@ -69,38 +63,31 @@ class Application_Util_ShellScript
     /**
      * Read property values from shell script.
      *
-     * @param $path Path to shell script
+     * @param string $path Path to shell script
      * @return array Map with names and values of properties
      * @throws Exception
      */
     public static function getPropertiesFromScript($path)
     {
-        $properties = array();
+        $properties = [];
 
-        if (!is_readable($path))
-        {
+        if (! is_readable($path)) {
             throw new Exception('cannot read file');
         }
 
         $file = fopen($path, 'r');
 
-        if ($file)
-        {
-            while (($line = fgets($file)) !== false)
-            {
+        if ($file) {
+            while (($line = fgets($file)) !== false) {
                 $line = trim($line);
 
                 // ignore comments
-                if (preg_match('/^#/', $line))
-                {
+                if (preg_match('/^#/', $line)) {
                     continue;
-                }
-                else {
-                    if (preg_match('/[A-Za-z0-9]+=.+/', $line))
-                    {
+                } else {
+                    if (preg_match('/[A-Za-z0-9]+=.+/', $line)) {
                         $property = preg_split('/\s*=\s*/', $line, 2);
-                        if (count($property) === 2)
-                        {
+                        if (count($property) === 2) {
                             $properties[$property[0]] = trim($property[1], '"\'');
                         }
                     }
@@ -108,12 +95,10 @@ class Application_Util_ShellScript
             }
 
             fclose($file);
-        }
-        else {
+        } else {
             throw new Exception('could not open file');
         }
 
         return $properties;
     }
-
 }

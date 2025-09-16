@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,38 +25,29 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Default
- * @author      Ralf Claussnitzer (ralf.claussnitzer@slub-dresden.de)
- * @author      Felix Ostrowski (ostrowski@hbz-nrw.de)
  * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * This controller is called on every initial
  * page request. It currently configures the view for greeting the user and
  * sets up the main menu.
- *
- * @category    Application
- * @package     Module_Default
  */
-class IndexController extends Application_Controller_Action {
-
+class IndexController extends Application_Controller_Action
+{
     /**
      * Always allow access to this controller; Override check in parent method.
      */
-    protected function checkAccessModulePermissions() {
-
+    protected function checkAccessModulePermissions()
+    {
     }
 
     /**
      * Redirect to default module 'home'.
-     *
-     * @return void
      */
-    public function indexAction() {
+    public function indexAction()
+    {
         $this->_helper->getHelper('Redirector')->gotoSimple('index', 'index', 'home');
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,20 +25,19 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Application_View_Helper
- * @author      Maximilian Salomon <salomon@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2018, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Application_View_Helper_JavascriptMessagesTest extends ControllerTestCase
 {
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
 
+    /** @var Application_View_Helper_JavascriptMessages */
     private $helper;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -45,7 +45,7 @@ class Application_View_Helper_JavascriptMessagesTest extends ControllerTestCase
 
         $this->helper = new Application_View_Helper_JavascriptMessages();
 
-        $this->helper->setView(Zend_Registry::get('Opus_View'));
+        $this->helper->setView($this->getView());
     }
 
     /**
@@ -53,11 +53,11 @@ class Application_View_Helper_JavascriptMessagesTest extends ControllerTestCase
      */
     public function testJavascriptMessages()
     {
-        $Messages = [
+        $messages = [
             'key1' => 'message1',
-            'key2' => 'message2'
+            'key2' => 'message2',
         ];
-        $this->helper->setMessages($Messages);
+        $this->helper->setMessages($messages);
 
         $expectation = '        <script type="text/javascript">' . "\n"
             . '            opus4Messages["key1"] = "message1";' . "\n"
@@ -75,25 +75,25 @@ class Application_View_Helper_JavascriptMessagesTest extends ControllerTestCase
     {
         $this->helper->addMessage('key1', 'message1');
         $this->helper->addMessage('identifierInvalidFormat');
-        $this->helper->addMessage('testkey');
+        $this->helper->addMessage('testkey564'); // key must not exit for test to work
 
-        $Messages = [
-            'key1' => 'message1',
+        $messages = [
+            'key1'                    => 'message1',
             'identifierInvalidFormat' => "'%value%' is malformed.",
-            'testkey' => 'testkey'
+            'testkey564'              => 'testkey564',
         ];
 
-        $this->assertEquals($Messages, $this->helper->getMessages());
+        $this->assertEquals($messages, $this->helper->getMessages());
     }
 
     public function testSetMessages()
     {
-        $Messages = [
+        $messages = [
             'key1' => 'message1',
-            'key2' => 'message2'
+            'key2' => 'message2',
         ];
-        $this->helper->setMessages($Messages);
-        $this->assertEquals($Messages, $this->helper->getMessages());
+        $this->helper->setMessages($messages);
+        $this->assertEquals($messages, $this->helper->getMessages());
     }
 
     /**
@@ -103,7 +103,7 @@ class Application_View_Helper_JavascriptMessagesTest extends ControllerTestCase
     public function testSetNullMessages()
     {
         $this->helper->setMessages(null);
-        $reality = $this->helper->javascriptMessages();
+        $reality     = $this->helper->javascriptMessages();
         $expectation = '        <script type="text/javascript">' . "\n"
             . '        </script>' . "\n";
         $this->assertEquals($expectation, $reality);
@@ -112,5 +112,24 @@ class Application_View_Helper_JavascriptMessagesTest extends ControllerTestCase
     public function testGetMessages()
     {
         $this->assertEquals([], $this->helper->getMessages());
+    }
+
+    /**
+     * Tests if default translations for javascript in the publish module are set correctly.
+     */
+    public function testGetDefaultMessageSet()
+    {
+        $this->helper->getDefaultMessageSet();
+
+        $expectation = '        <script type="text/javascript">' . "\n"
+            . '            opus4Messages["uploadedFileHasErrorMessage"] = "The file \'%name%\' has the following errors: ";' . "\n"
+            . '            opus4Messages["fileExtensionFalse"] = "File has a forbidden extension.";' . "\n"
+            . '            opus4Messages["fileUploadErrorSize"] = "Your file exceeds the defined size. The allowed size is \'%size%\' Byte.";' . "\n"
+            . '            opus4Messages["filenameLengthError"] = "The length of your filename is too long. Your filename should have less then \'%size%\' characters. ";' . "\n"
+            . '            opus4Messages["filenameFormatError"] = "Your filename has not allowed characters or a wrong form. ";' . "\n"
+            . '            opus4Messages["chooseAnotherFile"] = "Please choose another File.";' . "\n"
+            . '        </script>' . "\n";
+
+        $this->assertEquals($expectation, $this->helper->javascriptMessages()->toString());
     }
 }

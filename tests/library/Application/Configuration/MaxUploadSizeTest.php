@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,53 +25,57 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Application
- * @author      Sascha Szott
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2016-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2016, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
-class Application_Configuration_MaxUploadSizeTest extends ControllerTestCase {
-    
+
+class Application_Configuration_MaxUploadSizeTest extends TestCase
+{
     /**
      * Der Wert von sword:maxUploadSize ist als das Minimum von den folgenden
      * drei Werten definiert:
-     * 
+     *
      * 1. Konfigurationsparameter publish.maxfilesize
      * 2. PHP-Laufzeitkonfiguration post_max_size
      * 3. PHP-Laufzeitkonfiguration upload_max_filesize
-     * 
      */
     public function testMaxUploadSize()
     {
-        $config = Zend_Registry::get('Zend_Config');
+        $config = $this->getConfig();
 
         $configMaxFileSize = intval($config->publish->maxfilesize);
-        $postMaxSize = $this->convertToKByte(ini_get('post_max_size'));
-        $uploadMaxFilesize = $this->convertToKByte(ini_get('upload_max_filesize'));
+        $postMaxSize       = $this->convertToKbyte(ini_get('post_max_size'));
+        $uploadMaxFilesize = $this->convertToKbyte(ini_get('upload_max_filesize'));
 
         $maxUploadSizeHelper = new Application_Configuration_MaxUploadSize();
 
-        $maxUploadSizeByte = $maxUploadSizeHelper->getMaxUploadSizeInByte();
-        $maxUploadSizeKByte = $maxUploadSizeHelper->getMaxUploadSizeInKB();
+        $maxUploadSizeByte  = $maxUploadSizeHelper->getMaxUploadSizeInByte();
+        $maxUploadSizeKbyte = $maxUploadSizeHelper->getMaxUploadSizeInKB();
 
         $this->assertTrue($maxUploadSizeByte <= $configMaxFileSize, "cond1: $maxUploadSizeByte is greater than $configMaxFileSize");
-        $this->assertTrue($maxUploadSizeKByte <= $postMaxSize, "cond2: $maxUploadSizeKByte is greater than $postMaxSize");
-        $this->assertTrue($maxUploadSizeKByte <= $uploadMaxFilesize, "cond3: $maxUploadSizeKByte is greater than $uploadMaxFilesize");
+        $this->assertTrue($maxUploadSizeKbyte <= $postMaxSize, "cond2: $maxUploadSizeKbyte is greater than $postMaxSize");
+        $this->assertTrue($maxUploadSizeKbyte <= $uploadMaxFilesize, "cond3: $maxUploadSizeKbyte is greater than $uploadMaxFilesize");
     }
 
-    private function convertToKByte($val)
+    /**
+     * @param string $val
+     * @return int
+     *
+     * TODO this should go to utility functions (isn't it useful beyond testing?)
+     */
+    private function convertToKbyte($val)
     {
         $valTrim = trim($val);
-        $valInt = intval($valTrim);
-        $last = strtolower($valTrim[strlen($valTrim) - 1]);
+        $valInt  = intval($valTrim);
+        $last    = strtolower($valTrim[strlen($valTrim) - 1]);
         switch ($last) {
             // The 'G' modifier is available since PHP 5.1.0
             case 'g':
                 $valInt *= 1024;
+                // fall through is intended
             case 'm':
                 $valInt *= 1024;
+                // fall through is intended
             case 'k':
                 // do nothing
                 break;
@@ -80,5 +85,4 @@ class Application_Configuration_MaxUploadSizeTest extends ControllerTestCase {
 
         return $valInt;
     }
-
 }

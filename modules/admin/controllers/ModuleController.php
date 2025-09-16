@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,22 +25,15 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 /**
  * Controller for module management.
- *
- * @category    Application
- * @package     Module_Admin
  */
 class Admin_ModuleController extends Application_Controller_Action
 {
-
     /**
      * Displays table with all modules.
      *
@@ -52,13 +46,11 @@ class Admin_ModuleController extends Application_Controller_Action
         $this->view->modules = $modules;
 
         // load translations for all registered modules for descriptions and other language resources
-        foreach ($modules as $name => $descriptor)
-        {
-            if ($descriptor->isRegistered())
-            {
-                Zend_Registry::get('Zend_Translate')->loadModule($descriptor->getName());
-            }
-        }
-    }
+        /* TODO implement
+        foreach ($modules as $name => $descriptor) {
+            if ($descriptor->isRegistered()) {
 
+            }
+        }*/
+    }
 }

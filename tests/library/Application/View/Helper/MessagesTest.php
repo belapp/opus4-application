@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,15 +25,14 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Tests
- * @package     Application_View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2018, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Application_View_Helper_MessagesTest extends ControllerTestCase
 {
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
 
     /**
      * TODO how can the flashmessenger be used in tests?
@@ -41,80 +41,77 @@ class Application_View_Helper_MessagesTest extends ControllerTestCase
     {
         $this->useEnglish();
 
-        $view = Zend_Registry::get('Opus_View');
+        $view = $this->getView();
 
         $helper = new Application_View_Helper_Messages();
         $helper->setView($view);
 
-        $messages = [];
+        $messages   = [];
         $messages[] = ['message' => 'Hello, world!', 'level' => 'error'];
 
-        $this->assertEquals(
-<<<EOT
+        $expected = <<<TEXT
 <div class="messages">
   <div class="error">Hello, world!</div>
 </div>
 
-EOT
-, $helper->messages($messages)
-        );
+TEXT;
+
+        $this->assertEquals($expected, $helper->messages($messages));
     }
 
     public function testMessagesMultiple()
     {
         $this->useEnglish();
 
-        $view = Zend_Registry::get('Opus_View');
+        $view = $this->getView();
 
         $helper = new Application_View_Helper_Messages();
         $helper->setView($view);
 
-        $messages = [];
+        $messages   = [];
         $messages[] = ['message' => 'validation_error_int', 'level' => 'error'];
         $messages[] = ['message' => 'Just a test!', 'level' => 'info'];
         $messages[] = ['message' => 'Without level.'];
 
-        $this->assertEquals(
-<<<EOT
+        $expected = <<<TEXT
 <div class="messages">
   <div class="error">Please provide a number.</div>
   <div class="info">Just a test!</div>
   <div class="">Without level.</div>
 </div>
 
-EOT
-            , $helper->messages($messages)
-        );
+TEXT;
+
+        $this->assertEquals($expected, $helper->messages($messages));
     }
 
     public function testMessagesTranslation()
     {
         $this->useEnglish();
 
-        $view = Zend_Registry::get('Opus_View');
+        $view = $this->getView();
 
         $helper = new Application_View_Helper_Messages();
         $helper->setView($view);
 
-        $messages = [];
+        $messages   = [];
         $messages[] = ['message' => 'validation_error_int', 'level' => 'error'];
 
-        $this->assertEquals(
-<<<EOT
+        $expected = <<<TEXT
 <div class="messages">
   <div class="error">Please provide a number.</div>
 </div>
 
-EOT
-            , $helper->messages($messages)
-        );
+TEXT;
+
+        $this->assertEquals($expected, $helper->messages($messages));
     }
 
     public function testMessagesNone()
     {
         $helper = new Application_View_Helper_Messages();
 
-        $helper->setView(Zend_Registry::get('Opus_View'));
+        $helper->setView($this->getView());
 
         $this->assertEquals('', $helper->messages());
     }
@@ -123,16 +120,15 @@ EOT
     {
         $helper = new Application_View_Helper_Messages();
 
-        $helper->setView(Zend_Registry::get('Opus_View'));
+        $helper->setView($this->getView());
 
-        $this->assertEquals(
-<<<EOT
+        $expected = <<<TEXT
 <div class="messages">
   <div>No key for this message.</div>
 </div>
 
-EOT
-            , $helper->messages(['No key for this message.'])
-        );
+TEXT;
+
+        $this->assertEquals($expected, $helper->messages(['No key for this message.']));
     }
 }

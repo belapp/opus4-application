@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,43 +25,46 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Admin_Form_Document_SubjectsTest extends ControllerTestCase {
-    
-    public function testConstructForm() {
+use Opus\Common\Document;
+
+class Admin_Form_Document_SubjectsTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
+
+    public function testConstructForm()
+    {
         $form = new Admin_Form_Document_Subjects();
-        
-        $this->assertEquals(3, count($form->getSubForms()));
+
+        $this->assertCount(3, $form->getSubForms());
         $this->assertNotNull($form->getSubForm('Swd'));
         $this->assertNotNull($form->getSubForm('Psyndex'));
         $this->assertNotNull($form->getSubForm('Uncontrolled'));
-        
-        $this->assertEquals(1, count($form->getDecorators()));
+
+        $this->assertCount(1, $form->getDecorators());
         $this->assertNotNull($form->getDecorator('FormElements'));
     }
-    
-    public function testUpdateModel() {
+
+    public function testUpdateModel()
+    {
         $form = new Admin_Form_Document_Subjects();
-        
+
         $document = $this->createTestDocument();
-        
-        $form->populateFromModel(new Opus_Document(146)); // zwei Schlagwörter
-        
+
+        $form->populateFromModel(Document::get(146)); // zwei Schlagwörter
+
         $form->updateModel($document);
-        
+
         $subjects = $document->getSubject();
-        
-        $this->assertEquals(2, count($subjects));
-        
+
+        $this->assertCount(2, $subjects);
+
         // Reihenfolge sollte gleich bleiben, solange IDs in Testdaten nicht geändert werden
         $this->assertEquals('swd', $subjects[0]->getType());
         $this->assertEquals('uncontrolled', $subjects[1]->getType());
     }
-    
 }

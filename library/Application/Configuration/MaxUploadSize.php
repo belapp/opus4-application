@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,62 +25,75 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application_Configuration
- * @author      Sascha Szott
- * @copyright   Copyright (c) 2016
+ * @copyright   Copyright (c) 2016, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Configuration_MaxUploadSize {
-    
+
+use Opus\Common\Config;
+use Opus\Common\Log;
+
+class Application_Configuration_MaxUploadSize
+{
     /**
-     * The element sword:maxUploadSize indicates the maximum size (in kB) of 
+     * The element sword:maxUploadSize indicates the maximum size (in kB) of
      * a package that can be uploaded to the SWORD service.
-     * 
+     *
      * @return int maximum upload size in kilobyte
      */
-    public function getMaxUploadSizeInKB() {
+    public function getMaxUploadSizeInKB()
+    {
         $minSize = $this->getMaxUploadSizeInByte();
         return floor($minSize / 1024);
     }
-    
-    public function getMaxUploadSizeInByte() {
-        $logger = Zend_Registry::get('Zend_Log');
 
-        $config = Zend_Registry::get('Zend_Config');
+    /**
+     * @return int
+     * @throws Zend_Exception
+     */
+    public function getMaxUploadSizeInByte()
+    {
+        $logger = Log::get();
+
+        $config         = Config::get();
         $maxFileSizeInt = intval($config->publish->maxfilesize);
         $logger->debug('publish.maxfilesize (Byte) = ' . $maxFileSizeInt);
 
         $postMaxSizeInt = $this->convertToBytes(ini_get('post_max_size'));
         $logger->debug('post_max_size (Byte) = ' . $postMaxSizeInt);
 
-        $minSize = ($maxFileSizeInt < $postMaxSizeInt) ? $maxFileSizeInt : $postMaxSizeInt;
+        $minSize = $maxFileSizeInt < $postMaxSizeInt ? $maxFileSizeInt : $postMaxSizeInt;
 
         $uploadMaxFilesizeInt = $this->convertToBytes(ini_get('upload_max_filesize'));
         $logger->debug('upload_max_filesize (Byte) = ' . $uploadMaxFilesizeInt);
         if ($uploadMaxFilesizeInt < $minSize) {
             $minSize = $uploadMaxFilesizeInt;
-        }        
-        
+        }
+
         return $minSize;
     }
 
-    private function convertToBytes($val) {        
+    /**
+     * @param string $val
+     * @return int
+     */
+    private function convertToBytes($val)
+    {
         $valTrim = trim($val);
-        $valInt = intval($valTrim);
-        $last = strtolower($valTrim[strlen($valTrim) - 1]);
+        $valInt  = intval($valTrim);
+        $last    = strtolower($valTrim[strlen($valTrim) - 1]);
         switch ($last) {
             // The 'G' modifier is available since PHP 5.1.0
             case 'g':
                 $valInt *= 1024;
+                // fall through is intended
             case 'm':
                 $valInt *= 1024;
+                // fall through is intended
             case 'k':
                 $valInt *= 1024;
+                // fall through is intended
         }
 
         return $valInt;
     }
-    
 }

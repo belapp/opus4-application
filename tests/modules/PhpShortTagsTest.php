@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,12 +25,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
@@ -38,9 +35,10 @@
  * PHP Short Tags sind unerwünscht und führen zu Problemen mit neueren Version von PHP wo sie nicht mehr automatisch
  * unterstützt werden. Dieser Test prüft das Auftreten von "<? " Tags in den PHTML Dateien von OPUS 4.
  */
-class PhpShortTagsTest extends ControllerTestCase {
-
-    public function testDetectPhpShortTags() {
+class PhpShortTagsTest extends TestCase
+{
+    public function testDetectPhpShortTags()
+    {
         $modulesDir = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'modules';
 
         // look for short tags
@@ -49,7 +47,6 @@ class PhpShortTagsTest extends ControllerTestCase {
         // look for shorts tags with line break afterwards
         $output .= shell_exec("find $modulesDir -name '*phtml' -print0 |xargs -r0 grep -n '<?$'");
 
-        $this->assertTrue(strlen(trim($output)) == 0, $output);
+        $this->assertTrue(strlen(trim($output ?? '')) === 0, $output);
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,30 +25,37 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Admin_Model
- * @author      Sascha Szott <szott@zib.de>
  * @copyright   Copyright (c) 2018, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
-class Admin_Model_DoiStatusTest extends ControllerTestCase {
 
+use Opus\Common\Document;
+use Opus\Common\Identifier;
+
+class Admin_Model_DoiStatusTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'database';
+
+    /** @var int */
     private $docId;
 
-    protected function tearDown() {
-        if (!is_null($this->docId)) {
+    public function tearDown(): void
+    {
+        if ($this->docId !== null) {
             // removed previously created test document from database
-            $doc = new Opus_Document($this->docId);
-            $doc->deletePermanent();
+            $doc = Document::get($this->docId);
+            $doc->delete();
         }
         parent::tearDown();
     }
 
-    public function testWithPublishedDoc() {
+    public function testWithPublishedDoc()
+    {
         $this->createTestDocWithDoi('published');
-        $doc = new Opus_Document($this->docId);
+        $doc         = Document::get($this->docId);
         $identifiers = $doc->getIdentifier();
-        $doi = $identifiers[0];
+        $doi         = $identifiers[0];
 
         $doiStatus = new Admin_Model_DoiStatus($doc, $doi);
 
@@ -57,11 +65,12 @@ class Admin_Model_DoiStatusTest extends ControllerTestCase {
         $this->assertEquals($doi->getStatus(), $doiStatus->getDoiStatus());
     }
 
-    public function testWithUnpublishedDoc() {
+    public function testWithUnpublishedDoc()
+    {
         $this->createTestDocWithDoi('unpublished');
-        $doc = new Opus_Document($this->docId);
+        $doc         = Document::get($this->docId);
         $identifiers = $doc->getIdentifier();
-        $doi = $identifiers[0];
+        $doi         = $identifiers[0];
 
         $doiStatus = new Admin_Model_DoiStatus($doc, $doi);
 
@@ -71,16 +80,20 @@ class Admin_Model_DoiStatusTest extends ControllerTestCase {
         $this->assertEquals($doi->getStatus(), $doiStatus->getDoiStatus());
     }
 
-    private function createTestDocWithDoi($serverState) {
-        $doc = new Opus_Document();
+    /**
+     * @param string $serverState
+     */
+    private function createTestDocWithDoi($serverState)
+    {
+        $doc = Document::new();
         $doc->setServerState($serverState);
         $this->docId = $doc->store();
 
-        $doi = new Opus_Identifier();
+        $doi = Identifier::new();
         $doi->setType('doi');
         $doi->setValue('10.5027/opustest-' . $this->docId);
         $doi->setStatus('registered');
-        $doc->setIdentifier(array($doi));
+        $doc->setIdentifier([$doi]);
 
         $doc->store();
     }

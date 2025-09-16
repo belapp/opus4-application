@@ -1,5 +1,6 @@
 <?PHP
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,33 +25,33 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * TODO rename
  */
-class Application_Form_Decorator_HtmlTagWithId extends Zend_Form_Decorator_HtmlTag {
-
-    protected function _htmlAttribs(array $attribs) {
+class Application_Form_Decorator_HtmlTagWithId extends Zend_Form_Decorator_HtmlTag
+{
+    /**
+     * @return string
+     * @phpcs:disable PSR2.Methods.MethodDeclaration
+     */
+    protected function _htmlAttribs(array $attribs)
+    {
+        // @phpcs:enable
         $element = $this->getElement();
 
-        if (!is_null($element)) {
-            if (!is_null($attribs) && isset($attribs['class'])) {
-                $attribs['class'] = $attribs['class'] . ' ' . $this->getElement()->getName() . '-data';
-            }
-            else {
-                $attribs = array();
+        if ($element !== null) {
+            if ($attribs !== null && isset($attribs['class'])) {
+                $attribs['class'] .= ' ' . $this->getElement()->getName() . '-data';
+            } else {
+                $attribs          = [];
                 $attribs['class'] = $this->getElement()->getName() . '-data';
             }
         }
 
-        return parent::_htmlAttribs($attribs);;
+        return parent::_htmlAttribs($attribs);
     }
-
 }

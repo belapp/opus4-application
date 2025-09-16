@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,18 +25,17 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Application
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2015, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_SearchExceptionTest extends ControllerTestCase {
+use Opus\Search\SearchException;
 
-    public function testConstructForServerUnreachable() {
-        $cause = new Opus_SolrSearch_Exception('test', Opus_SolrSearch_Exception::SERVER_UNREACHABLE);
+class Application_SearchExceptionTest extends ControllerTestCase
+{
+    public function testConstructForServerUnreachable()
+    {
+        $cause = new SearchException('test', SearchException::SERVER_UNREACHABLE);
 
         $exception = new Application_SearchException($cause, false);
 
@@ -43,8 +43,9 @@ class Application_SearchExceptionTest extends ControllerTestCase {
         $this->assertEquals(503, $exception->getHttpResponseCode());
     }
 
-    public function testConstructForServerUnreachablePlainMessage() {
-        $cause = new Opus_SolrSearch_Exception('test', Opus_SolrSearch_Exception::SERVER_UNREACHABLE);
+    public function testConstructForServerUnreachablePlainMessage()
+    {
+        $cause = new SearchException('test', SearchException::SERVER_UNREACHABLE);
 
         $exception = new Application_SearchException($cause, true);
 
@@ -52,8 +53,9 @@ class Application_SearchExceptionTest extends ControllerTestCase {
         $this->assertEquals(503, $exception->getHttpResponseCode());
     }
 
-    public function testConstructForInvalidQuery() {
-        $cause = new Opus_SolrSearch_Exception('test', Opus_SolrSearch_Exception::INVALID_QUERY);
+    public function testConstructForInvalidQuery()
+    {
+        $cause = new SearchException('test', SearchException::INVALID_QUERY);
 
         $exception = new Application_SearchException($cause, false);
 
@@ -61,8 +63,9 @@ class Application_SearchExceptionTest extends ControllerTestCase {
         $this->assertEquals(500, $exception->getHttpResponseCode());
     }
 
-    public function testConstructForInvalidQueryPlainMessage() {
-        $cause = new Opus_SolrSearch_Exception('test', Opus_SolrSearch_Exception::INVALID_QUERY);
+    public function testConstructForInvalidQueryPlainMessage()
+    {
+        $cause = new SearchException('test', SearchException::INVALID_QUERY);
 
         $exception = new Application_SearchException($cause, true);
 
@@ -70,8 +73,9 @@ class Application_SearchExceptionTest extends ControllerTestCase {
         $this->assertEquals(500, $exception->getHttpResponseCode());
     }
 
-    public function testContructPlainMessage() {
-        $cause = new Opus_SolrSearch_Exception('test');
+    public function testContructPlainMessage()
+    {
+        $cause = new SearchException('test');
 
         $exception = new Application_SearchException($cause, true);
 
@@ -79,13 +83,13 @@ class Application_SearchExceptionTest extends ControllerTestCase {
         $this->assertEquals(500, $exception->getHttpResponseCode());
     }
 
-    public function testConstruct() {
-        $cause = new Opus_SolrSearch_Exception('test');
+    public function testConstruct()
+    {
+        $cause = new SearchException('test');
 
         $exception = new Application_SearchException($cause, false);
 
         $this->assertEquals('error_search_unknown', $exception->getMessage());
         $this->assertEquals(500, $exception->getHttpResponseCode());
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,40 +25,30 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Henning Gerhardt (henning.gerhardt@slub-dresden.de)
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 /**
  * Main entry point for this module.
- *
- * @category    Application
- * @package     Admin
  */
-class Admin_OailinkController extends Application_Controller_Action {
-
+class Admin_OailinkController extends Application_Controller_Action
+{
     /**
      * Shows link to oai module.
-     *
-     * @return void
      */
-    public function indexAction() {
-        $this->view->title = $this->view->translate('admin_title_oailink');
+    public function indexAction()
+    {
+        $view = $this->view;
 
-        $request = $this->getRequest();
+        $view->title = $this->view->translate('admin_title_oailink');
 
         // set baseLink for OAI requests
-        $baseUrl = $request->getBaseUrl();
-        $baseHost = $request->getHttpHost();
-        $baseScheme = $request->getScheme();
-        $this->view->baseLink = $baseScheme . '://' . $baseHost . $baseUrl . '/oai';
+        $view->baseLink = $view->serverUrl($view->baseUrl('/oai'));
 
         // set repIdentifier for OAI request examples
-        $config = $this->getConfig();
-        $repIdentifier = $config->oai->repository->identifier;
-        $this->view->repIdentifier = $repIdentifier;
+        $config              = $this->getConfig();
+        $repIdentifier       = $config->oai->repository->identifier;
+        $view->repIdentifier = $repIdentifier;
     }
 }

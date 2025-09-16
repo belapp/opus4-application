@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,26 +25,29 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Form_Element_TextareaTest extends FormElementTestCase {
-
-    public function setUp() {
-        $this->_formElementClass = 'Application_Form_Element_Textarea';
-        $this->_expectedDecoratorCount = 6;
-        $this->_expectedDecorators = array('ViewHelper', 'Errors', 'Description', 'ElementHtmlTag', 'LabelNotEmpty',
-            'dataWrapper');
-        $this->_staticViewHelper = 'viewFormTextarea';
+class Application_Form_Element_TextareaTest extends FormElementTestCase
+{
+    public function setUp(): void
+    {
+        $this->formElementClass       = 'Application_Form_Element_Textarea';
+        $this->expectedDecoratorCount = 6;
+        $this->expectedDecorators     = [
+            'ViewHelper',
+            'Errors',
+            'Description',
+            'ElementHtmlTag',
+            'LabelNotEmpty',
+            'dataWrapper',
+        ];
+        $this->staticViewHelper       = 'viewFormTextarea';
         parent::setUp();
     }
 
-    public function testGetHint() {
+    public function testGetHint()
+    {
         $this->assertNull($this->getElement()->getHint());
     }
-
 }

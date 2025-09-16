@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,38 +25,35 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Script
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-
 /**
- *
  * This file is not part of the main OPUS 4 distribution!
  *
  * It is currently used in the matheon module. The tarball
  * creation script prepare_directories.sh ignores this file and
  * does not add it to the tarball.
- *
- *
  */
 
 define('APPLICATION_ENV', 'production');
 
 require_once dirname(__FILE__) . '/../common/bootstrap.php';
 
-$jobrunner = new Opus_Job_Runner;
-$jobrunner->setLogger(Zend_Registry::get('Zend_Log'));
+use Opus\Common\Log;
+use Opus\Job\MailNotification;
+use Opus\Job\Runner;
+
+$jobrunner = new Runner();
+$jobrunner->setLogger(Log::get());
 // no waiting between jobs
 $jobrunner->setDelay(0);
 // set a limit of 100 index jobs per run
 $jobrunner->setLimit(100);
 
-$mailWorker = new Opus_Job_Worker_MailNotification();
-$mailWorker->setLogger(Zend_Registry::get('Zend_Log'));
+$mailWorker = new MailNotification();
+$mailWorker->setLogger(Log::get());
 
 $jobrunner->registerWorker($mailWorker);
 

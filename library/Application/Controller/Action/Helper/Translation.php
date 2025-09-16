@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,13 +25,13 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Controller
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Document;
+use Opus\Enrichment;
+use Opus\Language;
 
 /**
  * Helper for handling translations.
@@ -38,8 +39,8 @@
  * This class keeps some of the special code generating translation keys out of
  * the controllers and view scripts.
  */
-class Application_Controller_Action_Helper_Translation extends Zend_Controller_Action_Helper_Abstract {
-
+class Application_Controller_Action_Helper_Translation extends Zend_Controller_Action_Helper_Abstract
+{
     /**
      * Gets called when the helper is used like a method of the broker.
      *
@@ -48,31 +49,36 @@ class Application_Controller_Action_Helper_Translation extends Zend_Controller_A
      * @param string $value
      * @return string
      */
-    public function direct($modelName, $fieldName, $value) {
+    public function direct($modelName, $fieldName, $value)
+    {
         return $this->getKeyForValue($modelName, $fieldName, $value);
     }
 
     /**
      * Returns translation key for a value of a selection field.
+     *
      * @param string $modelName
      * @param string $fieldName
      * @param string $value
      * @return string Translation key
+     *
+     * TODO NAMESPACE translations depend on class names
      */
-    public function getKeyForValue($modelName, $fieldName, $value) {
-        // The 'Type' and the 'Language' field of Opus_Document currently need
+    public function getKeyForValue($modelName, $fieldName, $value)
+    {
+        // The 'Type' and the 'Language' field of Document currently need
         // to be handled separately, since their key don't have a prefix.
-        if ($modelName === 'Opus_Document'
+        if (
+            $modelName === Document::class
                 && ($fieldName === 'Language'
                         || $fieldName === 'Type'
-                        || $fieldName === 'PublicationState')) {
+                        || $fieldName === 'PublicationState')
+        ) {
             return $value;
-        }
-        elseif ($modelName === 'Opus_Enrichment' && $fieldName === 'KeyName') {
+        } elseif ($modelName === Enrichment::class && $fieldName === 'KeyName') {
             return $value;
-        }
-        else {
-            return $modelName . '_' . $fieldName . '_Value_' . ucfirst($value);
+        } else {
+            return $this->normalizeModelName($modelName) . '_' . $fieldName . '_Value_' . ucfirst($value);
         }
     }
 
@@ -86,19 +92,27 @@ class Application_Controller_Action_Helper_Translation extends Zend_Controller_A
      * @param string $fieldName
      * @return string Translation key
      */
-    public function getKeyForField($modelName, $fieldName) {
+    public function getKeyForField($modelName, $fieldName)
+    {
         if ($fieldName === 'Type') {
-            return $modelName . '_' . $fieldName;
-        }
-        else {
+            $translationKey = $this->normalizeModelName($modelName) . '_' . $fieldName;
+            return preg_replace('/Opus_Common_/', 'Opus_', $translationKey); // TODO LAMINAS fix keys
+        } else {
             switch ($modelName) {
-                case 'Opus_Language':
-                    return $modelName . '_' . $fieldName;
+                case Language::class:
+                    return $this->normalizeModelName($modelName) . '_' . $fieldName;
                 default:
                     return $fieldName;
             }
         }
     }
 
+    /**
+     * @param string $name
+     * @return string
+     */
+    protected function normalizeModelName($name)
+    {
+        return preg_replace('/\\\\/', '_', $name);
+    }
 }
-

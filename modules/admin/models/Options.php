@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,42 +25,69 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2016, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
-class Admin_Model_Options extends Application_Model_Abstract {
-
+/**
+ * TODO refactor this class (cleanup the design)
+ * TODO cleanup dependency on module/admin
+ */
+class Admin_Model_Options extends Application_Model_Abstract
+{
     /**
      * Path to options configuration.
      */
-    const OPTIONS_CONFIG_FILE = '/modules/admin/models/options.json';
+    public const OPTIONS_CONFIG_FILE = '/modules/admin/models/options.json';
+
+    /** @var array Option objects. */
+    private $options;
+
+    /** @var Zend_Config */
+    private $config;
 
     /**
-     * Option objects.
-     * @var array
+     * @param Zend_Config|null $config
+     *
+     * TODO allow providing Zend_Config object
      */
-    private $_options;
+    public function __construct($config = null)
+    {
+        if ($config !== null && is_array($config)) {
+            $this->config = new Zend_Config($config);
+        }
+    }
 
     /**
      * Returns options configuration from file.
      *
      * @return array
      */
-    public function getOptions() {
-        if (is_null($this->_options)) {
-            $this->_options = array();
-            $config = new Zend_Config_Json(APPLICATION_PATH . self::OPTIONS_CONFIG_FILE);
-            $options = $config->toArray();
+    public function getOptions()
+    {
+        if ($this->options === null) {
+            $this->options = [];
+            $config        = $this->getConfig();
+            $options       = $config->toArray();
 
             foreach ($options as $name => $parameters) {
-                $this->_options[$name] = new Admin_Model_Option($name, $parameters);
+                $this->options[$name] = new Admin_Model_Option($name, $parameters);
             }
         }
 
-        return $this->_options;
+        return $this->options;
     }
 
+    /**
+     * @return Zend_Config
+     * @throws Zend_Config_Exception
+     */
+    public function getConfig()
+    {
+        if ($this->config === null) {
+            $this->config = new Zend_Config_Json(APPLICATION_PATH . self::OPTIONS_CONFIG_FILE);
+        }
+
+        return $this->config;
+    }
 }

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,21 +25,27 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class ReviewerAndFullAdminTest extends ControllerTestCase {
 
-    public function setUp() {
+class ReviewerAndFullAdminTest extends ControllerTestCase
+{
+    /** @var bool */
+    protected $configModifiable = true;
+
+    /** @var string[] */
+    protected $additionalResources = ['database', 'translation', 'view', 'mainMenu', 'navigation'];
+
+    public function setUp(): void
+    {
         parent::setUp();
         $this->enableSecurity();
         $this->loginUser('security4', 'security4pwd');
     }
 
-    public function tearDown() {
+    public function tearDown(): void
+    {
         $this->logoutUser();
         $this->restoreSecuritySetting();
         parent::tearDown();
@@ -47,7 +54,8 @@ class ReviewerAndFullAdminTest extends ControllerTestCase {
     /**
      * Prüft, ob 'Review' Eintrag im Hauptmenu existiert.
      */
-    public function testMainMenu() {
+    public function testMainMenu()
+    {
         $this->useEnglish();
         $this->dispatch('/home');
         $this->assertQueryContentContains("//div[@id='header']", 'Administration');
@@ -57,7 +65,8 @@ class ReviewerAndFullAdminTest extends ControllerTestCase {
     /**
      * Prüft, daß Review Link in Admin Menu erscheint.
      */
-    public function testReviewAccessInAdminMenu() {
+    public function testReviewAccessInAdminMenu()
+    {
         $this->useEnglish();
         $this->dispatch('/admin');
         $this->assertQueryContentContains('//html/body', 'Review');
@@ -66,7 +75,8 @@ class ReviewerAndFullAdminTest extends ControllerTestCase {
     /**
      * Prüft, ob auf die Startseite des Review Modules zugegriffen werden kann.
      */
-    public function testAccessReviewModule() {
+    public function testAccessReviewModule()
+    {
         $this->useEnglish();
         $this->dispatch('/review');
         $this->assertQueryContentContains('//html/head/title', 'Review Documents');
@@ -75,7 +85,8 @@ class ReviewerAndFullAdminTest extends ControllerTestCase {
     /**
      * Prüft, das auf die Seite zur Verwaltung von Dokumenten zugegriffen werden kann.
      */
-    public function testAccessDocumentsController() {
+    public function testAccessDocumentsController()
+    {
         $this->useEnglish();
         $this->dispatch('/admin/documents');
         $this->assertQueryContentContains('//html/head/title', 'Administration of Documents');

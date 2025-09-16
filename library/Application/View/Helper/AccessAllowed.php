@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,42 +25,39 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Returns true is current user has access to a resource.
  */
-class Application_View_Helper_AccessAllowed extends Zend_View_Helper_Abstract {
-
-    /**
-     * @var \Application_Controller_Action_Helper_AccessControl
-     */
-    private $_accessControl;
+class Application_View_Helper_AccessAllowed extends Zend_View_Helper_Abstract
+{
+    /** @var Application_Controller_Action_Helper_AccessControl */
+    private $accessControl;
 
     /**
      * Returns true if access to resource is allowed or resource does not exist.
-     * @param type $resource
-     * @return boolean
+     *
+     * @param string $resource
+     * @return bool
      */
-    public function accessAllowed($resource) {
+    public function accessAllowed($resource)
+    {
         return $this->getAccessControl()->accessAllowed($resource);
     }
 
     /**
      * Returns the Zend_Acl object or null.
+     *
      * @return Zend_Acl
      */
-    protected function getAccessControl() {
-        if (is_null($this->_accessControl)) {
-            $this->_accessControl = Zend_Controller_Action_HelperBroker::getStaticHelper('accessControl');
+    protected function getAccessControl()
+    {
+        if ($this->accessControl === null) {
+            $this->accessControl = Zend_Controller_Action_HelperBroker::getStaticHelper('accessControl');
         }
-        return $this->_accessControl;
+        return $this->accessControl;
     }
-
 }

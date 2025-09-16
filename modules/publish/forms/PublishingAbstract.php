@@ -25,52 +25,60 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Publish
- * @author      Susanne Gottwald <gottwald@zib.de>
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-abstract class Publish_Form_PublishingAbstract extends Zend_Form {
 
-    protected $_config;
+use Opus\Common\Config;
 
-    protected $_session;
+abstract class Publish_Form_PublishingAbstract extends Zend_Form
+{
+    /** @var Zend_Config */
+    protected $config;
 
-    protected $_documentTypesHelper;
+    /** @var Zend_Session_Namespace */
+    protected $session;
 
+    /** @var Zend_Controller_Action_Helper_Abstract */
+    protected $documentTypesHelper;
+
+    /** @var Zend_View_Interface|null */
     public $view;
 
-    public function __construct() {
-        $this->_session = new Zend_Session_Namespace('Publish');
-        $this->_config = Zend_Registry::get('Zend_Config');
-        $this->_documentTypesHelper = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes');
-        $this->view = $this->getView();
-        parent::__construct();        
+    public function __construct()
+    {
+        $this->session             = new Zend_Session_Namespace('Publish');
+        $this->config              = Config::get();
+        $this->documentTypesHelper = Zend_Controller_Action_HelperBroker::getStaticHelper('DocumentTypes');
+        $this->view                = $this->getView();
+        parent::__construct();
     }
 
-    function getElementAttributes($elementName) {
-        $elementAttributes = array();
-        if (!is_null($this->getElement($elementName))) {            
-            $element = $this->getElement($elementName);
-            $elementAttributes['value'] = $element->getValue();
-            $elementAttributes['label'] = $element->getLabel();
-            $elementAttributes['error'] = $element->getMessages();
-            $elementAttributes['id'] = $element->getId();
-            $elementAttributes['type'] = $element->getType();
-            $elementAttributes['desc'] = $element->getDescription();
-            $elementAttributes['hint'] = $this->getFieldHint($elementName);
-            $elementAttributes['header'] = 'header_' . $elementName;
+    /**
+     * @param string $elementName
+     * @return array
+     */
+    public function getElementAttributes($elementName)
+    {
+        $elementAttributes = [];
+        if ($this->getElement($elementName) !== null) {
+            $element                       = $this->getElement($elementName);
+            $elementAttributes['value']    = $element->getValue();
+            $elementAttributes['label']    = $element->getLabel();
+            $elementAttributes['error']    = $element->getMessages();
+            $elementAttributes['id']       = $element->getId();
+            $elementAttributes['type']     = $element->getType();
+            $elementAttributes['desc']     = $element->getDescription();
+            $elementAttributes['hint']     = $this->getFieldHint($elementName);
+            $elementAttributes['header']   = 'header_' . $elementName;
             $elementAttributes['disabled'] = $element->getAttrib('disabled');
             $elementAttributes['datatype'] = $element->getAttrib('datatype');
-                        
+
             if ($element->getType() === 'Zend_Form_Element_Checkbox') {
                 $elementAttributes['value'] = $element->getCheckedValue();
                 if ($element->isChecked()) {
                     $elementAttributes['check'] = 'checked';
-                }
-                else {
+                } else {
                     $elementAttributes['check'] = '';
                 }
             }
@@ -81,8 +89,7 @@ abstract class Publish_Form_PublishingAbstract extends Zend_Form {
 
             if ($element->isRequired()) {
                 $elementAttributes['req'] = 'required';
-            }
-            else {
+            } else {
                 $elementAttributes['req'] = 'optional';
             }
 
@@ -92,9 +99,8 @@ abstract class Publish_Form_PublishingAbstract extends Zend_Form {
 
             if ($element->getAttrib('subfield')) {
                 $elementAttributes['subfield'] = true;
-            }
-            else {
-                $elementAttributes['subfield'] = false; 
+            } else {
+                $elementAttributes['subfield'] = false;
             }
 
             if ($element->getAttrib('DT_external')) {
@@ -107,34 +113,33 @@ abstract class Publish_Form_PublishingAbstract extends Zend_Form {
 
     /**
      * Method to build a display group by a number of arrays for fields, hidden fields and buttons.
-     * @param <Zend_Form_DisplayGroup> $displayGroup
-     * @return <Array> $group
+     *
+     * @param Zend_Form_DisplayGroup $displayGroup
+     * @return array
      */
-    function buildViewDisplayGroup($displayGroup) {
-        $groupFields = array();
-        $groupHiddens = array();
-        $groupButtons = array();
+    public function buildViewDisplayGroup($displayGroup)
+    {
+        $groupFields  = [];
+        $groupHiddens = [];
+        $groupButtons = [];
 
-        foreach ($displayGroup->getElements() AS $groupElement) {
-
+        foreach ($displayGroup->getElements() as $groupElement) {
             $elementAttributes = $this->getElementAttributes($groupElement->getName());
 
             if ($groupElement->getType() === 'Zend_Form_Element_Submit') {
                 //buttons
                 $groupButtons[$elementAttributes["id"]] = $elementAttributes;
-            }
-            else if ($groupElement->getType() === 'Zend_Form_Element_Hidden') {
+            } elseif ($groupElement->getType() === 'Zend_Form_Element_Hidden') {
                 //hidden fields
                 $groupHiddens[$elementAttributes["id"]] = $elementAttributes;
-            }
-            else {
+            } else {
                 //normal fields
                 $groupFields[$elementAttributes["id"]] = $elementAttributes;
             }
         }
 
-        $group = array();
-        $group['Fields'] = $groupFields;
+        $group            = [];
+        $group['Fields']  = $groupFields;
         $group['Hiddens'] = $groupHiddens;
         $group['Buttons'] = $groupButtons;
         return $group;
@@ -142,10 +147,13 @@ abstract class Publish_Form_PublishingAbstract extends Zend_Form {
 
     /**
      * Adds submit button to the form.
-     * @param type $name unique button name
-     * @param type $label visible button label
+     *
+     * @param string $label visible button label
+     * @param string $name unique button name
+     * @return Zend_Form_Element
      */
-    function addSubmitButton($label, $name) {
+    public function addSubmitButton($label, $name)
+    {
         $submit = $this->createElement('submit', $name);
         $submit->setDisableTranslator(true);
         $submit->setLabel($this->view->translate($label));
@@ -153,7 +161,12 @@ abstract class Publish_Form_PublishingAbstract extends Zend_Form {
         return $submit;
     }
 
-    private function getFieldHint($elementName) {        
+    /**
+     * @param string $elementName
+     * @return string
+     */
+    private function getFieldHint($elementName)
+    {
         if (strpos($elementName, 'collId') === 0) {
             // Übersetzung für "collection hints": Stufennummer im Elementnamen enthalten
             // d.h. Elementname folgt dem Schema 'collId' . $level . $suffix
@@ -162,5 +175,4 @@ abstract class Publish_Form_PublishingAbstract extends Zend_Form {
         $nameWithoutCounter = explode('_', $elementName);
         return 'hint_' . $nameWithoutCounter[0];
     }
-
 }

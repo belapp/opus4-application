@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,31 +25,36 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Document;
 
 /**
  * Basic unit tests for class Review_IndexController.
  *
  * @covers Review_IndexController
  */
-class Review_IndexControllerTest extends ControllerTestCase {
+class Review_IndexControllerTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'all';
 
-    private $documentId = null;
+    /** @var int */
+    private $documentId;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
 
         $document = $this->createTestDocument();
         $document->setServerState('unpublished');
-        $document->setPersonReferee(array());
-        $document->setEnrichment(array());
+        $document->setPersonReferee([]);
+        $document->setEnrichment([]);
         $this->documentId = $document->store();
 
-        $document = new Opus_Document($this->documentId);
+        $document = Document::get($this->documentId);
         $this->assertEquals(0, count($document->getPersonReferee()));
         $this->assertEquals(0, count($document->getEnrichment()));
     }
@@ -56,7 +62,8 @@ class Review_IndexControllerTest extends ControllerTestCase {
     /**
      * Basic tests dispatching and executing 'index' action.
      */
-    public function testCallWithoutActionShouldPullFromIndexAction() {
+    public function testCallWithoutActionShouldPullFromIndexAction()
+    {
         $this->dispatch('/review');
 
         $this->assertResponseCode(200);
@@ -66,7 +73,8 @@ class Review_IndexControllerTest extends ControllerTestCase {
         $this->assertQueryCount('//table.documents//a[@class="new-window"]', 10);
     }
 
-    public function testClearActionWithoutPost() {
+    public function testClearActionWithoutPost()
+    {
         $this->dispatch('/review/index/clear');
 
         $this->assertResponseCode(200);
@@ -74,20 +82,22 @@ class Review_IndexControllerTest extends ControllerTestCase {
         $this->assertAction('clear');
     }
 
-    public function testRejectActionWithoutPost() {
+    public function testRejectActionWithoutPost()
+    {
         $this->dispatch('/review/index/reject');
         $this->assertResponseCode(200);
         $this->assertController('index');
         $this->assertAction('reject');
     }
 
-    public function testIndexActionClearButtonWithOneDocumentGoesToClear() {
-        $this->request
-                ->setMethod('POST')
-                ->setPost(array(
-                    'selected' => array('1', $this->documentId),
-                    'buttonSubmit' => 'buttonSubmit',
-                ));
+    public function testIndexActionClearButtonWithOneDocumentGoesToClear()
+    {
+        $this->getRequest()
+            ->setMethod('POST')
+            ->setPost([
+                'selected'     => ['1', $this->documentId],
+                'buttonSubmit' => 'buttonSubmit',
+            ]);
         $this->dispatch('/review/index/index');
 
         $this->assertResponseCode(200);
@@ -99,16 +109,17 @@ class Review_IndexControllerTest extends ControllerTestCase {
         $this->assertContains('sureyes', $response->getBody());
         $this->assertContains('sureno', $response->getBody());
 
-        $document = new Opus_Document($this->documentId);
+        $document = Document::get($this->documentId);
         $this->assertEquals('unpublished', $document->getServerState());
     }
 
-    public function testClearActionWithOneDocumentUnconfirmed() {
-        $this->request
-                ->setMethod('POST')
-                ->setPost(array(
-                    'selected' => $this->documentId,
-                ));
+    public function testClearActionWithOneDocumentUnconfirmed()
+    {
+        $this->getRequest()
+            ->setMethod('POST')
+            ->setPost([
+                'selected' => $this->documentId,
+            ]);
         $this->dispatch('/review/index/clear');
 
         $this->assertResponseCode(200);
@@ -120,17 +131,18 @@ class Review_IndexControllerTest extends ControllerTestCase {
         $this->assertContains('sureyes', $response->getBody());
         $this->assertContains('sureno', $response->getBody());
 
-        $document = new Opus_Document($this->documentId);
+        $document = Document::get($this->documentId);
         $this->assertEquals('unpublished', $document->getServerState());
     }
 
-    public function testClearActionWithOneDocumentCanceled() {
-        $this->request
-                ->setMethod('POST')
-                ->setPost(array(
-                    'selected' => $this->documentId,
-                    'sureno' => 'no',
-                ));
+    public function testClearActionWithOneDocumentCanceled()
+    {
+        $this->getRequest()
+            ->setMethod('POST')
+            ->setPost([
+                'selected' => $this->documentId,
+                'sureno'   => 'no',
+            ]);
         $this->dispatch('/review/index/clear');
 
         $this->assertResponseCode(200);
@@ -142,17 +154,18 @@ class Review_IndexControllerTest extends ControllerTestCase {
         $this->assertNotContains('sureyes', $response->getBody());
         $this->assertNotContains('sureno', $response->getBody());
 
-        $document = new Opus_Document($this->documentId);
+        $document = Document::get($this->documentId);
         $this->assertEquals('unpublished', $document->getServerState());
     }
 
-    public function testClearActionWithOneDocumentConfirmed() {
-        $this->request
-                ->setMethod('POST')
-                ->setPost(array(
-                    'selected' => $this->documentId,
-                    'sureyes' => 'yes',
-                ));
+    public function testClearActionWithOneDocumentConfirmed()
+    {
+        $this->getRequest()
+            ->setMethod('POST')
+            ->setPost([
+                'selected' => $this->documentId,
+                'sureyes'  => 'yes',
+            ]);
         $this->dispatch('/review/index/clear');
 
         $this->assertResponseCode(200);
@@ -164,16 +177,17 @@ class Review_IndexControllerTest extends ControllerTestCase {
         $this->assertNotContains('sureyes', $response->getBody());
         $this->assertNotContains('sureno', $response->getBody());
 
-        $document = new Opus_Document($this->documentId);
+        $document = Document::get($this->documentId);
         $this->assertEquals('published', $document->getServerState());
     }
 
-    public function testRejectActionWithOneDocumentUnconfirmed() {
-        $this->request
-                ->setMethod('POST')
-                ->setPost(array(
-                    'selected' => $this->documentId,
-                ));
+    public function testRejectActionWithOneDocumentUnconfirmed()
+    {
+        $this->getRequest()
+            ->setMethod('POST')
+            ->setPost([
+                'selected' => $this->documentId,
+            ]);
         $this->dispatch('/review/index/reject');
 
         $this->assertResponseCode(200);
@@ -185,17 +199,18 @@ class Review_IndexControllerTest extends ControllerTestCase {
         $this->assertContains('sureyes', $response->getBody());
         $this->assertContains('sureno', $response->getBody());
 
-        $document = new Opus_Document($this->documentId);
+        $document = Document::get($this->documentId);
         $this->assertEquals('unpublished', $document->getServerState());
     }
 
-    public function testRejectActionWithOneDocumentCanceled() {
-        $this->request
-                ->setMethod('POST')
-                ->setPost(array(
-                    'selected' => $this->documentId,
-                    'sureno' => 'no',
-                ));
+    public function testRejectActionWithOneDocumentCanceled()
+    {
+        $this->getRequest()
+            ->setMethod('POST')
+            ->setPost([
+                'selected' => $this->documentId,
+                'sureno'   => 'no',
+            ]);
         $this->dispatch('/review/index/reject');
 
         $this->assertResponseCode(200);
@@ -207,17 +222,18 @@ class Review_IndexControllerTest extends ControllerTestCase {
         $this->assertNotContains('sureyes', $response->getBody());
         $this->assertNotContains('sureno', $response->getBody());
 
-        $document = new Opus_Document($this->documentId);
+        $document = Document::get($this->documentId);
         $this->assertEquals('unpublished', $document->getServerState());
     }
 
-    public function testRejectActionWithOneDocumentConfirmed() {
-        $this->request
-                ->setMethod('POST')
-                ->setPost(array(
-                    'selected' => $this->documentId,
-                    'sureyes' => 'yes',
-                ));
+    public function testRejectActionWithOneDocumentConfirmed()
+    {
+        $this->getRequest()
+            ->setMethod('POST')
+            ->setPost([
+                'selected' => $this->documentId,
+                'sureyes'  => 'yes',
+            ]);
         $this->dispatch('/review/index/reject');
 
         $this->assertResponseCode(200);
@@ -229,8 +245,7 @@ class Review_IndexControllerTest extends ControllerTestCase {
         $this->assertNotContains('sureyes', $response->getBody());
         $this->assertNotContains('sureno', $response->getBody());
 
-        $document = new Opus_Document($this->documentId);
+        $document = Document::get($this->documentId);
         $this->assertEquals('deleted', $document->getServerState());
     }
-
 }

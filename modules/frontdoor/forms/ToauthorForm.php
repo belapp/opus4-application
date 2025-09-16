@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,52 +25,49 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Frontdoor
- * @author      Tobias Leidinger <tobias.leidinger@googlemail.com>
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2009, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * class to built the mail form for mail contact to author
  */
-class Frontdoor_Form_ToauthorForm extends Zend_Form {
-
+class Frontdoor_Form_ToauthorForm extends Zend_Form
+{
     /**
      * hold author information (name, mail)
-     * @var array('name' => ..., 'mail' => ...)
+     *
+     * @var array ('name' => ..., 'mail' => ...)
+     *
+     * TODO LAMINAS name cannot be 'authors' because this creates a conflict with subform 'authors' in Zend_Form code
      */
-    protected $_authors;
+    protected $authorsInfo;
 
     /**
      * Build mail form
-     *
-     * @return void
      */
-    public function init() {
+    public function init()
+    {
         $atLeastOne = new Frontdoor_Form_AtLeastOneValidator();
-        $authorSub = new Zend_Form_SubForm('a');
+        $authorSub  = new Zend_Form_SubForm('a');
 
-        if (!is_null($this->_authors)) {
+        if ($this->authorsInfo !== null) {
             $authCheck = null;
-            foreach ($this->_authors as $author) {
-                $options = array('checked' => true);
-                if (count($this->_authors) == 1) {
+            foreach ($this->authorsInfo as $author) {
+                $options = ['checked' => true];
+                if (count($this->authorsInfo) === 1) {
                     $options['disabled'] = true;
                 }
-                $authCheck = new Zend_Form_Element_Checkbox($author['id'], $options);
+                $authCheck = new Zend_Form_Element_Checkbox(strval($author['id']), $options);
                 $atLeastOne->addField($authCheck);
                 $authCheck->setLabel($author['name']);
                 $authorSub->addElement($authCheck);
 
-                if (count($this->_authors) == 1) {
+                if (count($this->authorsInfo) === 1) {
                     $authCheck->setUncheckedValue(1);
                 }
             }
-            
+
             $authCheck->addValidator($atLeastOne);
             $this->addSubForm($authorSub, 'authors');
         }
@@ -88,28 +86,40 @@ class Frontdoor_Form_ToauthorForm extends Zend_Form {
         $message->setLabel('frontdoor_messagetext');
 
         $captcha = new Zend_Form_Element_Captcha(
-            'foo', array(
-            'label' => 'label_captcha',
-            'captcha' => array(
-                'captcha' => 'Figlet',
-                'wordLen' => 6,
-                'timeout' => 300,
-            ))
+            'foo',
+            [
+                'label'   => 'label_captcha',
+                'captcha' => [
+                    'captcha' => 'Figlet',
+                    'wordLen' => 6,
+                    'timeout' => 300,
+                ],
+            ]
         );
 
         $submit = new Zend_Form_Element_Submit('frontdoor_send_mailtoauthor');
         $submit->setLabel('frontdoor_send_mailtoauthor');
 
-        $this->addElements(array($sender, $senderMail, $message, $captcha, $submit));
+        $this->addElements([$sender, $senderMail, $message, $captcha, $submit]);
     }
 
-    public function setAuthors($authors) {
-        $this->_authors = $authors;
+    /**
+     * @param array $authors
+     * @return $this
+     */
+    public function setAuthors($authors)
+    {
+        $this->authorsInfo = $authors;
         return $this;
     }
 
-    public function isValid($data) {
+    /**
+     * @param array $data
+     * @return bool
+     * @throws Zend_Form_Exception
+     */
+    public function isValid($data)
+    {
         return parent::isValid($data);
     }
-
 }

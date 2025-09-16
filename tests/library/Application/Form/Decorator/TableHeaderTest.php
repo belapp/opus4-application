@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,36 +25,39 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Application_Form_Decorator
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Form_Decorator_TableHeaderTest extends ControllerTestCase {
 
-    private $columns = array(
-        array(
+class Application_Form_Decorator_TableHeaderTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
+
+    /** @var string[][] */
+    private $columns = [
+        [
             'label' => 'column1',
-            'class' => 'name'
-        ),
-        array(
+            'class' => 'name',
+        ],
+        [
             'label' => 'column2',
-            'class' => 'size'
-        )
-    );
+            'class' => 'size',
+        ],
+    ];
 
-    public function testConstruct() {
+    public function testConstruct()
+    {
         $decorator = new Application_Form_Decorator_TableHeader(
-            array('placement' => 'prepend', 'columns' => $this->columns)
+            ['placement' => 'prepend', 'columns' => $this->columns]
         );
 
         $this->assertEquals(Zend_Form_Decorator_Abstract::PREPEND, $decorator->getPlacement());
         $this->assertEquals($this->columns, $decorator->getColumns());
     }
 
-    public function testSetOptionColumns() {
+    public function testSetOptionColumns()
+    {
         $decorator = new Application_Form_Decorator_TableHeader();
 
         $decorator->setOption('columns', $this->columns);
@@ -61,7 +65,8 @@ class Application_Form_Decorator_TableHeaderTest extends ControllerTestCase {
         $this->assertEquals($this->columns, $decorator->getColumns());
     }
 
-    public function testSetGetColumns() {
+    public function testSetGetColumns()
+    {
         $decorator = new Application_Form_Decorator_TableHeader();
 
         $decorator->setColumns($this->columns);
@@ -69,7 +74,8 @@ class Application_Form_Decorator_TableHeaderTest extends ControllerTestCase {
         $this->assertEquals($this->columns, $decorator->getColumns());
     }
 
-    public function testRender() {
+    public function testRender()
+    {
         $decorator = new Application_Form_Decorator_TableHeader();
 
         $decorator->setColumns($this->columns);
@@ -82,13 +88,16 @@ class Application_Form_Decorator_TableHeaderTest extends ControllerTestCase {
         $markup = $decorator->render('content');
 
         $this->assertEquals(
-            '<thead><tr><th class="name">column1</th><th class="size">column2</th></tr></thead>content', $markup);
+            '<thead><tr><th class="name">column1</th><th class="size">column2</th></tr></thead>content',
+            $markup
+        );
     }
 
-    public function testRenderEscape() {
+    public function testRenderEscape()
+    {
         $decorator = new Application_Form_Decorator_TableHeader();
 
-        $decorator->setColumns(array(array('label' => '<h1>HTML</h1>')));
+        $decorator->setColumns([['label' => '<h1>HTML</h1>']]);
 
         $form = new Zend_Form();
         $form->addSubForm(new Zend_Form_SubForm(), 'subform1');
@@ -98,15 +107,18 @@ class Application_Form_Decorator_TableHeaderTest extends ControllerTestCase {
         $markup = $decorator->render('content');
 
         $this->assertEquals(
-            '<thead><tr><th class="">&lt;h1&gt;HTML&lt;/h1&gt;</th></tr></thead>content', $markup);
+            '<thead><tr><th class="">&lt;h1&gt;HTML&lt;/h1&gt;</th></tr></thead>content',
+            $markup
+        );
     }
 
-    public function testRenderTranslate() {
+    public function testRenderTranslate()
+    {
         $this->useGerman();
 
         $decorator = new Application_Form_Decorator_TableHeader();
 
-        $decorator->setColumns(array(array('label' => 'Value')));
+        $decorator->setColumns([['label' => 'Value']]);
 
         $form = new Zend_Form();
         $form->addSubForm(new Zend_Form_SubForm(), 'subform1');
@@ -116,7 +128,8 @@ class Application_Form_Decorator_TableHeaderTest extends ControllerTestCase {
         $markup = $decorator->render('content');
 
         $this->assertEquals(
-            '<thead><tr><th class="">Text</th></tr></thead>content', $markup);
+            '<thead><tr><th class="">Text</th></tr></thead>content',
+            $markup
+        );
     }
-
 }

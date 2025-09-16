@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,184 +25,218 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Form_Validate
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Unit Test for class Application_Form_Validate_Date.
+ *
+ * TODO TRANSLATION TestCase
  */
-class Application_Form_Validate_DateTest extends ControllerTestCase {
+class Application_Form_Validate_DateTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'translation';
 
-    const DE_FORMAT = 'dd.MM.yyyy';
+    public const DE_FORMAT = 'dd.MM.yyyy';
 
-    const DE_PATTERN = '#^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4}$#';
+    public const DE_PATTERN = '#^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4}$#';
 
-    const EN_FORMAT = 'yyyy/MM/dd';
+    public const EN_FORMAT = 'yyyy/MM/dd';
 
-    const EN_PATTERN = '#^[0-9]{1,4}/[0-9]{1,2}/[0-9]{1,2}$#';
+    public const EN_PATTERN = '#^[0-9]{1,4}/[0-9]{1,2}/[0-9]{1,2}$#';
 
-    private $__validator;
+    /** @var Application_Form_Validate_Date */
+    private $validator;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
 
-        $this->__validator = new Application_Form_Validate_Date();
+        $this->validator = new Application_Form_Validate_Date();
     }
 
-    public function useGerman() {
+    public function useGerman()
+    {
         parent::useGerman();
-        $this->__validator->setLocale('de');
+        $this->validator->setLocale('de');
     }
 
-    public function useEnglish() {
+    public function useEnglish()
+    {
         parent::useEnglish();
-        $this->__validator->setLocale('en');
+        $this->validator->setLocale('en');
     }
 
-    public function testGetDateFormatGerman() {
+    public function testGetDateFormatGerman()
+    {
         $this->useGerman();
-        $this->assertEquals(self::DE_FORMAT, $this->__validator->getDateFormat());
+        $this->assertEquals(self::DE_FORMAT, $this->validator->getDateFormat());
     }
 
-    public function testGetDateFormatEnglish() {
+    public function testGetDateFormatEnglish()
+    {
         $this->useEnglish();
-        $this->assertEquals(self::EN_FORMAT, $this->__validator->getDateFormat());
+        $this->assertEquals(self::EN_FORMAT, $this->validator->getDateFormat());
     }
 
-    public function testGetDateFormatDe() {
-        $this->assertEquals(self::DE_FORMAT, $this->__validator->getDateFormat('de'));
+    public function testGetDateFormatDe()
+    {
+        $this->assertEquals(self::DE_FORMAT, $this->validator->getDateFormat('de'));
     }
 
-    public function testGetDateFormatEn() {
-        $this->assertEquals(self::EN_FORMAT, $this->__validator->getDateFormat('en'));
+    public function testGetDateFormatEn()
+    {
+        $this->assertEquals(self::EN_FORMAT, $this->validator->getDateFormat('en'));
     }
 
-    public function testIsValidForEmptyString() {
-        $this->assertFalse($this->__validator->isValid(''));
+    public function testIsValidForEmptyString()
+    {
+        $this->assertFalse($this->validator->isValid(''));
     }
 
-    public function testIsValidForEmptyStringWithWhitespaces() {
-        $this->assertFalse($this->__validator->isValid('     '));
+    public function testIsValidForEmptyStringWithWhitespaces()
+    {
+        $this->assertFalse($this->validator->isValid('     '));
     }
 
-    public function testIsValidForNull() {
-        $this->assertFalse($this->__validator->isValid(null));
+    public function testIsValidForNull()
+    {
+        $this->assertFalse($this->validator->isValid(null));
     }
 
-    public function testIsValidFor2000() {
-        $this->assertFalse($this->__validator->isValid('2000'));
+    public function testIsValidFor2000()
+    {
+        $this->assertFalse($this->validator->isValid('2000'));
     }
 
-    public function testIsValidFor2001German() {
+    public function testIsValidFor2001German()
+    {
         $this->useGerman();
-        $this->assertFalse($this->__validator->isValid('2001'));
+        $this->assertFalse($this->validator->isValid('2001'));
     }
 
-    public function testIsValidFor2001English() {
+    public function testIsValidFor2001English()
+    {
         $this->useEnglish();
-        $this->assertFalse($this->__validator->isValid('2001'));
+        $this->assertFalse($this->validator->isValid('2001'));
     }
 
-    public function testIsValidFor2011German() {
+    public function testIsValidFor2011German()
+    {
         $this->useGerman();
-        $this->assertFalse($this->__validator->isValid('2011'));
+        $this->assertFalse($this->validator->isValid('2011'));
     }
 
-    public function testIsValidFor2011English() {
+    public function testIsValidFor2011English()
+    {
         $this->useEnglish();
-        $this->assertFalse($this->__validator->isValid('2011'));
+        $this->assertFalse($this->validator->isValid('2011'));
     }
 
-    public function testIsValidForValidDate1German() {
+    public function testIsValidForValidDate1German()
+    {
         $this->useGerman();
-        $this->assertTrue($this->__validator->isValid('12.5.1999'));
+        $this->assertTrue($this->validator->isValid('12.5.1999'));
     }
 
-    public function testIsValidForValidDate1English() {
+    public function testIsValidForValidDate1English()
+    {
         $this->useEnglish();
-        $this->assertTrue($this->__validator->isValid('1999/05/15'));
+        $this->assertTrue($this->validator->isValid('1999/05/15'));
     }
 
-    public function testIsValidForValidDate2German() {
+    public function testIsValidForValidDate2German()
+    {
         $this->useGerman();
-        $this->assertTrue($this->__validator->isValid('12.5.99'));
+        $this->assertTrue($this->validator->isValid('12.5.99'));
     }
 
-    public function testIsValidForValidDate2English() {
+    public function testIsValidForValidDate2English()
+    {
         $this->useEnglish();
-        $this->assertTrue($this->__validator->isValid('99/05/15'));
+        $this->assertTrue($this->validator->isValid('99/05/15'));
     }
 
-    public function testIsValidForValidDate3German() {
+    public function testIsValidForValidDate3German()
+    {
         $this->useGerman();
-        $this->assertTrue($this->__validator->isValid('1.1.1'));
+        $this->assertTrue($this->validator->isValid('1.1.1'));
     }
 
-    public function testIsValidForValidDate3English() {
+    public function testIsValidForValidDate3English()
+    {
         $this->useEnglish();
-        $this->assertTrue($this->__validator->isValid('1/1/1'));
+        $this->assertTrue($this->validator->isValid('1/1/1'));
     }
 
-    public function testIsValidForYear10000German() {
+    public function testIsValidForYear10000German()
+    {
         $this->useGerman();
-        $this->assertFalse($this->__validator->isValid('1.1.10000'));
+        $this->assertFalse($this->validator->isValid('1.1.10000'));
     }
 
-    public function testIsValidForYear10000English() {
+    public function testIsValidForYear10000English()
+    {
         $this->useEnglish();
-        $this->assertFalse($this->__validator->isValid('10000/1/1'));
+        $this->assertFalse($this->validator->isValid('10000/1/1'));
     }
 
-    public function testIsValidForInvalidInputGerman() {
+    public function testIsValidForInvalidInputGerman()
+    {
         $this->useGerman();
-        $this->assertFalse($this->__validator->isValid('1. Jan 2002'));
+        $this->assertFalse($this->validator->isValid('1. Jan 2002'));
     }
 
-    public function testIsValidForInvalidInputEnglish() {
+    public function testIsValidForInvalidInputEnglish()
+    {
         $this->useEnglish();
-        $this->assertFalse($this->__validator->isValid('Feb, 1. 2002'));
+        $this->assertFalse($this->validator->isValid('Feb, 1. 2002'));
     }
 
-    public function testIsValidForInvalidDateGerman() {
+    public function testIsValidForInvalidDateGerman()
+    {
         $this->useGerman();
-        $this->assertFalse($this->__validator->isValid('29.2.2001'));
+        $this->assertFalse($this->validator->isValid('29.2.2001'));
     }
 
-    public function testIsValidForInvalidDateEnglish() {
+    public function testIsValidForInvalidDateEnglish()
+    {
         $this->useEnglish();
-        $this->assertFalse($this->__validator->isValid('2001/02/29'));
+        $this->assertFalse($this->validator->isValid('2001/02/29'));
     }
 
-    public function testConstructGerman() {
+    public function testConstructGerman()
+    {
         $this->useGerman();
         $validator = new Application_Form_Validate_Date();
         $this->assertEquals(self::DE_FORMAT, $validator->getFormat());
     }
 
-    public function testConstructEnglish() {
+    public function testConstructEnglish()
+    {
         $this->useEnglish();
         $validator = new Application_Form_Validate_Date();
         $this->assertEquals(self::EN_FORMAT, $validator->getFormat());
     }
 
-    public function testGetInputPatternGerman() {
+    public function testGetInputPatternGerman()
+    {
         $this->useGerman();
         $validator = new Application_Form_Validate_Date();
         $this->assertEquals(self::DE_PATTERN, $validator->getInputPattern());
     }
 
-    public function testGetInputPatternEnglish() {
+    public function testGetInputPatternEnglish()
+    {
         $this->useEnglish();
         $validator = new Application_Form_Validate_Date();
         $this->assertEquals(self::EN_PATTERN, $validator->getInputPattern());
     }
 
-    public function testSetGetInputPattern() {
+    public function testSetGetInputPattern()
+    {
         $this->useEnglish();
         $validator = new Application_Form_Validate_Date();
         $validator->setInputPattern('#^[0-9]{1.4}$#');
@@ -210,7 +245,8 @@ class Application_Form_Validate_DateTest extends ControllerTestCase {
         $this->assertEquals(self::EN_PATTERN, $validator->getInputPattern());
     }
 
-    public function testSetLocale() {
+    public function testSetLocale()
+    {
         $validator = new Application_Form_Validate_Date();
         $validator->setLocale('de');
         $this->assertEquals(self::DE_FORMAT, $validator->getFormat());
@@ -218,6 +254,5 @@ class Application_Form_Validate_DateTest extends ControllerTestCase {
         $validator->setLocale('en');
         $this->assertEquals(self::EN_FORMAT, $validator->getFormat());
         $this->assertEquals(self::EN_PATTERN, $validator->getInputPattern());
-     }
-
+    }
 }

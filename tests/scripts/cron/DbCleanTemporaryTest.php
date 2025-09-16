@@ -25,56 +25,66 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Cronjob
- * @package     Tests
- * @author      Edouard Simon (edouard.simon@zib.de)
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-require_once('CronTestCase.php');
-require_once('OpusDocumentMock.php');
-/**
- * 
- */
-class DbCleanTemporaryTest extends CronTestCase {
+use Opus\Common\Date;
+use Opus\Common\Document;
+use Opus\Common\DocumentInterface;
+use Opus\Common\Model\ModelException;
+use Opus\Common\Model\NotFoundException;
 
+class DbCleanTemporaryTest extends CronTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'database';
+
+    /** @var DocumentInterface */
     private $doc;
-    
-    public function setUp() {
+
+    public function setUp(): void
+    {
         parent::setUp();
-        $this->doc = new OpusDocumentMock();
+        $this->doc = Document::new();
+        $this->doc->setLifecycleListener(new DocumentLifecycleListenerMock());
         $this->doc->setServerState('temporary');
         $this->doc->store();
     }
-    
-    public function testCleanUpDocumentOlderThan2Days() {
+
+    public function testCleanUpDocumentOlderThan2Days()
+    {
         $this->changeDocumentDateModified(3);
         $this->executeScript('cron-db-clean-temporary.php');
         try {
-            $doc = new Opus_Document($this->doc->getId());
-            $doc->deletePermanent();
-            $this->fail("expected Opus_Model_NotFoundException");
-        } catch(Opus_Model_NotFoundException $e) {
+            $doc = Document::get($this->doc->getId());
+            $doc->delete();
+            $this->fail("expected Opus\Common\Model\NotFoundException");
+        } catch (NotFoundException $e) {
         }
     }
 
-    public function testKeepDocumentNewerThan3Days() {
+    public function testKeepDocumentNewerThan3Days()
+    {
         $this->changeDocumentDateModified(2);
         $this->executeScript('cron-db-clean-temporary.php');
         try {
-            $doc = new Opus_Document($this->doc->getId());
-            $doc->deletePermanent();
-        } catch(Opus_Model_NotFoundException $e) {
+            $doc = Document::get($this->doc->getId());
+            $doc->delete();
+        } catch (NotFoundException $e) {
             $this->fail("expected existing document.");
         }
     }
-    
-    private function changeDocumentDateModified($numDaysBeforeNow) {
+
+    /**
+     * @param int $numDaysBeforeNow
+     * @throws ModelException
+     */
+    private function changeDocumentDateModified($numDaysBeforeNow)
+    {
         $date = new DateTime();
         $date->sub(new DateInterval("P{$numDaysBeforeNow}D"));
-        $this->doc->changeServerDateModified(new Opus_Date($date));
+        $this->doc->setServerDateModified(new Date($date));
+        $this->doc->store();
     }
-    
 }

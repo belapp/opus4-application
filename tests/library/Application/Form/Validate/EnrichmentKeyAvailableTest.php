@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,25 +25,27 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2015, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Unit Tests for enrichment key availability validation.
  */
-class Application_Form_Validate_EnrichmentKeyAvailableTest extends ControllerTestCase {
+class Application_Form_Validate_EnrichmentKeyAvailableTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'database';
 
-    public function testIsValidSuccess() {
+    public function testIsValidSuccess()
+    {
         $validator = new Application_Form_Validate_EnrichmentKeyAvailable();
 
         $this->assertTrue($validator->isValid('TestEnrichment'));
     }
 
-    public function testIsValidFailure() {
+    public function testIsValidFailure()
+    {
         $validator = new Application_Form_Validate_EnrichmentKeyAvailable();
 
         $this->assertFalse($validator->isValid('City'));
@@ -53,22 +56,24 @@ class Application_Form_Validate_EnrichmentKeyAvailableTest extends ControllerTes
         $this->assertArrayHasKey('isAvailable', $messages);
     }
 
-    public function testIsValidSuccessForSameId() {
+    public function testIsValidSuccessForSameId()
+    {
         $validator = new Application_Form_Validate_EnrichmentKeyAvailable();
 
-        $this->assertTrue($validator->isValid('City', array('Id' => 'City')));
+        $this->assertTrue($validator->isValid('City', ['Id' => 'City']));
     }
 
-    public function testIsValidFailureForChangedName() {
+    public function testIsValidFailureForChangedName()
+    {
         $validator = new Application_Form_Validate_EnrichmentKeyAvailable();
 
-        $this->assertFalse($validator->isValid('City', array('Id' => 'TestEnrichment')));
+        $this->assertFalse($validator->isValid('City', ['Id' => 'TestEnrichment']));
     }
 
-    public function testIsValidSuccessForChangedName() {
+    public function testIsValidSuccessForChangedName()
+    {
         $validator = new Application_Form_Validate_EnrichmentKeyAvailable();
 
-        $this->assertTrue($validator->isValid('TestEnrichment', array('Id' => 'City')));
+        $this->assertTrue($validator->isValid('TestEnrichment', ['Id' => 'City']));
     }
-
 }

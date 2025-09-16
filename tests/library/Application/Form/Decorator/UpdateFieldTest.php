@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,15 +25,14 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Application_Form_Decorator
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Application_Form_Decorator_UpdateFieldTest extends ControllerTestCase
 {
+    /** @var string */
+    protected $additionalResources = 'translation';
 
     public function testRender()
     {
@@ -80,7 +80,9 @@ class Application_Form_Decorator_UpdateFieldTest extends ControllerTestCase
         $this->assertEquals(
             '<div class="update-field-wrapper">'
             . '<input class="field-update-checkbox" name="cityUpdateEnabled" id="cityUpdateEnabled"'
-            . ' type="checkbox" checked="checked" /> Update field</div>CONTENT', $output);
+            . ' type="checkbox" checked="checked" /> Update field</div>CONTENT',
+            $output
+        );
         $this->assertContains('checked="checked"', $output);
     }
 
@@ -103,8 +105,7 @@ class Application_Form_Decorator_UpdateFieldTest extends ControllerTestCase
 
         $decorator = new Application_Form_Decorator_UpdateField();
 
-        $translator = Zend_Registry::get('Zend_Translate');
-        $translator->loadModule('admin'); // translation only automatically loaded for 'default'
+        $translator = Application_Translate::getInstance();
 
         $element = new Zend_Form_Element_Text('city');
         $element->setTranslator($translator);
@@ -115,5 +116,4 @@ class Application_Form_Decorator_UpdateFieldTest extends ControllerTestCase
 
         $this->assertContains('Feld aktualisieren', $output);
     }
-
 }

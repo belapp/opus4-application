@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,10 +25,7 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application_Util
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2016, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
@@ -36,12 +34,12 @@
  */
 class Application_Util_String
 {
-
     /**
      * Replaces keys in a string with values from an array.
      *
-     * @param $content string
-     * @param $properties array with replacement values
+     * @param string $content
+     * @param array  $properties Replacement values
+     * @param bool   $quote
      * @return string
      */
     public static function replaceProperties($content, $properties, $quote = true)
@@ -51,8 +49,7 @@ class Application_Util_String
         $keys = array_keys($properties);
 
         if ($quote) {
-            array_walk($properties, function(&$value, $key)
-            {
+            array_walk($properties, function (&$value, $key) {
                 $value = self::quoteValue($value);
             });
         }
@@ -65,17 +62,15 @@ class Application_Util_String
     /**
      * Puts double quotes around a string.
      *
-     * @param $value
+     * @param string $value
      * @return string
      */
     public static function quoteValue($value)
     {
-        if (strpos($value, '"') !== false)
-        {
+        if (strpos($value, '"') !== false) {
             $value = str_replace('"', '\"', $value);
         }
 
         return "\"$value\"";
     }
-
 }

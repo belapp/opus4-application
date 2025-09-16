@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,31 +25,38 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Document;
+use Opus\Common\Person;
+use Opus\Common\Title;
 
 /**
  * Unit test for class Review_Model_DocumentAdapter.
  *
  * TODO $view not used at the moment, refactor or add tests
  */
-class Application_Util_DocumentAdapterTest extends ControllerTestCase {
+class Application_Util_DocumentAdapterTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'view', 'translation'];
 
-    public function testHasFilesTrue() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testHasFilesTrue()
+    {
+        $view = $this->getView();
 
-        $doc = new Opus_Document(1);
+        $doc = Document::get(1);
 
         $docAdapter = new Application_Util_DocumentAdapter($view, $doc);
 
         $this->assertTrue($docAdapter->hasFiles());
     }
 
-    public function testHasFilesFalse() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testHasFilesFalse()
+    {
+        $view = $this->getView();
 
         $doc = $this->createTestDocument();
 
@@ -57,18 +65,20 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertFalse($docAdapter->hasFiles());
     }
 
-    public function testGetFileCount() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testGetFileCount()
+    {
+        $view = $this->getView();
 
-        $doc = new Opus_Document(1);
+        $doc = Document::get(1);
 
         $docAdapter = new Application_Util_DocumentAdapter($view, $doc);
 
         $this->assertEquals(2, $docAdapter->getFileCount());
     }
 
-    public function testGetFileCountZero() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testGetFileCountZero()
+    {
+        $view = $this->getView();
 
         $doc = $this->createTestDocument();
 
@@ -77,8 +87,9 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertEquals(0, $docAdapter->getFileCount());
     }
 
-    public function testIsBelongsToBibliographyTrue() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testIsBelongsToBibliographyTrue()
+    {
+        $view = $this->getView();
 
         $doc = $this->createTestDocument();
 
@@ -89,8 +100,9 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertTrue($docAdapter->isBelongsToBibliography());
     }
 
-    public function testIsBelongsToBibliographyFalse() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testIsBelongsToBibliographyFalse()
+    {
+        $view = $this->getView();
 
         $doc = $this->createTestDocument();
 
@@ -101,20 +113,47 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertFalse($docAdapter->isBelongsToBibliography());
     }
 
-    /**
-     * Tests returning title in document language.
-     */
-    public function testGetMainTitle() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testIsBelongsToBibliographyTrueWithStringValue()
+    {
+        $view = $this->getView();
 
         $doc = $this->createTestDocument();
 
-        $title = new Opus_Title();
+        $doc->setBelongsToBibliography('1');
+
+        $docAdapter = new Application_Util_DocumentAdapter($view, $doc);
+
+        $this->assertTrue($docAdapter->isBelongsToBibliography());
+    }
+
+    public function testIsBelongsToBibliographyFalseWithStringValue()
+    {
+        $view = $this->getView();
+
+        $doc = $this->createTestDocument();
+
+        $doc->setBelongsToBibliography('0');
+
+        $docAdapter = new Application_Util_DocumentAdapter($view, $doc);
+
+        $this->assertFalse($docAdapter->isBelongsToBibliography());
+    }
+
+    /**
+     * Tests returning title in document language.
+     */
+    public function testGetMainTitle()
+    {
+        $view = $this->getView();
+
+        $doc = $this->createTestDocument();
+
+        $title = Title::new();
         $title->setLanguage('deu');
         $title->setValue('Deutscher Titel');
         $doc->addTitleMain($title);
 
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setLanguage('eng');
         $title->setValue('Englischer Titel');
         $doc->addTitleMain($title);
@@ -126,12 +165,13 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertEquals($docAdapter->getMainTitle(), 'Englischer Titel');
     }
 
-    public function testGetMainTitleForDocWithNoTitles() {
+    public function testGetMainTitleForDocWithNoTitles()
+    {
         $this->useEnglish();
 
-        $view = Zend_Registry::get('Opus_View');
+        $view = $this->getView();
 
-        $doc = $this->createTestDocument();
+        $doc   = $this->createTestDocument();
         $docId = $doc->store();
 
         $docAdapter = new Application_Util_DocumentAdapter($view, $doc);
@@ -139,17 +179,18 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertEquals("untitled document (id = '$docId')", $docAdapter->getMainTitle());
     }
 
-    public function testGetMainTitleForDocWithNoLanguage() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testGetMainTitleForDocWithNoLanguage()
+    {
+        $view = $this->getView();
 
         $doc = $this->createTestDocument();
 
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setLanguage('deu');
         $title->setValue('Deutscher Titel');
         $doc->addTitleMain($title);
 
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setLanguage('eng');
         $title->setValue('Englischer Titel');
         $doc->addTitleMain($title);
@@ -160,17 +201,18 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertEquals($docAdapter->getMainTitle(), 'Deutscher Titel');
     }
 
-    public function testGetMainTitleForDocWithNoTitleInDocLanguage() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testGetMainTitleForDocWithNoTitleInDocLanguage()
+    {
+        $view = $this->getView();
 
         $doc = $this->createTestDocument();
 
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setLanguage('deu');
         $title->setValue('Deutscher Titel');
         $doc->addTitleMain($title);
 
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setLanguage('eng');
         $title->setValue('Englischer Titel');
         $doc->addTitleMain($title);
@@ -183,17 +225,18 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertEquals($docAdapter->getMainTitle(), 'Deutscher Titel');
     }
 
-    public function testGetDocTitle() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testGetDocTitle()
+    {
+        $view = $this->getView();
 
         $doc = $this->createTestDocument();
 
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setLanguage('deu');
         $title->setValue('Deutscher Titel');
         $doc->addTitleMain($title);
 
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setLanguage('eng');
         $title->setValue('Englischer Titel');
         $doc->addTitleMain($title);
@@ -205,14 +248,15 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertEquals($docAdapter->getDocTitle(), 'Deutscher Titel');
     }
 
-    public function testGetAuthors() {
+    public function testGetAuthors()
+    {
         $doc = $this->createTestDocument();
 
-        $person = new Opus_Person();
+        $person = Person::new();
         $person->setLastName("Doe");
         $doc->addPersonAuthor($person);
 
-        $person = new Opus_Person();
+        $person = Person::new();
         $person->setLastName("Smith");
         $person->setFirstName("Jane");
         $doc->addPersonAuthor($person);
@@ -225,8 +269,9 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertEquals('Smith, Jane', $authors[1]['name']);
     }
 
-    public function testGetAuthorsForDocumentWithoutAuthors() {
-        $view = Zend_Registry::get('Opus_View');
+    public function testGetAuthorsForDocumentWithoutAuthors()
+    {
+        $view = $this->getView();
 
         $doc = $this->createTestDocument();
 
@@ -238,7 +283,8 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertEmpty($authors);
     }
 
-    public function testGetPublishedDate() {
+    public function testGetPublishedDate()
+    {
         $this->useEnglish();
         $dates = new Application_Controller_Action_Helper_Dates();
 
@@ -264,7 +310,8 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertEquals('2012', $adapter->getPublishedDate(false));
     }
 
-    public function testGetCompletedDate() {
+    public function testGetCompletedDate()
+    {
         $this->useGerman();
         $dates = new Application_Controller_Action_Helper_Dates();
 
@@ -290,15 +337,15 @@ class Application_Util_DocumentAdapterTest extends ControllerTestCase {
         $this->assertEquals('2012', $adapter->getCompletedDate(false));
     }
 
-    public function testGetYear() {
+    public function testGetYear()
+    {
         $this->markTestIncomplete('not working yet');
 
-        $doc = new Opus_Document(1);
+        $doc = Document::get(1);
 
         $adapter = new Application_Util_DocumentAdapter(null, $doc);
 
         $this->assertNotEquals('0000', $adapter->getYear());
         $this->assertEquals(1999, $adapter->getYear());
     }
-
 }

@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,23 +25,27 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Application_Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 class Application_Form_Element_ComboboxTest extends FormElementTestCase
 {
+    /** @var string */
+    protected $additionalResources = 'translation';
 
-    public function setUp()
+    public function setUp(): void
     {
-        $this->_formElementClass = 'Application_Form_Element_Combobox';
-        $this->_expectedDecoratorCount = 6;
-        $this->_expectedDecorators = array(
-            'ViewHelper', 'Errors', 'Description', 'ElementHtmlTag', 'LabelNotEmpty', 'dataWrapper'
-        );
+        $this->formElementClass       = 'Application_Form_Element_Combobox';
+        $this->expectedDecoratorCount = 6;
+        $this->expectedDecorators     = [
+            'ViewHelper',
+            'Errors',
+            'Description',
+            'ElementHtmlTag',
+            'LabelNotEmpty',
+            'dataWrapper',
+        ];
         parent::setUp();
     }
 
@@ -48,33 +53,33 @@ class Application_Form_Element_ComboboxTest extends FormElementTestCase
     {
         $element = $this->getElement();
 
-        $values = array('Berlin', 'München', 'Hamburg');
+        $values = ['Berlin', 'München', 'Hamburg'];
 
         $element->setAutocompleteValues($values);
 
         $options = $element->getMultiOptions();
 
-        $this->assertEquals(array('Berlin' => 'Berlin', 'München' => 'München', 'Hamburg' => 'Hamburg'), $options);
+        $this->assertEquals(['Berlin' => 'Berlin', 'München' => 'München', 'Hamburg' => 'Hamburg'], $options);
     }
 
     public function testSetAutocompleteValuesWithNullValueInArray()
     {
         $element = $this->getElement();
 
-        $values = array('Berlin', 'München', null, 'Hamburg');
+        $values = ['Berlin', 'München', null, 'Hamburg'];
 
         $element->setAutocompleteValues($values);
 
         $options = $element->getMultiOptions();
 
-        $this->assertEquals(array('Berlin' => 'Berlin', 'München' => 'München', 'Hamburg' => 'Hamburg'), $options);
+        $this->assertEquals(['Berlin' => 'Berlin', 'München' => 'München', 'Hamburg' => 'Hamburg'], $options);
     }
 
     public function testIsValid()
     {
         $element = $this->getElement();
 
-        $values = array('Berlin', 'München', 'Hamburg');
+        $values = ['Berlin', 'München', 'Hamburg'];
 
         $element->setAutocompleteValues($values);
 
@@ -93,7 +98,7 @@ class Application_Form_Element_ComboboxTest extends FormElementTestCase
     {
         $element = $this->getElement();
 
-        $values = array('Berlin', 'München', 'Hamburg');
+        $values = ['Berlin', 'München', 'Hamburg'];
 
         $element->setAutocompleteValues($values);
 
@@ -108,7 +113,7 @@ class Application_Form_Element_ComboboxTest extends FormElementTestCase
 
         $element = $this->getElement();
 
-        $values = array('2010/05/23', '2012/08/03', '2017/04/29');
+        $values = ['2010/05/23', '2012/08/03', '2017/04/29'];
 
         $element->setAutocompleteValues($values);
         $element->addValidator(new Application_Form_Validate_Date());
@@ -121,7 +126,7 @@ class Application_Form_Element_ComboboxTest extends FormElementTestCase
 
         $this->useGerman();
 
-        $element->setValidators(array(new Application_Form_Validate_Date()));
+        $element->setValidators([new Application_Form_Validate_Date()]);
 
         $this->assertTrue($element->isValid('04.11.2015'));
         $this->assertFalse($element->isValid('2015/04/11'));
@@ -135,7 +140,6 @@ class Application_Form_Element_ComboboxTest extends FormElementTestCase
 
         $options = $element->getMultiOptions();
 
-        $this->assertEquals(array('Berlin' => 'Berlin'), $options);
+        $this->assertEquals(['Berlin' => 'Berlin'], $options);
     }
-
 }

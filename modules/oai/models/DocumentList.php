@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -25,16 +26,15 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category   Application
- * @package    Module_Oai
- * @author     Thoralf Klein <thoralf.klein@zib.de>
  * @copyright  Copyright (c) 2012, OPUS 4 development team
  * @license    http://www.gnu.org/licenses/gpl.html General Public License
- * @version    $Id$
  */
 
-class Oai_Model_DocumentList {
+use Opus\Common\CollectionRole;
+use Opus\Common\Repository;
 
+class Oai_Model_DocumentList
+{
     /**
      * Holds information about which document state aka server_state
      * are delivered out
@@ -43,7 +43,7 @@ class Oai_Model_DocumentList {
      *
      * TODO should be private
      */
-    public $deliveringDocumentStates = null;
+    public $deliveringDocumentStates;
 
     /**
      * Holds restriction types for xMetaDiss
@@ -52,87 +52,90 @@ class Oai_Model_DocumentList {
      *
      * TODO should be private
      */
-    public $xMetaDissRestriction = null;
+    public $xMetaDissRestriction;
 
     /**
      * Retrieve all document ids for a valid oai request.
      *
-     * @param array &$oaiRequest
      * @return array
      *
-     * TODO function contains metadataPrefix specifische criteria for generating document list (refactor!)
+     * TODO function contains metadataPrefix specific criteria for generating document list (refactor!)
+     * TODO simplify function
      */
-    public function query(array $oaiRequest) {
+    public function query(array $oaiRequest)
+    {
         $today = date('Y-m-d', time());
 
-        $finder = new Opus_DocumentFinder();
+        $finder = Repository::getInstance()->getDocumentFinder();
 
         // add server state restrictions
-        $finder->setServerStateInList($this->deliveringDocumentStates);
+        $finder->setServerState($this->deliveringDocumentStates);
 
-        $metadataPrefix = $oaiRequest['metadataPrefix'];
-        if ('xMetaDissPlus' === $metadataPrefix 
-            || 'xMetaDiss' === $metadataPrefix) {
-            $finder->setFilesVisibleInOai();
+        $metadataPrefix = strtolower($oaiRequest['metadataPrefix']);
+
+        if (
+            strcmp('xmetadissplus', $metadataPrefix) === 0
+            || 'xmetadiss' === $metadataPrefix
+        ) {
+            $finder->setHasFilesVisibleInOai();
             $finder->setNotEmbargoedOn($today);
         }
-        if ('xMetaDiss' === $metadataPrefix) {
-            $finder->setTypeInList($this->xMetaDissRestriction);
+        if ('xmetadiss' === $metadataPrefix) {
+            $finder->setDocumentType($this->xMetaDissRestriction);
             $finder->setNotEmbargoedOn($today);
         }
         if ('epicur' === $metadataPrefix) {
-            $finder->setIdentifierTypeExists('urn');
+            $finder->setIdentifierExists('urn');
         }
 
         if (array_key_exists('set', $oaiRequest)) {
             $setarray = explode(':', $oaiRequest['set']);
-            if (!isset($setarray[0])) {
-                return array();
+            if (! isset($setarray[0])) {
+                return [];
             }
 
-            if ($setarray[0] == 'doc-type') {
-                if (count($setarray) === 2 and !empty($setarray[1])) {
-                    $finder->setType($setarray[1]);
+            if ($setarray[0] === 'doc-type') {
+                if (count($setarray) === 2 && ! empty($setarray[1])) {
+                    $finder->setDocumentType($setarray[1]);
+                } else {
+                    return [];
                 }
-                else {
-                    return array();
-                }
-            }
-            else if ($setarray[0] == 'bibliography') {
-                if (count($setarray) !== 2 or empty($setarray[1])) {
-                    return array();
+            } elseif ($setarray[0] === 'bibliography') {
+                if (count($setarray) !== 2 || empty($setarray[1])) {
+                    return [];
                 }
                 $setValue = $setarray[1];
 
-                $bibliographyMap = array(
+                // TODO why this complicated mapping?
+                $bibliographyMap = [
                     "true"  => 1,
                     "false" => 0,
-                );
+                ];
                 if (false === isset($setValue, $bibliographyMap[$setValue])) {
-                    return array();
+                    return [];
                 }
 
                 $finder->setBelongsToBibliography($bibliographyMap[$setValue]);
-            }
-            else {
-                if (count($setarray) < 1 or count($setarray) > 2) {
+            } else {
+                if (count($setarray) < 1 || count($setarray) > 2) {
                     $msg = "Invalid SetSpec: Must be in format 'set:subset'.";
                     throw new Oai_Model_Exception($msg);
                 }
 
                 // Trying to locate collection role and filter documents.
-                $role = Opus_CollectionRole::fetchByOaiName($setarray[0]);
-                if (is_null($role)) {
+                $role = CollectionRole::fetchByOaiName($setarray[0]);
+                if ($role === null) {
                     $msg = "Invalid SetSpec: Top level set does not exist.";
                     throw new Oai_Model_Exception($msg);
                 }
                 $finder->setCollectionRoleId($role->getId());
 
                 // Trying to locate given collection and filter documents.
-                if (count($setarray) == 2) {
-                    $subsetName = $setarray[1];
+                if (count($setarray) === 2) {
+                    $subsetName   = $setarray[1];
                     $foundSubsets = array_filter(
-                        $role->getOaiSetNames(), function ($s) use ($subsetName) {
+                        $role->getOaiSetNames(),
+                        function ($s) use ($subsetName) {
                                 return $s['oai_subset'] === $subsetName;
                         }
                     );
@@ -143,15 +146,14 @@ class Oai_Model_DocumentList {
                         });
 
                         if (count($emptySubsets) === 1) {
-                            return array();
-                        }
-                        else {
+                            return [];
+                        } else {
                             $msg = "Invalid SetSpec: Subset does not exist.";
                             throw new Oai_Model_Exception($msg);
                         }
                     }
 
-                    foreach ($foundSubsets AS $subset) {
+                    foreach ($foundSubsets as $subset) {
                         if ($subset['oai_subset'] !== $subsetName) {
                             $msg = "Invalid SetSpec: Internal error.";
                             throw new Oai_Model_Exception($msg);
@@ -160,10 +162,9 @@ class Oai_Model_DocumentList {
                     }
                 }
             }
-
         }
 
-        if (array_key_exists('from', $oaiRequest) and !empty($oaiRequest['from'])) {
+        if (array_key_exists('from', $oaiRequest) && ! empty($oaiRequest['from'])) {
             $from = DateTime::createFromFormat('Y-m-d', $oaiRequest['from']);
             $finder->setServerDateModifiedAfter($from->format('Y-m-d'));
         }
@@ -174,6 +175,6 @@ class Oai_Model_DocumentList {
             $finder->setServerDateModifiedBefore($until->format('Y-m-d'));
         }
 
-        return $finder->ids();
+        return $finder->getIds();
     }
 }

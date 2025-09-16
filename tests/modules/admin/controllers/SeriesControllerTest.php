@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,33 +25,42 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @author      Michael Lang <lang@zib.de>
- * @author      Maximilian Salomon <salomon@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
+use Opus\Common\Model\NotFoundException;
+use Opus\Common\Series;
+use Opus\Common\SeriesInterface;
+
 /**
- * Class Admin_SeriesControllerTest.
- *
  * @covers Admin_SeriesController
  */
-class Admin_SeriesControllerTest extends CrudControllerTestCase {
+class Admin_SeriesControllerTest extends CrudControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'all';
 
-    public function setUp() {
+    public function setUp(): void
+    {
         $this->setController('series');
         parent::setUp();
     }
 
-    function getModels() {
-        return Opus_Series::getAllSortedBySortKey();
+    /**
+     * @return SeriesInterface[]
+     */
+    public function getModels()
+    {
+        return Series::getAllSortedBySortKey();
     }
 
-    function createNewModel() {
-        $series = new Opus_Series();
+    /**
+     * @return int
+     */
+    public function createNewModel()
+    {
+        $series = Series::new();
 
         $series->setTitle('Testseries');
         $series->setInfobox('Infotext');
@@ -60,11 +70,18 @@ class Admin_SeriesControllerTest extends CrudControllerTestCase {
         return $series->store();
     }
 
-    function getModel($identifier) {
-        return new Opus_Series($identifier);
+    /**
+     * @param int $identifier
+     * @return SeriesInterface
+     * @throws NotFoundException
+     */
+    public function getModel($identifier)
+    {
+        return Series::get($identifier);
     }
 
-    public function testShowAction() {
+    public function testShowAction()
+    {
         $this->createsModels = true;
 
         $seriesId = $this->createNewModel();
@@ -81,25 +98,27 @@ class Admin_SeriesControllerTest extends CrudControllerTestCase {
         $this->assertQueryContentContains('div#SortOrder', '10');
     }
 
-    public function testShowNewAction() {
+    public function testShowNewAction()
+    {
         $this->dispatch('/admin/series/new');
 
-        $sortOrder = Opus_Series::getMaxSortKey() + 1;
+        $sortOrder = Series::getMaxSortKey() + 1;
 
         $this->assertXPath('//input[@type = "checkbox" and @checked = "checked"]');
-        $this->assertXPath('//input[@name = "SortOrder" and @value = "' . $sortOrder .  '"]');
+        $this->assertXPath('//input[@name = "SortOrder" and @value = "' . $sortOrder . '"]');
     }
 
-    public function testNewActionSave() {
+    public function testNewActionSave()
+    {
         $this->createsModels = true;
 
-        $post = array(
-            'Title' => 'NewSeriesTitle',
-            'Infobox' => 'NewSeriesInfobox',
-            'Visible' => '0',
+        $post = [
+            'Title'     => 'NewSeriesTitle',
+            'Infobox'   => 'NewSeriesInfobox',
+            'Visible'   => '0',
             'SortOrder' => '33',
-            'Save' => 'Speichern'
-        );
+            'Save'      => 'Speichern',
+        ];
 
         $this->getRequest()->setMethod('POST')->setPost($post);
 
@@ -123,18 +142,19 @@ class Admin_SeriesControllerTest extends CrudControllerTestCase {
         $this->assertQueryContentContains('div#SortOrder', '33');
     }
 
-    public function testNewActionCancel() {
+    public function testNewActionCancel()
+    {
         $this->createsModels = true;
 
         $modelCount = count($this->getModels());
 
-        $post = array(
-            'Title' => 'NewSeries',
-            'Infobox' => 'NewSeriesInfobox',
-            'Visible' => '1',
+        $post = [
+            'Title'     => 'NewSeries',
+            'Infobox'   => 'NewSeriesInfobox',
+            'Visible'   => '1',
             'SortOrder' => '20',
-            'Cancel' => 'Abbrechen'
-        );
+            'Cancel'    => 'Abbrechen',
+        ];
 
         $this->getRequest()->setMethod('POST')->setPost($post);
 
@@ -142,11 +162,15 @@ class Admin_SeriesControllerTest extends CrudControllerTestCase {
 
         $this->assertRedirectTo('/admin/series', 'Should redirect to index action.');
 
-        $this->assertEquals($modelCount, count(Opus_Series::getAllSortedBySortKey()),
-            'Es sollte keine neue Series geben.');
+        $this->assertEquals(
+            $modelCount,
+            count(Series::getAllSortedBySortKey()),
+            'Es sollte keine neue Series geben.'
+        );
     }
 
-    public function testEditActionShowForm() {
+    public function testEditActionShowForm()
+    {
         $this->dispatch('/admin/series/edit/id/4');
         $this->assertResponseCode(200);
         $this->assertController('series');
@@ -158,25 +182,26 @@ class Admin_SeriesControllerTest extends CrudControllerTestCase {
         $this->assertQueryCount('input#Id', 1);
     }
 
-    public function testEditActionSave() {
+    public function testEditActionSave()
+    {
         $this->createsModels = true;
 
         $seriesId = $this->createNewModel();
 
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'Id' => $seriesId,
-            'Title' => 'ModifiedTitle',
-            'Infobox' => 'ModifiedInfo',
-            'Visible' => '0',
+        $this->getRequest()->setMethod('POST')->setPost([
+            'Id'        => $seriesId,
+            'Title'     => 'ModifiedTitle',
+            'Infobox'   => 'ModifiedInfo',
+            'Visible'   => '0',
             'SortOrder' => '12',
-            'Save' => 'Abspeichern'
-        ));
+            'Save'      => 'Abspeichern',
+        ]);
 
         $this->dispatch('/admin/series/edit');
         $this->assertRedirectTo('/admin/series/show/id/' . $seriesId);
         $this->verifyFlashMessage('controller_crud_save_success', self::MESSAGE_LEVEL_NOTICE);
 
-        $series = new Opus_Series($seriesId);
+        $series = Series::get($seriesId);
 
         $this->assertEquals('ModifiedTitle', $series->getTitle());
         $this->assertEquals('ModifiedInfo', $series->getInfobox());
@@ -184,29 +209,31 @@ class Admin_SeriesControllerTest extends CrudControllerTestCase {
         $this->assertEquals(12, $series->getSortOrder());
     }
 
-    public function testEditActionCancel() {
+    public function testEditActionCancel()
+    {
         $this->createsModels = true;
 
         $seriesId = $this->createNewModel();
 
-        $this->getRequest()->setMethod('POST')->setPost(array(
-            'Id' => $seriesId,
-            'Title' => 'ModifiedTitle',
-            'Infobox' => 'ModifiedInfo',
-            'Visible' => '0',
+        $this->getRequest()->setMethod('POST')->setPost([
+            'Id'        => $seriesId,
+            'Title'     => 'ModifiedTitle',
+            'Infobox'   => 'ModifiedInfo',
+            'Visible'   => '0',
             'SortOrder' => '12',
-            'Cancel' => 'Cancel'
-        ));
+            'Cancel'    => 'Cancel',
+        ]);
 
         $this->dispatch('/admin/series/edit');
         $this->assertRedirectTo('/admin/series');
 
-        $series = new Opus_Series($seriesId);
+        $series = Series::get($seriesId);
 
         $this->assertEquals('Testseries', $series->getTitle());
     }
 
-    public function testDeleteActionShowForm() {
+    public function testDeleteActionShowForm()
+    {
         $this->useEnglish();
 
         $this->dispatch('/admin/series/delete/id/4');
@@ -217,42 +244,43 @@ class Admin_SeriesControllerTest extends CrudControllerTestCase {
         $this->assertQuery('input#ConfirmNo');
     }
 
-    public function testHideDocumentsLinkForSeriesWithoutDocuments() {
+    public function testHideDocumentsLinkForSeriesWithoutDocuments()
+    {
         $this->dispatch('/admin/series');
 
-        $allSeries = Opus_Series::getAll();
+        $allSeries = Series::getAll();
 
         foreach ($allSeries as $series) {
             $seriesId = $series->getId();
             if ($series->getNumOfAssociatedDocuments() > 0) {
                 $this->assertQuery("//a[@href='/admin/documents/index/seriesid/$seriesId']");
-            }
-            else {
+            } else {
                 $this->assertNotQuery("//a[@href='/admin/documents/index/seriesid/$seriesId']");
             }
         }
     }
 
-    public function testSeriesVisibilityIsDisplayedCorrectly() {
+    public function testSeriesVisibilityIsDisplayedCorrectly()
+    {
         $this->dispatch('/admin/series');
 
-        $allSeries = Opus_Series::getAll();
+        $allSeries = Series::getAll();
 
         foreach ($allSeries as $series) {
             $seriesId = $series->getId();
             if ($series->getVisible()) {
                 $this->assertXPath('//a[@href="/admin/series/show/id/' . $seriesId . '" and @class="displayname"]');
-            }
-            else {
+            } else {
                 $this->assertXPath('//a[@href="/admin/series/show/id/' . $seriesId . '" and @class="displayname invisible"]');
             }
         }
     }
 
-    public function testSeriesIdIsShownInTable() {
+    public function testSeriesIdIsShownInTable()
+    {
         $this->dispatch('/admin/series');
 
-        $allSeries = Opus_Series::getAll();
+        $allSeries = Series::getAll();
 
         foreach ($allSeries as $series) {
             $seriesId = $series->getId();
@@ -260,11 +288,21 @@ class Admin_SeriesControllerTest extends CrudControllerTestCase {
         }
     }
 
-    public function testHiddenIdElementNotWrappedInLiTag() {
+    public function testHiddenIdElementNotWrappedInLiTag()
+    {
         $this->dispatch('/admin/series/show/id/1');
 
         $this->assertNotQuery('//li/input[@name="Id"]');
         $this->assertQuery('//div[@class="wrapper"]/input[@name="Id"]');
     }
 
+    public function testModelClassIsTranslated()
+    {
+        $this->useGerman();
+
+        $this->dispatch('/admin/series');
+
+        $this->assertNotXpathContentContains('//thead/tr/th', Series::class);
+        $this->assertXpathContentContains('//thead/tr/th', 'Schriftenreihe');
+    }
 }

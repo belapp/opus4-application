@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,39 +25,56 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
- *
+ */
+
+/**
  * TODO statt der Redirect Prüfung (für Access) eine Funktion definieren (assertNoAccess)
  */
-abstract class AccessModuleAdminOneResourceOnlyTest extends ControllerTestCase {
+abstract class AccessModuleAdminOneResourceOnlyTest extends ControllerTestCase
+{
+    /** @var bool */
+    protected $configModifiable = true;
 
-    private $acls = array(
-        'module_admin' => false,
+    /** @var string[] */
+    protected $additionalResources = ['database', 'view', 'mainMenu', 'navigation', 'translation'];
+
+    /** @var array */
+    private $acls = [
+        'module_admin'     => false,
         'indexmaintenance' => false,
-        'job' => false
-    );
+        'job'              => false,
+    ];
 
-    public function setUpTests($username, $password, $acls = null) {
+    /**
+     * @param string     $username
+     * @param string     $password
+     * @param null|array $acls
+     */
+    public function setUpTests($username, $password, $acls = null)
+    {
         $this->enableSecurity();
         $this->acls = $acls;
         $this->loginUser($username, $password);
     }
 
-    public function tearDown() {
+    public function tearDown(): void
+    {
         $this->logoutUser();
         $this->restoreSecuritySetting();
         parent::tearDown();
     }
 
-    private function assertElement($xpath, $present = true) {
+    /**
+     * @param string $xpath
+     * @param bool   $present
+     */
+    private function assertElement($xpath, $present = true)
+    {
         if ($present) {
             $this->assertQuery($xpath);
-        }
-        else {
+        } else {
             $this->assertNotQuery($xpath);
         }
     }
@@ -64,7 +82,8 @@ abstract class AccessModuleAdminOneResourceOnlyTest extends ControllerTestCase {
     /**
      * Überprüft, ob nur die erlaubten Einträge im Admin Menu angezeigt werden.
      */
-    public function testAdminMenuFiltering() {
+    public function testAdminMenuFiltering()
+    {
         $this->dispatch('/admin');
         $this->assertElement('//a[@href="/admin/licence"]', false);
         $this->assertElement('//a[@href="/admin/documents"]', false);
@@ -81,7 +100,8 @@ abstract class AccessModuleAdminOneResourceOnlyTest extends ControllerTestCase {
     /**
      * Überprüft, ob auf die Seite zur Verwaltung von Lizenzen zugegriffen werden kann.
      */
-    public function testAccessLicenceController() {
+    public function testAccessLicenceController()
+    {
         $this->dispatch('/admin/licence');
         $this->assertRedirectTo(
             '/auth/index/rmodule/admin/rcontroller/licence/raction/index',
@@ -92,7 +112,8 @@ abstract class AccessModuleAdminOneResourceOnlyTest extends ControllerTestCase {
     /**
      * Überprüft, ob auf die Seite zur Verwaltung von Dokumenten zugegriffen werden kann.
      */
-    public function testAccessDocumentsController() {
+    public function testAccessDocumentsController()
+    {
         $this->dispatch('/admin/documents');
         $this->assertRedirectTo(
             '/auth/index/rmodule/admin/rcontroller/documents/raction/index',
@@ -103,7 +124,8 @@ abstract class AccessModuleAdminOneResourceOnlyTest extends ControllerTestCase {
     /**
      * Überprüfe, dass keine Zugriff auf Module Review
      */
-    public function testNoAccessReviewModule() {
+    public function testNoAccessReviewModule()
+    {
         $this->dispatch('/review');
         $this->assertRedirectTo(
             '/auth/index/rmodule/review/rcontroller/index/raction/index',
@@ -114,23 +136,26 @@ abstract class AccessModuleAdminOneResourceOnlyTest extends ControllerTestCase {
     /**
      * Überprüft Zugriff auf die Einträge in der Rubrik "Setup" im Admin Untermenü
      */
-    public function testAccessSetupMenu() {
+    public function testAccessSetupMenu()
+    {
         $this->dispatch('/admin/setup');
         $this->assertElement('//a[@href="/admin/enrichmentkey"]', false);
-        $this->assertElement('//a[@href="/setup/help-page"]', false);
-        $this->assertElement('//a[@href="/setup/static-page"]', false);
+        $this->assertElement('//a[@href="/setup/helppage"]', false);
+        $this->assertElement('//a[@href="/setup/translation"]', false);
         $this->assertElement('//a[@href="/setup/language"]', false);
     }
 
     /**
      * Prüft, ob fuer Nutzer mit vollem Zugriff auf Admin Modul der Edit Link in der Frontdoor angezeigt wird.
      */
-    public function testActionBoxInFrontdoorPresent() {
+    public function testActionBoxInFrontdoorPresent()
+    {
         $this->dispatch('/frontdoor/index/index/docId/92');
         $this->assertElement('//div[@id="actionboxContainer"]', false);
     }
 
-    public function testSubMenuInfo() {
+    public function testSubMenuInfo()
+    {
         $this->dispatch('/admin/index/info/menu');
         $this->assertElement('//a[@href="/admin/index/info"]', false);
         $this->assertElement('//a[@href="/admin/oailink"]', true);
@@ -139,14 +164,14 @@ abstract class AccessModuleAdminOneResourceOnlyTest extends ControllerTestCase {
         $this->assertElement('//a[@href="/admin/job"]', $this->acls['job']);
     }
 
-    public function testIndexmaintenance() {
+    public function testIndexmaintenance()
+    {
         $this->useEnglish();
         $this->dispatch('/admin/indexmaintenance');
         if ($this->acls['indexmaintenance']) {
             $this->assertQueryContentContains('//h1', 'Solr Index Maintenance');
             $this->assertQueryContentContains('//div', 'This feature is currently disabled.');
-        }
-        else {
+        } else {
             $this->assertRedirectTo(
                 '/auth/index/rmodule/admin/rcontroller/indexmaintenance/raction/index',
                 'assert redirect from  to auth failed'
@@ -154,19 +179,18 @@ abstract class AccessModuleAdminOneResourceOnlyTest extends ControllerTestCase {
         }
     }
 
-    public function testJob() {
+    public function testJob()
+    {
         $this->useEnglish();
         $this->dispatch('/admin/job');
         if ($this->acls['job']) {
             $this->assertQueryContentContains('//legend', 'Job Processing');
             $this->assertQueryContentContains('//div', 'Asynchronous Job Processing is disabled');
-        }
-        else {
+        } else {
             $this->assertRedirectTo(
                 '/auth/index/rmodule/admin/rcontroller/job/raction/index',
                 'assert redirect from /admin/job to auth failed'
             );
         }
     }
-
 }

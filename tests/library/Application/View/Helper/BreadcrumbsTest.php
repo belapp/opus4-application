@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,29 +25,29 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     View_Helper
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-/**
- * Class BreadcrumbsTest.
- */
-class Application_View_Helper_BreadcrumbsTest extends ControllerTestCase {
+class Application_View_Helper_BreadcrumbsTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'mainMenu', 'navigation', 'translation'];
 
-    private $page = null;
+    /** @var Zend_Navigation_Page */
+    private $page;
 
-    private $breadcrumbs = null;
+    /** @var Application_View_Helper_Breadcrumbs */
+    private $breadcrumbs;
 
-    private $view = null;
+    /** @var Zend_View */
+    private $view;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
 
-        $this->view = Zend_Registry::get('Opus_View');
+        $this->view = $this->getView();
 
         $this->breadcrumbs = $this->view->breadcrumbs();
 
@@ -54,7 +55,8 @@ class Application_View_Helper_BreadcrumbsTest extends ControllerTestCase {
         $this->page = $navigation->findOneByLabel('admin_title_documents');
     }
 
-    public function testHelpLinkPresent() {
+    public function testHelpLinkPresent()
+    {
         $this->page->helpUrl = 'http://opus4.kobv.de';
 
         $this->dispatch('/admin/documents');
@@ -62,7 +64,8 @@ class Application_View_Helper_BreadcrumbsTest extends ControllerTestCase {
         $this->assertQuery('//a[@class="admin-help"]');
     }
 
-    public function testHelpLinkNotPresent() {
+    public function testHelpLinkNotPresent()
+    {
         $this->page->helpUrl = null;
 
         $this->dispatch('/admin/documents');
@@ -70,34 +73,45 @@ class Application_View_Helper_BreadcrumbsTest extends ControllerTestCase {
         $this->assertNotQuery('//a[@class="admin-help"]');
     }
 
-    public function testSetReplacement() {
+    public function testSetReplacement()
+    {
         $this->breadcrumbs->setReplacement('Breadcrumbs Text');
 
-        $this->assertEquals('<div class="breadcrumbsContainer"><div class="wrapper">Breadcrumbs Text</div></div>',
-            $this->breadcrumbs->renderStraight());
+        $this->assertEquals(
+            '<div class="breadcrumbsContainer"><div class="wrapper">Breadcrumbs Text</div></div>',
+            $this->breadcrumbs->renderStraight()
+        );
     }
 
-    public function testRenderStraight() {
+    public function testRenderStraight()
+    {
         $this->dispatch('/admin');
-        $this->assertEquals('<div class="breadcrumbsContainer"><div class="wrapper">Administration</div></div>',
-            $this->breadcrumbs->renderStraight());
+        $this->assertEquals(
+            '<div class="breadcrumbsContainer"><div class="wrapper">Administration</div></div>',
+            $this->breadcrumbs->renderStraight()
+        );
     }
 
-    public function testSetSuffix() {
+    public function testSetSuffix()
+    {
         $this->dispatch('/admin');
         $this->breadcrumbs->setSuffix('(Extra Stuff)');
-        $this->assertEquals('<div class="breadcrumbsContainer">'
+        $this->assertEquals(
+            '<div class="breadcrumbsContainer">'
             . '<div class="wrapper">Administration &gt; (Extra Stuff)</div></div>',
-            $this->breadcrumbs->renderStraight());
+            $this->breadcrumbs->renderStraight()
+        );
     }
 
-    public function testSetSuffixWithoutSeparator() {
+    public function testSetSuffixWithoutSeparator()
+    {
         $this->dispatch('/admin');
         $this->breadcrumbs->setSuffix(' (Extra Stuff)');
         $this->breadcrumbs->setSuffixSeparatorDisabled(true);
-        $this->assertEquals('<div class="breadcrumbsContainer">'
+        $this->assertEquals(
+            '<div class="breadcrumbsContainer">'
             . '<div class="wrapper">Administration (Extra Stuff)</div></div>',
-            $this->breadcrumbs->renderStraight());
+            $this->breadcrumbs->renderStraight()
+        );
     }
-
 }

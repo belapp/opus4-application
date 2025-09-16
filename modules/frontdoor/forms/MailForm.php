@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,26 +25,20 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Frontdoor
- * @author      Wolfgang Filter <wolfgang.filter@ub.uni-stuttgart.de>
- * @author      Simone Finkbeiner <simone.finkbeiner@ub.uni-stuttgart.de>
  * @copyright   Copyright (c) 2009, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * class to built the mail mask for document recommendation via e-mail
  */
-class Frontdoor_Form_MailForm extends Zend_Form {
-
+class Frontdoor_Form_MailForm extends Zend_Form
+{
     /**
      * Build easy mail form
-     *
-     * @return void
      */
-    public function init() {
+    public function init()
+    {
         // Create and configure query field elements:
         $recipient = new Zend_Form_Element_Text('recipient');
         $recipient->setRequired(false);
@@ -65,12 +60,12 @@ class Frontdoor_Form_MailForm extends Zend_Form {
         $message->setRequired(false);
         $message->setLabel('frontdoor_messagetext');
 
-        $title = new Zend_Form_Element_Hidden('title');
+        $title   = new Zend_Form_Element_Hidden('title');
         $htmlTag = $title->getDecorator('htmlTag');
         $htmlTag->setOption('tag', 'div');
         $title->removeDecorator('label');
 
-        $docId = new Zend_Form_Element_Hidden('doc_id');
+        $docId   = new Zend_Form_Element_Hidden('doc_id');
         $htmlTag = $docId->getDecorator('htmlTag');
         $htmlTag->setOption('tag', 'div');
         $docId->removeDecorator('label');
@@ -85,8 +80,7 @@ class Frontdoor_Form_MailForm extends Zend_Form {
 
         // Add elements to form:
         $this->addElements(
-            array($recipient, $recipientMail, $sender, $senderMail, $message, $title, $docId, $docType, $submit)
+            [$recipient, $recipientMail, $sender, $senderMail, $message, $title, $docId, $docType, $submit]
         );
     }
-
 }

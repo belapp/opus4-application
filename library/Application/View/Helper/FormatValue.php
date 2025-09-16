@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,13 +25,15 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Date;
+use Opus\Common\DnbInstitute;
+use Opus\Common\LoggingTrait;
+use Opus\Common\Model\FieldInterface;
+use Opus\Common\Model\ModelInterface;
 
 /**
  * View Helper for formatting field values.
@@ -40,124 +43,121 @@
  * TODO Explore options to remove overlap with ShowModel view helper
  *      (ShowModel combines value formatting and layout).
  */
-class Application_View_Helper_FormatValue extends Zend_View_Helper_Abstract {
-
-    /**
-     * Logger for this class.
-     * @var Zend_Log Logger
-     */
-    private $_logger;
+class Application_View_Helper_FormatValue extends Zend_View_Helper_Abstract
+{
+    use LoggingTrait;
 
     /**
      * Controller helper for translations.
+     *
      * @var Application_Controller_Action_Helper_Translation
      */
-    private $_translation;
+    private $translation;
 
     /**
      * Controller helper for handling of dates.
+     *
      * @var Application_Controller_Action_Helper_Dates
      */
-    private $_dates;
+    private $dates;
 
     /**
      * Constructs Application_View_Helper_FormatValue.
      */
-    public function __construct() {
-        $this->_translation =
-                Zend_Controller_Action_HelperBroker::getStaticHelper(
-                    'Translation'
-                );
-
-        $this->_dates =
-                Zend_Controller_Action_HelperBroker::getStaticHelper('Dates');
+    public function __construct()
+    {
+        $this->translation = Zend_Controller_Action_HelperBroker::getStaticHelper('Translation');
+        $this->dates       = Zend_Controller_Action_HelperBroker::getStaticHelper('Dates');
     }
 
     /**
      * Returns instance of the view helper.
-     * @return Application_View_Helper_FormatValue
+     *
+     * @return $this
      */
-    public function formatValue() {
+    public function formatValue()
+    {
         return $this;
     }
 
     /**
-     * Formats value that is instance of Opus_Model_Abstract.
-     * @param Opus_Model_Abstract $field
-     * @param string Name of model for field (default = null)
+     * Formats value that is instance of AbstractModel.
+     *
+     * @param FieldInterface $field
+     * @param string|null    $model
      * @return string Formatted output
      */
-    public function formatModel($field, $model = null) {
-        if ($field instanceof Opus_Date) {
+    public function formatModel($field, $model = null)
+    {
+        if ($field instanceof Date) {
             return $this->formatDate($field);
-        }
-        else {
+        } else {
             $modelClass = $field->getValueModelClass();
 
             $this->getLogger()->debug('Formatting field ' . $field->getName());
 
-            if (!empty($modelClass)) {
+            if (! empty($modelClass)) {
                 switch ($modelClass) {
-                    case 'Opus_Date':
+                    case Date::class:
                         return $this->formatDate($field->getValue());
-                    case 'Opus_DnbInstitute':
+                    case DnbInstitute::class:
                         $value = $field->getValue();
                         if (isset($value[0])) {
                             return $value[0]->getName();
-                        }
-                        else {
+                        } else {
                             // Should never happen (DNB Institute without name),
                             // but in case it does:
                             return 'ERROR: DNB institute without name.';
                         }
+                        break; // should never be reached
                     default:
                         // Should never happen, but in case it does:
                         $this->getLogger()->err(__CLASS__ . ' Trying to format unknown model ' . $modelClass);
                         return 'ERROR: Unknown model class (see log).';
                 }
-            }
-            else {
-                if ($field->isSelection()) {
+            } else {
+                $value = $field->getValue();
+
+                if ($field->getName() === 'Language') {
+                    return $this->view->translateLanguage($value);
+                } elseif ($field->isSelection()) {
                     Application_Form_Element_Language::getLanguageList(); // initializes language list translations
-                    $value = $field->getValue();
-                    $key = $this->_translation->getKeyForValue($model, $field->getName(), $value);
+                    $key = $this->translation->getKeyForValue($model, $field->getName(), $value);
                     return $this->view->translate($key);
-                }
-                else if ($field->isCheckbox()) {
-                    if ($field->getValue()) {
+                } elseif ($field->isCheckbox()) {
+                    if ($value) {
                         $key = 'Field_Value_True';
-                    }
-                    else {
+                    } else {
                         $key = 'Field_Value_False';
                     }
                     return $this->view->translate($key);
-                }
-                else {
-                    return $field->getValue();
+                } else {
+                    return $value;
                 }
             }
         }
     }
 
     /**
-     * Returns Opus_Date values formatted as string.
-     * @param Opus_Date $date
+     * Returns Date values formatted as string.
+     *
+     * @param Date $date
      * @return string Formatted date
      */
-    public function formatDate($date) {
-        if (!($date instanceof Opus_Date)) {
+    public function formatDate($date)
+    {
+        if (! $date instanceof Date) {
             return $date;
-        }
-        else {
-            return $this->_dates->getDateString($date);
+        } else {
+            return $this->dates->getDateString($date);
         }
     }
 
     /**
      * Formats value for output on metadata overview page.
      *
-     * @param Field value
-     * @param string Name of model for field
+     * @param mixed       $value
+     * @param string|null $model
      * @return string Formatted output
      *
      * TODO some values need to be translated (others don't)
@@ -165,30 +165,16 @@ class Application_View_Helper_FormatValue extends Zend_View_Helper_Abstract {
      * TODO can't get list of allowed values from model
      * TODO some things have special methods (Person->getDisplayName())
      */
-    public function format($value, $model = null) {
-        if ($value instanceof Opus_Model_Abstract) {
+    public function format($value, $model = null)
+    {
+        if ($value instanceof ModelInterface) {
             return $this->formatModel($value, $model);
         }
-        if ($value instanceof Opus_Model_Field) {
+        if ($value instanceof FieldInterface) {
             return $this->formatModel($value, $model);
-        }
-        else {
+        } else {
             $this->getLogger()->debug('Formatting ' . $value);
             return $value;
         }
     }
-
-    /**
-     * Returns logger.
-     * @return Zend_Log
-     */
-    private function getLogger() {
-        if (empty($this->logger)) {
-            $this->_logger = Zend_Registry::get('Zend_Log');
-        }
-
-        return $this->_logger;
-    }
-
 }
-

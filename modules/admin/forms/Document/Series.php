@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,57 +25,54 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Model\NotFoundException;
+use Opus\Common\Series;
+use Opus\Model\Dependent\Link\DocumentSeries;
 
 /**
  * Unterformular fuer das Editieren eines Serieneintrags.
  *
  * TODO gibt es gute Lösung die Doc-ID nicht noch einmal im Unterformular zu haben (als Teil der ID)
- *
- * @category    Application
- * @package     Module_Admin
- * @subpackage  Form_Document
  */
-class Admin_Form_Document_Series extends Admin_Form_AbstractModelSubForm {
-
+class Admin_Form_Document_Series extends Admin_Form_AbstractModelSubForm
+{
     /**
      * Name von Formelement für Dokument-ID (Teil des Schlüssels für Link DocumentSeries).
      */
-    const ELEMENT_DOC_ID = 'Id';
+    public const ELEMENT_DOC_ID = 'Id';
 
     /**
      * Name von Formelement für Series-ID.
      */
-    const ELEMENT_SERIES_ID = 'SeriesId';
+    public const ELEMENT_SERIES_ID = 'SeriesId';
 
     /**
      * Name von Formelement für Label/Nummer des Dokuments in Schriftenreihe.
      */
-    const ELEMENT_NUMBER = 'Number';
+    public const ELEMENT_NUMBER = 'Number';
 
     /**
      * Name von Formelement für die Sortierposition in Schriftenreihe.
      */
-    const ELEMENT_SORT_ORDER = 'SortOrder';
+    public const ELEMENT_SORT_ORDER = 'SortOrder';
 
     /**
      * Erzeugt die Formulareelemente.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         // Schluessel fuer Link Objekte ist Dokument-ID + Series-ID
         $this->addElement('Hidden', self::ELEMENT_DOC_ID);
 
         $this->addElement('Series', self::ELEMENT_SERIES_ID);
-        $number = $this->createElement('text', self::ELEMENT_NUMBER, array('required' => true));
-        $number->addValidator(new Application_Form_Validate_SeriesNumberAvailable());
+        $number = $this->createElement('text', self::ELEMENT_NUMBER, ['required' => true]);
+        // $number->addValidator(new Application_Form_Validate_SeriesNumberAvailable());
         $this->addElement($number);
         $this->addElement('SortOrder', self::ELEMENT_SORT_ORDER);
     }
@@ -82,9 +80,10 @@ class Admin_Form_Document_Series extends Admin_Form_AbstractModelSubForm {
     /**
      * Initialisiert das Formular mit den Werten im Modell.
      *
-     * @param Opus_Model_Dependent_Link_DocumentSeries $seriesLink
+     * @param DocumentSeries $seriesLink
      */
-    public function populateFromModel($seriesLink) {
+    public function populateFromModel($seriesLink)
+    {
         $linkId = $seriesLink->getId();
         $this->getElement(self::ELEMENT_DOC_ID)->setValue($linkId[0]);
         $series = $seriesLink->getModel();
@@ -95,11 +94,13 @@ class Admin_Form_Document_Series extends Admin_Form_AbstractModelSubForm {
 
     /**
      * Aktualisiert das Modell mit den Werten im Formular.
+     *
      * @param type $seriesLink
      */
-    public function updateModel($seriesLink) {
+    public function updateModel($seriesLink)
+    {
         $seriesId = $this->getElementValue(self::ELEMENT_SERIES_ID);
-        $series = new Opus_Series($seriesId);
+        $series   = Series::get($seriesId);
         $seriesLink->setModel($series);
         $seriesLink->setNumber($this->getElementValue(self::ELEMENT_NUMBER));
         $seriesLink->setDocSortOrder($this->getElementValue(self::ELEMENT_SORT_ORDER));
@@ -107,29 +108,28 @@ class Admin_Form_Document_Series extends Admin_Form_AbstractModelSubForm {
 
     /**
      * Liefert das angezeigte Modell oder ein neues für hinzugefügte Verknüpfungen.
-     * @return \Opus_Model_Dependent_Link_DocumentSeries
+     *
+     * @return DocumentSeries
      */
-    public function getModel() {
+    public function getModel()
+    {
         $docId = $this->getElement(self::ELEMENT_DOC_ID)->getValue();
 
         if (empty($docId)) {
             $linkId = null;
-        }
-        else {
+        } else {
             $seriesId = $this->getElement(self::ELEMENT_SERIES_ID)->getValue();
-            $linkId = array($docId, $seriesId);
+            $linkId   = [$docId, $seriesId];
         }
 
         try {
-            $seriesLink = new Opus_Model_Dependent_Link_DocumentSeries($linkId);
-        }
-        catch (Opus_Model_NotFoundException $omnfe) {
-            $seriesLink = new Opus_Model_Dependent_Link_DocumentSeries();
+            $seriesLink = new DocumentSeries($linkId);
+        } catch (NotFoundException $omnfe) {
+            $seriesLink = new DocumentSeries();
         }
 
         $this->updateModel($seriesLink);
 
         return $seriesLink;
     }
-
 }

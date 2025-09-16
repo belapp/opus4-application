@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,15 +25,14 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2015, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
-class Admin_ConfigController extends Application_Controller_Action {
 
-    public function indexAction() {
+class Admin_ConfigController extends Application_Controller_Action
+{
+    public function indexAction()
+    {
         $form = new Admin_Form_Configuration();
 
         if ($this->getRequest()->isPost()) {
@@ -45,21 +45,20 @@ class Admin_ConfigController extends Application_Controller_Action {
             switch ($result) {
                 case Admin_Form_Configuration::RESULT_SAVE:
                     if ($form->isValid($data)) {
-                        $config = new Zend_Config(array(), true);
+                        $config = new Zend_Config([], true);
                         $form->updateModel($config);
                         Application_Configuration::save($config);
-                    }
-                    else {
+                    } else {
                         break;
                     }
+                    // after saving fall through for same redirect as 'Cancel'
                 case Admin_Form_Configuration::RESULT_CANCEL:
                     $this->_helper->Redirector->redirectTo('config', null, 'index', 'admin');
                     break;
                 default:
                     break;
             }
-        }
-        else {
+        } else {
             $form->populateFromModel($this->getConfig());
         }
 
@@ -67,5 +66,4 @@ class Admin_ConfigController extends Application_Controller_Action {
 
         echo $form;
     }
-
 }

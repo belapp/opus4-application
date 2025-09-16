@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,36 +25,38 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Application_Update
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- *
+ */
+
+use Opus\Common\CollectionRole;
+use Opus\Common\EnrichmentKey;
+
+/**
  * TODO does deleting 'Import' for testing update make sense?
  */
 class Application_Update_AddImportCollectionTest extends ControllerTestCase
 {
+    /** @var string */
+    protected $additionalResources = 'database';
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
         // delete import collections
-        $collectionRole = Opus_CollectionRole::fetchByName('Import');
+        $collectionRole = CollectionRole::fetchByName('Import');
 
-        if (!is_null($collectionRole))
-        {
+        if ($collectionRole !== null) {
             $collectionRole->delete();
         }
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
-        $enrichmentKey = Opus_EnrichmentKey::fetchByName('opus.test.key');
+        $enrichmentKey = EnrichmentKey::fetchByName('opus.test.key');
 
-        if (!is_null($enrichmentKey))
-        {
+        if ($enrichmentKey !== null) {
             $enrichmentKey->delete();
         }
 
@@ -68,13 +71,13 @@ class Application_Update_AddImportCollectionTest extends ControllerTestCase
 
         $keyName = 'opus.test.key';
 
-        $enrichmentKey = Opus_EnrichmentKey::fetchByName($keyName);
+        $enrichmentKey = EnrichmentKey::fetchByName($keyName);
 
         $this->assertNull($enrichmentKey);
 
         $update->addEnrichmentKey($keyName);
 
-        $enrichmentKey = Opus_EnrichmentKey::fetchByName($keyName);
+        $enrichmentKey = EnrichmentKey::fetchByName($keyName);
 
         $this->assertNotNull($enrichmentKey);
         $this->assertEquals($keyName, $enrichmentKey->getName());
@@ -89,13 +92,13 @@ class Application_Update_AddImportCollectionTest extends ControllerTestCase
         $update->setLogger(new MockLogger());
         $update->setQuietMode(true);
 
-        $collectionRole = Opus_CollectionRole::fetchByName('Import');
+        $collectionRole = CollectionRole::fetchByName('Import');
 
         $this->assertNull($collectionRole);
 
         $update->addCollection();
 
-        $collectionRole = Opus_CollectionRole::fetchByName('Import');
+        $collectionRole = CollectionRole::fetchByName('Import');
 
         $this->assertNotNull($collectionRole);
 
@@ -103,5 +106,4 @@ class Application_Update_AddImportCollectionTest extends ControllerTestCase
 
         $this->assertNotNull($collection);
     }
-
 }

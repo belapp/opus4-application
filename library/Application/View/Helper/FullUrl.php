@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,32 +25,24 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View
- * @author      Ralf Claussnitzer (ralf.claussnitzer@slub-dresden.de)
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2008 - 2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
- * 
  * This helper class defines only one method fullUrl() to retrieve the
  * application base url for absolute urls in views.
- *
  */
-class Application_View_Helper_FullUrl extends Zend_View_Helper_Abstract {
-
+class Application_View_Helper_FullUrl extends Zend_View_Helper_Abstract
+{
     /**
      * Return the full url (server name followed by base URL).
      * This method might by useful when constructing absolute URLs.
      *
-     * @param Zend_View $view instance of Zend_View
-     * @return Full url string.
+     * @return string Full url string.
      */
-    public function fullUrl() {
+    public function fullUrl()
+    {
         return $this->view->serverUrl() . $this->view->baseUrl();
     }
-
 }

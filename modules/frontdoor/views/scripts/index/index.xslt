@@ -26,16 +26,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Frontdoor
- * @author      Michael Lang <lang@zib.de>
- * @author      Felix Ostrowski <ostrowski@hbz-nrw.de>
- * @author      Simone Finkbeiner <simone.finkbeiner@ub.uni-stuttgart.de>
- * @author      Thoralf Klein <thoralf.klein@zib.de>
- * @author      Edouard Simon <edouard.simon@zib.de>
- * @copyright   Copyright (c) 2009-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2009, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 -->
 
@@ -170,14 +162,14 @@
             </colgroup>
 
             <xsl:apply-templates select="PersonAuthor" />
-            <xsl:apply-templates select="IdentifierUrn" />
-            <xsl:apply-templates select="IdentifierUrl" />
-            <xsl:apply-templates select="IdentifierHandle" />
-            <xsl:apply-templates select="IdentifierDoi" />
-            <xsl:apply-templates select="IdentifierIsbn" />
-            <xsl:apply-templates select="IdentifierIssn" />
-            <xsl:apply-templates select="IdentifierArxiv" />
-            <xsl:apply-templates select="IdentifierPubmed" />
+            <xsl:apply-templates select="Identifier[@Type = 'urn']" />
+            <xsl:apply-templates select="Identifier[@Type = 'url']" />
+            <xsl:apply-templates select="Identifier[@Type = 'handle']" />
+            <xsl:apply-templates select="Identifier[@Type = 'doi']" />
+            <xsl:apply-templates select="Identifier[@Type = 'isbn']" />
+            <xsl:apply-templates select="Identifier[@Type = 'issn']" />
+            <xsl:apply-templates select="Identifier[@Type = 'arxiv']" />
+            <xsl:apply-templates select="Identifier[@Type = 'pmid']" />
             <xsl:apply-templates select="TitleParent" mode="mainLanguage" />
             <xsl:apply-templates select="TitleParent" mode="otherLanguage" />
             <xsl:apply-templates select="TitleSub" mode="mainLanguage" />
@@ -240,7 +232,7 @@
                     </th>
 
                     <td>
-                        <em class="data-marker">
+                        <em class="data-marker subject">
                             <xsl:for-each select="Subject[@Type='uncontrolled'][generate-id(.)=generate-id(key('list', @Language))]/@Language">
                                 <xsl:sort/>
                                 <xsl:for-each select="key('list', .)">
@@ -273,6 +265,7 @@
 
             <xsl:apply-templates select="@Volume" />
             <xsl:apply-templates select="@Issue" />
+            <xsl:apply-templates select="@ArticleNumber" />
             <xsl:apply-templates select="@Edition" />
             <xsl:apply-templates select="@PageNumber" />
             <xsl:apply-templates select="@PageFirst" />
@@ -304,7 +297,7 @@
             <xsl:apply-templates select="Collection[@RoleName='pacs']" />
             <xsl:apply-templates select="Collection[@RoleName='bk']" />
             <xsl:apply-templates select="Collection[@RoleName='jel']" />
-            <xsl:apply-templates select="IdentifierSerial" />
+            <xsl:apply-templates select="Identifier[@Type = 'serial']" />
 
             <xsl:for-each select="Collection[@RoleName!='institutes' and @RoleName!='projects' and @RoleName!='ccs' and @RoleName!='ddc' and @RoleName!='msc' and @RoleName!='pacs' and @RoleName!='bk' and @RoleName!='jel'][count(. | key('userCollections-by-roleId', @RoleId)[1]) = 1]">
                 <xsl:apply-templates select="key('userCollections-by-roleId', @RoleId)" />

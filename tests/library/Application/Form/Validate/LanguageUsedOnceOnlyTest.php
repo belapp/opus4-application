@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,29 +25,32 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Unit Tests
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Unit Tests für Validator der prüft, ob eine Sprache mehrfach verwendet wurde.
  */
-class Application_Form_Validate_LanguageUsedOnceOnlyTest extends ControllerTestCase {
+class Application_Form_Validate_LanguageUsedOnceOnlyTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'translation';
 
+    /** @var string[] */
     private $selectedLanguages;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
-        $this->selectedLanguages = array('deu', 'fra', 'rus', 'deu', 'eng', 'deu');
+        $this->selectedLanguages = ['deu', 'fra', 'rus', 'deu', 'eng', 'deu'];
     }
 
     /**
      * Validierung für 3. Unterformular (index = 2) mit Sprache 'rus' ist TRUE.
      */
-    public function testIsValidTrue() {
+    public function testIsValidTrue()
+    {
         $validator = new Application_Form_Validate_LanguageUsedOnceOnly($this->selectedLanguages, 2);
 
         $this->assertTrue($validator->isValid('rus'));
@@ -55,13 +59,15 @@ class Application_Form_Validate_LanguageUsedOnceOnlyTest extends ControllerTestC
     /**
      * Validierung für 4. Unterformular (index = 3) mit Sprache 'deu' ist FALSE, weil Sprache schon verwendet wurde.
      */
-    public function testIsValidFalse() {
+    public function testIsValidFalse()
+    {
         $validator = new Application_Form_Validate_LanguageUsedOnceOnly($this->selectedLanguages, 3);
 
         $this->assertFalse($validator->isValid('deu'));
     }
 
-    public function testIsValidFalse3rdOccurence() {
+    public function testIsValidFalse3rdOccurence()
+    {
         $validator = new Application_Form_Validate_LanguageUsedOnceOnly($this->selectedLanguages, 5);
 
         $this->assertFalse($validator->isValid('deu'));
@@ -70,7 +76,8 @@ class Application_Form_Validate_LanguageUsedOnceOnlyTest extends ControllerTestC
     /**
      * Wenn kein Array mit den Sprachen übergeben wurde soll der Validator ignoriert werden. Sollte nie passieren.
      */
-    public function testLanguagesNullAlwaysReturnsTrue() {
+    public function testLanguagesNullAlwaysReturnsTrue()
+    {
         $validator = new Application_Form_Validate_LanguageUsedOnceOnly(null, 0);
 
         $this->assertTrue($validator->isValid('deu'));
@@ -80,28 +87,31 @@ class Application_Form_Validate_LanguageUsedOnceOnlyTest extends ControllerTestC
      * Wenn Array mit Sprachen zu kurz ist soll der Validator ignoriert werden, nachdem alle vorhanden Positionen
      * geprüft wurden.
      */
-    public function testLanguagesTooShortReturnsTrue() {
-        $validator = new Application_Form_Validate_LanguageUsedOnceOnly(array('eng', 'deu', 'spa'), 4);
+    public function testLanguagesTooShortReturnsTrue()
+    {
+        $validator = new Application_Form_Validate_LanguageUsedOnceOnly(['eng', 'deu', 'spa'], 4);
 
         $this->assertTrue($validator->isValid('rus'));
     }
 
-    public function testLanguagesTooShortReturnsFalse() {
-        $validator = new Application_Form_Validate_LanguageUsedOnceOnly(array('eng', 'deu', 'spa'), 4);
+    public function testLanguagesTooShortReturnsFalse()
+    {
+        $validator = new Application_Form_Validate_LanguageUsedOnceOnly(['eng', 'deu', 'spa'], 4);
 
         $this->assertFalse($validator->isValid('deu'));
     }
 
-    public function testGetPosition() {
-        $validator = new Application_Form_Validate_LanguageUsedOnceOnly(array('eng', 'deu', 'spa'), 4);
+    public function testGetPosition()
+    {
+        $validator = new Application_Form_Validate_LanguageUsedOnceOnly(['eng', 'deu', 'spa'], 4);
 
         $this->assertEquals(4, $validator->getPosition());
     }
 
-    public function testGetLanguages() {
-        $validator = new Application_Form_Validate_LanguageUsedOnceOnly(array('eng', 'deu', 'spa'), 4);
+    public function testGetLanguages()
+    {
+        $validator = new Application_Form_Validate_LanguageUsedOnceOnly(['eng', 'deu', 'spa'], 4);
 
-        $this->assertEquals(array('eng', 'deu', 'spa'), $validator->getLanguages());
+        $this->assertEquals(['eng', 'deu', 'spa'], $validator->getLanguages());
     }
-
 }

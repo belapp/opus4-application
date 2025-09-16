@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,34 +25,37 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application_Form_Decorator
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Form_Decorator_Button extends Zend_Form_Decorator_Abstract {
 
-    private $_elementName;
+class Application_Form_Decorator_Button extends Zend_Form_Decorator_Abstract
+{
+    /** @var string */
+    private $elementName;
 
-    public function render($content) {
+    /**
+     * @param string $content
+     * @return string
+     */
+    public function render($content)
+    {
         $button = $this->getElement()->getElement($this->getElementName());
 
-        if (is_null($button)) {
+        if ($button === null) {
             return $content;
         }
 
-        $buttonId = $button->getId();
+        $buttonId       = $button->getId();
         $buttonFullName = $button->getFullyQualifiedName();
-        $buttonName = $button->getName();
-        $buttonValue = $button->getLabel();
+        $buttonName     = $button->getName();
+        $buttonValue    = $button->getLabel();
 
-        if (strlen(trim($buttonValue)) == 0) {
+        if ($buttonValue === null || strlen(trim($buttonValue)) === 0) {
             $buttonValue = $buttonName;
         }
 
-        $markup = "<div class=\"data-wrapper $buttonName-data\">";
+        $markup  = "<div class=\"data-wrapper $buttonName-data\">";
         $markup .= "<div class=\"field\" id=\"$buttonId-element\">";
         $markup .= "<input type=\"submit\" name=\"$buttonFullName\" id=\"$buttonId\" value=\"$buttonValue\" />";
         $markup .= '</div></div>';
@@ -59,20 +63,28 @@ class Application_Form_Decorator_Button extends Zend_Form_Decorator_Abstract {
         return $content . $markup;
     }
 
-    public function setElementName($columns) {
-        $this->columns = $columns;
+    /**
+     * @param string $name
+     *
+     * TODO BUG is this function used anywhere?
+     */
+    public function setElementName($name)
+    {
+        $this->elementName = $name;
     }
 
-    public function getElementName() {
+    /**
+     * @return string
+     */
+    public function getElementName()
+    {
         $name = $this->getOption('name');
-        if (!is_null($name)) {
+        if ($name !== null) {
             $this->removeOption('name');
-        }
-        else {
-            $name = $this->_elementName;
+        } else {
+            $name = $this->elementName;
         }
 
         return $name;
     }
-
 }

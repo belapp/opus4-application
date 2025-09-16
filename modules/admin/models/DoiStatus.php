@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,48 +25,68 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Sascha Szott <szott@zib.de>
  * @copyright   Copyright (c) 2018, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
-class Admin_Model_DoiStatus {
 
+use Opus\Common\DocumentInterface;
+use Opus\Common\IdentifierInterface;
+
+class Admin_Model_DoiStatus
+{
+    /** @var int */
     private $docId;
 
+    /** @var string */
     private $doi;
 
+    /** @var bool */
     private $published;
 
+    /** @var string */
     private $doiStatus;
 
     /**
-     * Admin_Model_DoiStatus constructor.
-     *
-     * @param Opus_Document $doc
+     * @param DocumentInterface   $doc
+     * @param IdentifierInterface $doi
      */
-    public function __construct($doc, $doi) {
-        $this->docId = $doc->getId();
-        $this->published = ($doc->getServerState() == 'published');
-        $this->doi = $doi->getValue();
+    public function __construct($doc, $doi)
+    {
+        $this->docId     = $doc->getId();
+        $this->published = $doc->getServerState() === 'published';
+        $this->doi       = $doi->getValue();
         $this->doiStatus = $doi->getStatus();
     }
 
-    public function getDocId() {
+    /**
+     * @return int
+     */
+    public function getDocId()
+    {
         return $this->docId;
     }
 
-    public function getDoi() {
+    /**
+     * @return string|null
+     */
+    public function getDoi()
+    {
         return $this->doi;
     }
 
-    public function isPublished() {
+    /**
+     * @return bool
+     */
+    public function isPublished()
+    {
         return $this->published;
     }
 
-    public function getDoiStatus() {
+    /**
+     * @return string
+     */
+    public function getDoiStatus()
+    {
         return $this->doiStatus;
     }
-
 }

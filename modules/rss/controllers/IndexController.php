@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,27 +25,27 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Rss
- * @author      Sascha Szott <szott@zib.de>
- * @author      Michael Lang <lang@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  *
  * TODO context spezifische Titel für RSS feed (latest, collections, ...)
  * TODO move feed code into Rss_Model_Feed
  */
 
-class Rss_IndexController extends Application_Controller_Xml {
+use Opus\Common\Document;
+use Opus\Search\Result\Base;
+use Opus\Search\SearchException;
 
-    const NUM_OF_ITEMS_PER_FEED = '25';
+class Rss_IndexController extends Application_Controller_Xml
+{
+    public const NUM_OF_ITEMS_PER_FEED = '25';
 
-    const RSS_SORT_FIELD = 'server_date_published';
+    public const RSS_SORT_FIELD = 'server_date_published';
 
-    const RSS_SORT_ORDER = 'desc';
+    public const RSS_SORT_ORDER = 'desc';
 
-    public function init() {
+    public function init()
+    {
         parent::init();
     }
 
@@ -53,41 +54,40 @@ class Rss_IndexController extends Application_Controller_Xml {
      *
      * TODO function should only call performSearch instead of doing the search steps separately
      */
-    public function indexAction() {
+    public function indexAction()
+    {
         // support backward compatibility: interpret missing parameter searchtype as latest search
         $searchType = $this->getRequest()->getParam('searchtype', Application_Util_Searchtypes::LATEST_SEARCH);
 
         $search = Application_Util_Searchtypes::getSearchPlugin($searchType);
 
-        $params = array();
+        $params = [];
 
         try {
             $params = $search->createQueryBuilderInputFromRequest($this->getRequest());
-        }
-        catch (Application_Search_QueryBuilderException $e) {
+        } catch (Application_Search_QueryBuilderException $e) {
             $this->getLogger()->err(__METHOD__ . ' : ' . $e->getMessage());
             $applicationException = new Application_Exception($e->getMessage());
-            $code = $e->getCode();
-            if ($code != 0) {
+            $code                 = $e->getCode();
+            if ($code !== 0) {
                 $applicationException->setHttpResponseCode($code);
-            }            
+            }
             throw $applicationException;
         }
 
         // overwrite parameters in rss context
         // rss feeds have a fixed maximum number of items
-        $params['rows'] = self::NUM_OF_ITEMS_PER_FEED;
+        $params['rows']  = self::NUM_OF_ITEMS_PER_FEED;
         $params['start'] = 0;
         // rss feeds have both a fixed sort field and sort order
         $params['sortField'] = self::RSS_SORT_FIELD;
         $params['sortOrder'] = self::RSS_SORT_ORDER;
 
-        $resultList = array();
+        $resultList = [];
         try {
-            $searcher = new Opus_SolrSearch_Searcher();
+            $searcher   = Application_Search_SearcherFactory::getSearcher();
             $resultList = $searcher->search($search->createSearchQuery($params));
-        }
-        catch (Opus_SolrSearch_Exception $exception) {
+        } catch (SearchException $exception) {
             $this->handleSolrError($exception);
         }
 
@@ -99,20 +99,20 @@ class Rss_IndexController extends Application_Controller_Xml {
         $this->setFrontdoorBaseUrl();
     }
 
-    private function handleSolrError(Opus_SolrSearch_Exception $exception) {
+    private function handleSolrError(SearchException $exception)
+    {
         $this->_helper->layout()->enableLayout();
         $this->getLogger()->err(__METHOD__ . ' : ' . $exception);
+
         if ($exception->isServerUnreachable()) {
             $e = new Application_Exception('error_search_unavailable');
             $e->setHttpResponseCode(503);
             throw $e;
-        }
-        elseif ($exception->isInvalidQuery()) {
+        } elseif ($exception->isInvalidQuery()) {
             $e = new Application_Exception('error_search_invalidquery');
             $e->setHttpResponseCode(500);
             throw $e;
-        }
-        else {
+        } else {
             $e = new Application_Exception('error_search_unknown');
             $e->setHttpResponseCode(500);
             throw $e;
@@ -122,46 +122,59 @@ class Rss_IndexController extends Application_Controller_Xml {
     /**
      * Sets parameters for XSLT processor.
      */
-    private function setParameters() {
+    private function setParameters()
+    {
         $feed = new Rss_Model_Feed($this->view);
 
         $feedLink = $this->view->serverUrl() . $this->getRequest()->getBaseUrl() . '/index/index/';
 
-        $this->_proc->setParameter('', 'feedTitle', $feed->getTitle());
-        $this->_proc->setParameter('', 'feedDescription', $feed->getDescription());
-        $this->_proc->setParameter('', 'link', $feedLink);
+        $this->proc->setParameter('', 'feedTitle', $feed->getTitle());
+        $this->proc->setParameter('', 'feedDescription', $feed->getDescription());
+        $this->proc->setParameter('', 'link', $feedLink);
     }
 
-    private function setDates($resultList) {
+    /**
+     * @param Base $resultList
+     * @throws Exception
+     */
+    private function setDates($resultList)
+    {
         if ($resultList->getNumberOfHits() > 0) {
             $latestDoc = $resultList->getResults();
-            $document = new Opus_Document($latestDoc[0]->getId());
-            $date = new Zend_Date($document->getServerDatePublished());
+            $document  = Document::get($latestDoc[0]->getId());
+            $date      = $document->getServerDatePublished()->getDateTime();
+        } else {
+            $date = new DateTime(); // now
         }
-        else {
-            $date = Zend_Date::now();
-        }
-        $this->_proc->setParameter('', 'lastBuildDate', $date->get(Zend_Date::RFC_2822));
-        $this->_proc->setParameter('', 'pubDate', $date->get(Zend_Date::RFC_2822));
+
+        $dateOutput = $date->format(DateTime::RFC2822);
+        $this->proc->setParameter('', 'lastBuildDate', $dateOutput);
+        $this->proc->setParameter('', 'pubDate', $dateOutput);
     }
 
-    private function setItems($resultList) {
-        $this->_xml->appendChild($this->_xml->createElement('Documents'));
+    /**
+     * @param Base $resultList
+     * @throws Application_Exception
+     * @throws DOMException
+     */
+    private function setItems($resultList)
+    {
+        $this->xml->appendChild($this->xml->createElement('Documents'));
         foreach ($resultList->getResults() as $result) {
-            $document = new Opus_Document($result->getId());
+            $document    = Document::get($result->getId());
             $documentXml = new Application_Util_Document($document);
-            $domNode = $this->_xml->importNode($documentXml->getNode(), true);
+            $domNode     = $this->xml->importNode($documentXml->getNode(), true);
 
             // add publication date in RFC_2822 format
-            $date = $document->getServerDatePublished()->getDateTime();
-            $itemPubDate = $this->_xml->createElement('ItemPubDate', $date->format(DateTime::RFC2822));
+            $date        = $document->getServerDatePublished()->getDateTime();
+            $itemPubDate = $this->xml->createElement('ItemPubDate', $date->format(DateTime::RFC2822));
             $domNode->appendChild($itemPubDate);
-            $this->_xml->documentElement->appendChild($domNode);
+            $this->xml->documentElement->appendChild($domNode);
         }
     }
 
-    private function setFrontdoorBaseUrl() {
-        $this->_proc->setParameter('', 'frontdoorBaseUrl', $this->view->fullUrl() . '/frontdoor/index/index/docId/');
+    private function setFrontdoorBaseUrl()
+    {
+        $this->proc->setParameter('', 'frontdoorBaseUrl', $this->view->fullUrl() . '/frontdoor/index/index/docId/');
     }
-
 }

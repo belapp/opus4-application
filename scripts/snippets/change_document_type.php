@@ -1,5 +1,3 @@
-
-
 <?php
 
 /**
@@ -27,14 +25,12 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Edouard Simon (edouard.simon@zib.de)
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id: update-thesispublisher.php 11775 2013-06-25 14:28:41Z tklein $
  */
+
 /**
- * 
+ * TODO should this be part of administration, part of opus4 tool
  */
 if (basename(__FILE__) !== basename($argv[0])) {
     echo "script must be executed directy (not via opus-console)\n";
@@ -43,38 +39,44 @@ if (basename(__FILE__) !== basename($argv[0])) {
 
 require_once dirname(__FILE__) . '/../common/bootstrap.php';
 
-$options = getopt('', array('dryrun', 'from:', 'to:'));
+use Opus\Common\Document;
+use Opus\Common\Repository;
+
+$options = getopt('', ['dryrun', 'from:', 'to:']);
 
 $dryrun = isset($options['dryrun']);
 
-if (!isset($options['from']) || empty($options['from']) || !isset($options['to']) || empty($options['to'])) {
+if (! isset($options['from']) || empty($options['from']) || ! isset($options['to']) || empty($options['to'])) {
     echo "Usage: {$argv[0]} --from <current doc type> --to <target doc type> (--dryrun)\n";
     echo "--from and --to must be provided.\n";
     exit;
 }
 
 $from = $options['from'];
-$to = $options['to'];
+$to   = $options['to'];
 
 if ($dryrun) {
-    _log("TEST RUN: NO DATA WILL BE MODIFIED"); 
+    writeMessage("TEST RUN: NO DATA WILL BE MODIFIED");
 }
 
-$docFinder = new Opus_DocumentFinder();
-$docIds = $docFinder->setType($from)->ids();
+$docFinder = Repository::getInstance()->getDocumentFinder();
+$docIds    = $docFinder->setDocumentType($from)->getIds();
 
-_log(count($docIds) . " documents found");
+writeMessage(count($docIds) . " documents found");
 
 foreach ($docIds as $docId) {
-    $doc = new Opus_Document($docId);
+    $doc = Document::get($docId);
     $doc->setType($to);
-    if (!$dryrun) {
-        $doc->store(); 
+    if (! $dryrun) {
+        $doc->store();
     }
-    _log("Document #$docId changed from '$from' to '$to'");
+    writeMessage("Document #$docId changed from '$from' to '$to'");
 }
 
-function _log($message) {
+/**
+ * @param string $message
+ */
+function writeMessage($message)
+{
     echo "$message\n";
 }
-

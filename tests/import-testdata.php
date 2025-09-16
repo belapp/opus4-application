@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,9 +25,7 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2016, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
@@ -36,42 +35,49 @@ defined('APPLICATION_PATH')
 
 // Define application environment
 defined('APPLICATION_ENV')
-|| define('APPLICATION_ENV', (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production'));
+|| define('APPLICATION_ENV', getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production');
 
 // Configure include path.
 set_include_path(
     implode(
-        PATH_SEPARATOR, array(
+        PATH_SEPARATOR,
+        [
             '.',
             dirname(__FILE__),
             APPLICATION_PATH . '/library',
             APPLICATION_PATH . '/vendor',
             get_include_path(),
-        )
+        ]
     )
 );
 
 require_once 'autoload.php';
 
+// TODO OPUSVIER-4420 remove after switching to Laminas/ZF3
+require_once APPLICATION_PATH . '/vendor/opus4-repo/framework/library/OpusDb/Mysqlutf8.php';
+
+use Opus\Common\Config;
+use Opus\Database;
+
 // environment initializiation
 $application = new Zend_Application(
     APPLICATION_ENV,
-    array(
-        "config"=>array(
+    [
+        "config" => [
             APPLICATION_PATH . '/application/configs/application.ini',
             APPLICATION_PATH . '/application/configs/config.ini',
             APPLICATION_PATH . '/application/configs/console.ini',
             APPLICATION_PATH . '/tests/config.ini',
-            APPLICATION_PATH . '/tests/tests.ini'
-        )
-    )
+            APPLICATION_PATH . '/tests/tests.ini',
+        ],
+    ]
 );
 
 // Bootstrapping application
 $application->bootstrap('Backend');
 
-$config = Zend_Registry::get('Zend_Config');
+$config = Config::get();
 $config = $config->merge(new Zend_Config_Ini(dirname(__FILE__) . '/config.ini'));
 
-$database = new Opus_Database();
+$database = new Database();
 $database->import(APPLICATION_PATH . '/tests/sql');

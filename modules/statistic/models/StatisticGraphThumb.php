@@ -1,6 +1,4 @@
 <?php
-include_once ("jpgraph/jpgraph.php");
-include_once ("jpgraph/jpgraph_bar.php");
 
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
@@ -27,49 +25,63 @@ include_once ("jpgraph/jpgraph_bar.php");
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Statistic
- * @author      Birgit Dressler (b.dressler@sulb.uni-saarland.de)
  * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Statistic_Model_StatisticGraphThumb {
 
-    protected $_data = null;
-    protected $_width = 35;
-    protected $_height = 27;
-    protected $_bgImg ;
+class Statistic_Model_StatisticGraphThumb
+{
+    /** @var array */
+    protected $data;
 
-    public function __construct($data, $backgroundImage = null) {
-        $this->_bgImg = $backgroundImage;
+    /** @var int */
+    protected $width = 35;
 
-        $this->_data = $data;
+    /** @var int */
+    protected $height = 27;
+
+    /** @var string|null */
+    protected $bgImg;
+
+    /**
+     * @param array       $data
+     * @param null|string $backgroundImage
+     */
+    public function __construct($data, $backgroundImage = null)
+    {
+        $this->bgImg = $backgroundImage;
+
+        $this->data = $data;
     }
 
-        public function setSize($width, $height) {
-        $this->_width = $width;
-        $this->_height = $height;
-        }
+    /**
+     * @param int $width
+     * @param int $height
+     */
+    public function setSize($width, $height)
+    {
+        $this->width  = $width;
+        $this->height = $height;
+    }
 
-    public function drawGraph() {
+    public function drawGraph()
+    {
         // generate graphic
-        $graph = new Graph($this->_width, $this->_height, "auto");
+        $graph = new Graph($this->width, $this->height, "auto");
         $graph->SetScale("textlin");
 
         $graph->img->SetMargin(0, 0, 1, 0);
         //$graph->SetFrame(true);
         // generate bars
-        $bplot = new BarPlot($this->_data);
+        $bplot = new BarPlot($this->data);
         $graph->Add($bplot);
-
 
         // format bars
         $bplot->SetFillColor('gray');
 
         //show background image if file exists
-        if (false === empty($this->_bgImg) && file_exists($this->_bgImg)) {
-            $graph->SetBackgroundImage($this->_bgImg, BGIMG_FILLFRAME);
+        if (false === empty($this->bgImg) && is_readable($this->bgImg)) {
+            $graph->SetBackgroundImage($this->bgImg, BGIMG_FILLFRAME);
         }
         $bplot->SetFillGradient("gray", "darkgray", GRAD_HOR);
         $graph->yaxis->HideTicks(true, true);
@@ -77,6 +89,5 @@ class Statistic_Model_StatisticGraphThumb {
 
         // show graphic
         $graph->Stroke();
-
     }
 }

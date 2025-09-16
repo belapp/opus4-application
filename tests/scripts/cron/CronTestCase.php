@@ -25,59 +25,70 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Cronjob
- * @package     Tests
- * @author      Edouard Simon (edouard.simon@zib.de)
- * @copyright   Copyright (c) 2008-2012, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-/**
- * 
- */
-class CronTestCase extends ControllerTestCase {
+use Opus\Common\Job;
+use Opus\Common\Model\NotFoundException;
 
+class CronTestCase extends ControllerTestCase
+{
+    /** @var string */
     protected static $scriptPath;
-    protected static $lockDir;
-    private $jobIds = array();
 
-    public static function setUpBeforeClass() {
+    /** @var string */
+    protected static $lockDir;
+
+    /** @var array */
+    private $jobIds = [];
+
+    public static function setUpBeforeClass(): void
+    {
         parent::setUpBeforeClass();
         self::$scriptPath = realpath(dirname(__FILE__) . '/../../../scripts/cron') . '/';
-        self::$lockDir = realpath(self::$scriptPath . '/../../workspace/cache/');
+        self::$lockDir    = realpath(self::$scriptPath . '/../../workspace/cache/');
     }
 
-    public function tearDown() {
-        if (!empty($this->jobIds)) {
+    public function tearDown(): void
+    {
+        if (! empty($this->jobIds)) {
             foreach ($this->jobIds as $jobId) {
                 try {
-                    $job = new Opus_Job($jobId);
+                    $job = Job::get($jobId);
                     $job->delete();
-                } catch (Opus_Model_NotFoundException $e) {
-                    
+                } catch (NotFoundException $e) {
                 }
             }
         }
         parent::tearDown();
     }
 
-    protected function executeScript($fileName) {
-        $command = self::$scriptPath . 'cron-php-runner.sh ' . self::$scriptPath . $fileName . ' ' . self::$lockDir;
+    /**
+     * @param string $fileName
+     * @return string
+     */
+    protected function executeScript($fileName)
+    {
+        $command             = self::$scriptPath . 'cron-php-runner.sh ' . self::$scriptPath . $fileName . ' ' . self::$lockDir;
         $savedApplicationEnv = getenv('APPLICATION_ENV');
         putenv('APPLICATION_ENV=' . APPLICATION_ENV);
         $result = shell_exec($command);
         putenv('APPLICATION_ENV=' . $savedApplicationEnv);
-        $this->assertNotNull($result, "Script execution failed:\n".$command);
+        $this->assertNotNull($result, "Script execution failed:\n" . $command);
         $this->assertContains("job '" . self::$scriptPath . $fileName . "' done", $result);
         return $result;
     }
 
-    protected function createJob($label, $data = array()) {
-        $job = new Opus_Job();
+    /**
+     * @param string $label
+     * @param array  $data
+     */
+    protected function createJob($label, $data = [])
+    {
+        $job = Job::new();
         $job->setLabel($label);
         $job->setData($data);
         $this->jobIds[] = $job->store();
     }
-
 }

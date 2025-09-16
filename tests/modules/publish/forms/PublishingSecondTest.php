@@ -25,38 +25,42 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Publish Unit Test
- * @author      Susanne Gottwald <gottwald@zib.de>
- * @copyright   Copyright (c) 2008-2011, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Publish_Form_PublishingSecondTest extends ControllerTestCase {
 
-    protected $_logger;
+class Publish_Form_PublishingSecondTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['view', 'translation'];
 
-    public function setUp() {
-	$writer = new Zend_Log_Writer_Null;
-	$this->_logger = new Zend_Log($writer);
-	parent::setUp();
+    /** @var Zend_Log */
+    protected $logger;
+
+    public function setUp(): void
+    {
+        $writer       = new Zend_Log_Writer_Null();
+        $this->logger = new Zend_Log($writer);
+        parent::setUp();
     }
 
     /**
-     * @expectedException Publish_Model_FormSessionTimeoutException
-     * exception because of missing session documentType 
+     * exception because of missing session documentType
      */
-    public function testConstructorWithoutDocTypeInSession() {
-        $form = new Publish_Form_PublishingSecond($this->_logger);
+    public function testConstructorWithoutDocTypeInSession()
+    {
+        $this->expectException(Publish_Model_FormSessionTimeoutException::class);
+        $form = new Publish_Form_PublishingSecond($this->logger);
     }
 
     /**
      * A sucessful creation of PublishingSecond should result in having at least two buttons send and back
      */
-    public function testConstructorWithDocTypeInSession() {
-        $session = new Zend_Session_Namespace('Publish');
+    public function testConstructorWithDocTypeInSession()
+    {
+        $session               = new Zend_Session_Namespace('Publish');
         $session->documentType = 'preprint';
-        $form = new Publish_Form_PublishingSecond($this->_logger);
+        $form                  = new Publish_Form_PublishingSecond($this->logger);
         $this->assertNotNull($form->getElement('back'));
         $this->assertNotNull($form->getElement('send'));
     }
@@ -64,16 +68,17 @@ class Publish_Form_PublishingSecondTest extends ControllerTestCase {
     /**
      * Data is invalid because doc type workingpaper need more field entries.
      */
-    public function testIsValidWithInvalidData() {
-        $config = Zend_Registry::get('Zend_Config');
+    public function testIsValidWithInvalidData()
+    {
+        $config                         = $this->getConfig();
         $config->documentTypes->include = 'all,preprint,article,demo,workingpaper';
-        $session = new Zend_Session_Namespace('Publish');
-        $session->documentType = 'workingpaper';
-        $form = new Publish_Form_PublishingSecond($this->_logger);
-        $data = array(
+        $session                        = new Zend_Session_Namespace('Publish');
+        $session->documentType          = 'workingpaper';
+        $form                           = new Publish_Form_PublishingSecond($this->logger);
+        $data                           = [
             'PersonSubmitterFirstName_1' => 'John',
-            'PersonSubmitterLastName_1' => 'Doe'
-        );
+            'PersonSubmitterLastName_1'  => 'Doe',
+        ];
 
         $valid = $form->isValid($data);
         $this->assertFalse($valid);
@@ -82,64 +87,67 @@ class Publish_Form_PublishingSecondTest extends ControllerTestCase {
     /**
      * Doc Type has only two fields which are already filled.
      */
-    public function testIsValidWithValidData() {
-        $config = Zend_Registry::get('Zend_Config');
+    public function testIsValidWithValidData()
+    {
+        $config                         = $this->getConfig();
         $config->documentTypes->include = 'all,preprint,article,demo,workingpaper';
-        $session = new Zend_Session_Namespace('Publish');
-        $session->documentType = 'demo';
-        $form = new Publish_Form_PublishingSecond($this->_logger);
-        $data = array(
+        $session                        = new Zend_Session_Namespace('Publish');
+        $session->documentType          = 'demo';
+        $form                           = new Publish_Form_PublishingSecond($this->logger);
+        $data                           = [
             'PersonSubmitterFirstName_1' => 'John',
-            'PersonSubmitterLastName_1' => 'Doe'
-        );
+            'PersonSubmitterLastName_1'  => 'Doe',
+        ];
 
         $valid = $form->isValid($data);
         $this->assertTrue($valid);
     }
-    
+
     /**
      * Demo has 2 fields which are stored in elements and 2 new buttons are created.
      */
-    public function testPrepareCheckMethodWithDemoType() {
-        $config = Zend_Registry::get('Zend_Config');
+    public function testPrepareCheckMethodWithDemoType()
+    {
+        $config                         = $this->getConfig();
         $config->documentTypes->include = 'all,preprint,article,demo,workingpaper';
-        $session = new Zend_Session_Namespace('Publish');
-        $session->documentType = 'demo';
-        
-        $form = new Publish_Form_PublishingSecond($this->_logger);
-        $data = array(
+        $session                        = new Zend_Session_Namespace('Publish');
+        $session->documentType          = 'demo';
+
+        $form = new Publish_Form_PublishingSecond($this->logger);
+        $data = [
             'PersonSubmitterFirstName_1' => 'John',
-            'PersonSubmitterLastName_1' => 'Doe'
-        );
+            'PersonSubmitterLastName_1'  => 'Doe',
+        ];
         $form->prepareCheck();
         $this->assertNotNull($form->getElement('back'));
         $this->assertNotNull($form->getElement('send'));
-        $this->assertTrue($session->elements['PersonSubmitterFirstName_1']['value']=='John');
-        $this->assertTrue($session->elements['PersonSubmitterLastName_1']['value']=='Doe');
+        $this->assertTrue($session->elements['PersonSubmitterFirstName_1']['value'] === 'John');
+        $this->assertTrue($session->elements['PersonSubmitterLastName_1']['value'] === 'Doe');
     }
-        
-    public function testExternalElementLegalNotices() {
-        $session = new Zend_Session_Namespace('Publish');
-        $session->documentType = 'all';
-        $session->additionalFields = array();   
-        
-        $elementData = array(
-            'id' => 'LegalNotices',
-            'label' => 'LegalNotices',
-            'req' => 'required',
-            'type' => 'Zend_Form_Element_Checkbox',
-            'createType' => 'checkbox',
-            'header' => 'header_LegalNotices',
-            'value' => '0',
-            'check' => '',
-            'disabled' => '0',
-            'error' => array(),
-            'DT_external' => true            
-            );
+
+    public function testExternalElementLegalNotices()
+    {
+        $session                   = new Zend_Session_Namespace('Publish');
+        $session->documentType     = 'all';
+        $session->additionalFields = [];
+
+        $elementData = [
+            'id'          => 'LegalNotices',
+            'label'       => 'LegalNotices',
+            'req'         => 'required',
+            'type'        => 'Zend_Form_Element_Checkbox',
+            'createType'  => 'checkbox',
+            'header'      => 'header_LegalNotices',
+            'value'       => '0',
+            'check'       => '',
+            'disabled'    => '0',
+            'error'       => [],
+            'DT_external' => true,
+        ];
 
         $session->DT_externals['LegalNotices'] = $elementData;
-        
-        $form = new Publish_Form_PublishingSecond($this->_logger);
-        $this->assertNotNull($form->getElement('LegalNotices'));                
+
+        $form = new Publish_Form_PublishingSecond($this->logger);
+        $this->assertNotNull($form->getElement('LegalNotices'));
     }
 }

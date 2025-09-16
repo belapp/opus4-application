@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,12 +25,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Tests
- * @author      Ralf Claussnitzer <ralf.claussnitzer@slub-dresden.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 error_reporting(E_ALL | E_STRICT);
@@ -44,20 +41,23 @@ defined('APPLICATION_ENV')
         || define('APPLICATION_ENV', 'testing');
 
 // Ensure library/ is on include_path
-set_include_path(implode(PATH_SEPARATOR, array(
+set_include_path(implode(PATH_SEPARATOR, [
     APPLICATION_PATH . DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR . 'support', // Support-Klassen fuer Tests
     APPLICATION_PATH . DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR . 'library', // tests/library
     APPLICATION_PATH . DIRECTORY_SEPARATOR . 'library', // Server library
     APPLICATION_PATH . DIRECTORY_SEPARATOR . 'vendor', // 3rd party library
-    get_include_path()
-)));
+    get_include_path(),
+]));
 
-$catalogPath = APPLICATION_PATH . DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR .
-    'resources' . DIRECTORY_SEPARATOR . 'opus4-catalog.xml';
+$catalogPath = APPLICATION_PATH . DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR
+    . 'resources' . DIRECTORY_SEPARATOR . 'opus4-catalog.xml';
 
 putenv("XML_CATALOG_FILES=$catalogPath");
 
 require_once 'autoload.php';
+
+// TODO OPUSVIER-4420 remove after switching to Laminas/ZF3
+require_once APPLICATION_PATH . '/vendor/opus4-repo/framework/library/OpusDb/Mysqlutf8.php';
 
 // enable fallback autoloader for testing
 $autoloader = Zend_Loader_Autoloader::getInstance();
@@ -70,12 +70,17 @@ ensureDirectory(APPLICATION_PATH . '/tests/workspace/tmp');
 ensureDirectory(APPLICATION_PATH . '/tests/workspace/tmp/resumption');
 ensureDirectory(APPLICATION_PATH . '/tests/workspace/incoming');
 ensureDirectory(APPLICATION_PATH . '/tests/workspace/log');
+ensureDirectory(APPLICATION_PATH . '/tests/workspace/filecache');
 ensureDirectory(APPLICATION_PATH . '/tests/workspace/files');
 ensureDirectory(APPLICATION_PATH . '/tests/workspace/cache');
 ensureDirectory(APPLICATION_PATH . '/tests/workspace/export');
 
-function ensureDirectory($path) {
-    if (!is_dir($path)) {
+/**
+ * @param string $path
+ */
+function ensureDirectory($path)
+{
+    if (! is_dir($path)) {
         mkdir($path);
         echo "Created directory '$path'" . PHP_EOL;
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,37 +25,55 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Sword
- * @author      Sascha Szott
- * @copyright   Copyright (c) 2016
+ * @copyright   Copyright (c) 2016, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
+ *
+ * TODO separate differentiation of ZIP and TAR into separate classes - it should be possible to ADD another class to
+ *      support a new type of package - it should not be necessary to MODIFY existing classes for that
  */
+
+use Opus\Import\AbstractPackageReader;
+use Opus\Import\AdditionalEnrichments;
+use Opus\Import\ImportStatusDocument;
+use Opus\Import\TarPackageReader;
+use Opus\Import\ZipPackageReader;
+
 class Sword_Model_PackageHandler
 {
-
+    /** @var AdditionalEnrichments */
     private $additionalEnrichments;
 
+    /** @var string */
     private $packageType;
 
-    const PACKAGE_TYPE_ZIP = 'zip';
+    public const PACKAGE_TYPE_ZIP = 'zip';
 
-    const PACKAGE_TYPE_TAR = 'tar';
+    public const PACKAGE_TYPE_TAR = 'tar';
 
+    /**
+     * @param string $contentType
+     * @throws Exception
+     */
     public function __construct($contentType)
     {
         $this->setPackageType($contentType);
     }
 
+    /**
+     * @param AdditionalEnrichments $additionalEnrichments
+     */
     public function setAdditionalEnrichments($additionalEnrichments)
     {
         $this->additionalEnrichments = $additionalEnrichments;
     }
 
+    /**
+     * @param string $contentType
+     * @throws Exception
+     */
     private function setPackageType($contentType)
     {
-        if (is_null($contentType) || $contentType === false) {
+        if ($contentType === null || $contentType === false) {
             throw new Exception('Content-Type header is required');
         }
 
@@ -70,60 +89,116 @@ class Sword_Model_PackageHandler
         }
     }
 
+    /**
+     * Verarbeitet die mit dem SWORD-Request übergebene Paketdatei.
+     *
+     * @param string $payload der Inhalt der Paketdatei
+     * @return ImportStatusDocument|null
+     */
     public function handlePackage($payload)
     {
-        $tmpFileName = $this->getTmpFileName($payload);
-        $this->savePackage($payload, $tmpFileName);
-        $packageReader = $this->getPackageReader($this->packageType);
-        try {
-            $statusDoc = $packageReader->readPackage($tmpFileName);
-        } finally {
-            unlink($tmpFileName);
+        $packageReader = $this->getPackageReader();
+        if ($packageReader === null) {
+            // TODO improve error handling
+            return null;
         }
 
+        $tmpDirName = null;
+        $statusDoc  = null;
+        try {
+            $tmpDirName = $this->createTmpDir($payload);
+            $this->savePackage($payload, $tmpDirName);
+
+            $statusDoc = $packageReader->readPackage($tmpDirName);
+        } finally {
+            // TODO copy file before cleanup if error occured
+            if ($tmpDirName !== null) {
+                $this->cleanupTmpDir($tmpDirName);
+            }
+        }
         return $statusDoc;
     }
 
     /**
-     * @param $packageType
-     * @return null
+     * Entfernt das zuvor erzeugte temporäre Verzeichnis für die Extraktion des Paketinhalts.
+     * Das Verzeichnis enthält Dateien und ein Unterverzeichnis. Daher ist ein rekursives Löschen
+     * erforderlich.
+     *
+     * @param string $tmpDirName
+     */
+    private function cleanupTmpDir($tmpDirName)
+    {
+        $it    = new RecursiveDirectoryIterator($tmpDirName, RecursiveDirectoryIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $file) {
+            if ($file->isDir()) {
+                rmdir($file->getRealPath());
+            } else {
+                unlink($file->getRealPath());
+            }
+        }
+        rmdir($tmpDirName);
+    }
+
+    /**
+     * Liefert in Abhängigkeit vom zu verarbeitenden Pakettyp ein passendes Objekt zum Einlesen des Pakets zurück.
+     * Liefert null zurück, wenn der Pakettyp nicht verarbeitet werden kann.
+     *
+     * @return AbstractPackageReader
      *
      * TODO make types configurable and remove explicit TAR/ZIP declarations in this class (use factory class?)
      */
-    private function getPackageReader($packageType)
+    private function getPackageReader()
     {
         $packageReader = null;
-        switch ($packageType) {
+        switch ($this->packageType) {
             case self::PACKAGE_TYPE_ZIP:
-                $packageReader = new Application_Import_ZipPackageReader();
+                $packageReader = new ZipPackageReader();
                 break;
             case self::PACKAGE_TYPE_TAR:
-                $packageReader = new Application_Import_TarPackageReader();
+                $packageReader = new TarPackageReader();
                 break;
             default:
-                // TODO do some error handling
                 break;
         }
         $packageReader->setAdditionalEnrichments($this->additionalEnrichments);
         return $packageReader;
     }
 
-    private function savePackage($payload, $tmpFileName)
+    /**
+     * Speichert die übergebene Payload als Datei im übergebenen Verzeichnis ab.
+     *
+     * @param string $payload
+     * @param string $tmpDir
+     *
+     * TODO save package into import folder (no longer temporary file)
+     */
+    private function savePackage($payload, $tmpDir)
     {
+        $tmpFileName = $tmpDir . DIRECTORY_SEPARATOR . 'package.' . $this->packageType;
         file_put_contents($tmpFileName, $payload);
     }
 
-    private function getTmpFileName($payload)
+    /**
+     * Erzeugt ein temporäres Verzeichnis, in dem die mit dem SWORD-Request übergebene Datei zwischengespeichert werden
+     * kann. Die Methode gibt den absoluten Pfad des Verzeichnisses zurück.
+     *
+     * @param string $payload der Inhalt des SWORD-Packages
+     * @return string absoluter Pfad des temporären Ablageverzeichnisses
+     * @throws Application_Exception
+     */
+    private function createTmpDir($payload)
     {
-        $dirName = Application_Configuration::getInstance()->getTempPath();
-        $fileName = md5($payload) . '-' . time() . '-' . rand(10000, 99999) . '.' . $this->packageType;
-        $tmpFileName = $dirName . $fileName;
-        $suffix = 0;
-        while (file_exists($tmpFileName)) {
-            // add suffix to make file name unique (even if collision events are not very likely)
-            $tmpFileName .= "-$suffix";
+        $baseDirName = Application_Configuration::getInstance()->getTempPath()
+            . DIRECTORY_SEPARATOR . md5($payload) . '-' . time() . '-' . rand(10000, 99999);
+        $suffix      = 0;
+        $dirName     = "$baseDirName-$suffix";
+        while (is_readable($dirName)) {
+            // add another suffix to make file name unique (even if collision events are not very likely)
             $suffix++;
+            $dirName = "$baseDirName-$suffix";
         }
-        return $tmpFileName;
+        mkdir($dirName);
+        return $dirName;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,35 +25,34 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Export
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
  * Export plugin for applying XSLT on XML before returning response.
- *
- *
  */
 class Export_Model_XsltExport extends Export_Model_XmlExport
 {
-
+    /**
+     * @return int
+     * @throws Application_Exception
+     * @throws Application_SearchException
+     * @throws Zend_Exception
+     * @throws Zend_View_Exception
+     */
     public function execute()
     {
         $config = $this->getConfig();
 
-        if (isset($config->stylesheet))
-        {
+        $stylesheet = null;
+        if (isset($config->stylesheet)) {
             $stylesheet = $config->stylesheet;
         }
 
         $stylesheetDirectory = 'stylesheets';
 
-        if (isset($config->stylesheetDirectory))
-        {
+        if (isset($config->stylesheetDirectory)) {
             $stylesheetDirectory = $config->stylesheetDirectory;
         }
 
@@ -64,6 +64,7 @@ class Export_Model_XsltExport extends Export_Model_XmlExport
         );
 
         $this->prepareXml();
-    }
 
+        return 0;
+    }
 }

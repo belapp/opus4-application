@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,60 +25,62 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application_Util
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2015, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_Util_Document {
+use Opus\Common\DocumentInterface;
+use Opus\Common\Repository;
+use Opus\Common\Security\Realm;
+use Opus\Model\Xml;
+use Opus\Model\Xml\Version1;
+
+class Application_Util_Document
+{
+    /** @var DocumentInterface */
+    private $document;
 
     /**
-     *
-     * @var Opus_Document
-     */
-    private $_document;
-
-    /**
-     *
-     * @param Opus_Document $document
+     * @param DocumentInterface $document
      * @throws Application_Exception
      */
-    public function  __construct($document) {
-        $this->_document = $document;
-        if (!$this->checkPermission()) {
-            throw new Application_Exception('document access for id ' . $this->_document->getId() . ' not allowed');
+    public function __construct($document)
+    {
+        $this->document = $document;
+        if (! $this->checkPermission()) {
+            throw new Application_Exception('document access for id ' . $this->document->getId() . ' not allowed');
         }
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
-    private function checkPermission() {
-        if ($this->_document->getServerState() === 'published') {
+    private function checkPermission()
+    {
+        if ($this->document->getServerState() === 'published') {
             return true;
         }
         $accessControl = Zend_Controller_Action_HelperBroker::getStaticHelper('accessControl');
-        return Opus_Security_Realm::getInstance()->checkDocument($this->_document->getId())
+        return Realm::getInstance()->checkDocument($this->document->getId())
                 || $accessControl->accessAllowed('documents');
     }
 
     /**
-     * @param boolean $useCache
-     * @return DOMNode Opus_Document node
+     * @param bool $useCache
+     * @return DOMNode Document node
      */
-    public function getNode($useCache = true) {
-        $xmlModel = new Opus_Model_Xml();
-        $xmlModel->setModel($this->_document);
+    public function getNode($useCache = true)
+    {
+        $cache = Repository::getInstance()->getDocumentXmlCache();
+
+        $xmlModel = new Xml();
+        $xmlModel->setModel($this->document);
         $xmlModel->excludeEmptyFields(); // needed for preventing handling errors
-        $xmlModel->setStrategy(new Opus_Model_Xml_Version1);
+        $xmlModel->setStrategy(new Version1());
         if ($useCache) {
-              $xmlModel->setXmlCache(new Opus_Model_Xml_Cache);
+              $xmlModel->setXmlCache($cache);
         }
         $result = $xmlModel->getDomDocument();
         return $result->getElementsByTagName('Opus_Document')->item(0);
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,12 +25,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Application_Form_Decorator
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 /**
@@ -37,26 +34,36 @@
  *
  * Wird im Metadaten-Formular und Filemanager verwendet, um die Add- und Import Buttons richtig zu positionieren.
  */
-class Application_Form_Decorator_FieldsetWithButtons extends Zend_Form_Decorator_Fieldset {
-
-    protected $_legendButtons = null;
+class Application_Form_Decorator_FieldsetWithButtons extends Zend_Form_Decorator_Fieldset
+{
+    /** @var Zend_Form_Element|Zend_Form_Element[]|null */
+    protected $legendButtons;
 
     /**
      * @param string $content
-     * @return string|void
+     * @return string
      */
-    public function render($content) {
+    public function render($content)
+    {
         $this->setOption('escape', false);
         $this->getElement()->setDisableTranslator(true); // legend is translated before set
         return parent::render($content);
     }
 
-    public function setLegendButtons($buttons) {
-        $this->_legendButtons = $buttons;
+    /**
+     * @param string|null $buttons
+     */
+    public function setLegendButtons($buttons)
+    {
+        $this->legendButtons = $buttons;
     }
 
-    public function getLegendButtons() {
-        $buttons = $this->_legendButtons;
+    /**
+     * @return Zend_Form_Element|Zend_Form_Element[]|null
+     */
+    public function getLegendButtons()
+    {
+        $buttons = $this->legendButtons;
 
         if ((null === $buttons) && (null !== ($element = $this->getElement()))) {
             if (method_exists($element, 'getLegendButtons')) {
@@ -73,25 +80,29 @@ class Application_Form_Decorator_FieldsetWithButtons extends Zend_Form_Decorator
         return $buttons;
     }
 
-    public function getLegend() {
+    /**
+     * @return string
+     */
+    public function getLegend()
+    {
         $legend = parent::getLegend();
 
         $element = $this->getElement();
-        $view = $element->getView();
+        $view    = $element->getView();
 
         $buttons = $this->getLegendButtons();
 
-        if (!is_null($buttons) && !is_array($buttons)) {
-            $buttons = array($buttons);
+        if ($buttons !== null && ! is_array($buttons)) {
+            $buttons = [$buttons];
         }
 
         $markup = '';
 
-        if (!is_null($buttons) && count($buttons) >= 1) {
+        if ($buttons !== null && count($buttons) >= 1) {
             $markup .= '<span class="button-group">';
             foreach ($buttons as $button) {
                 $button = $element->getElement($button);
-                if (!is_null($button)) {
+                if ($button !== null) {
                     $markup .= $this->renderButton($button);
                 }
             }
@@ -102,20 +113,18 @@ class Application_Form_Decorator_FieldsetWithButtons extends Zend_Form_Decorator
     }
 
     /**
-     * @param $button
+     * @param Zend_Form_Element $button
      * @return string
      */
-    protected function renderButton($button) {
-        $name = $button->getName();
+    protected function renderButton($button)
+    {
+        $name      = $button->getName();
         $elementId = $button->getId();
         $decorator = new Zend_Form_Decorator_ViewHelper();
         $decorator->setElement($button);
-        $markup =
-            "<span class=\"data-wrapper $name-data\">"
+        return "<span class=\"data-wrapper $name-data\">"
             . "<span class=\"field\" id=\"$elementId-element\">"
             . $decorator->render(null)
             . '</span></span>';
-        return $markup;
     }
-
 }

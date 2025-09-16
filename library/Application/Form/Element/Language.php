@@ -1,5 +1,6 @@
 <?PHP
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,23 +25,22 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2014, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Language;
 
 /**
- *
  * TODO override setLabel for more robust translation
  */
-class Application_Form_Element_Language extends Application_Form_Element_Select {
+class Application_Form_Element_Language extends Application_Form_Element_Select
+{
+    /** @var array */
+    private static $languageList;
 
-    private static $_languageList;
-
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->setLabel($this->getView()->translate($this->getName()));
@@ -52,26 +52,28 @@ class Application_Form_Element_Language extends Application_Form_Element_Select 
         }
     }
 
-    public static function getLanguageList() {
-        if (is_null(self::$_languageList)) {
+    /**
+     * @return array
+     */
+    public static function getLanguageList()
+    {
+        if (self::$languageList === null) {
             self::initLanguageList();
         }
-        return self::$_languageList;
+        return self::$languageList;
     }
 
     /**
      * Setup language list.
-     *
-     * @return void
      */
-    public static function initLanguageList() {
-        $translate = Zend_Registry::get(Application_Translate::REGISTRY_KEY);
-        $languages = array();
-        foreach (Opus_Language::getAllActiveTable() as $languageRow) {
-            $langId = $languageRow['part2_t'];
-            $languages[$langId] = $translate->translate($langId);
+    public static function initLanguageList()
+    {
+        $translate = Application_Translate::getInstance();
+        $languages = [];
+        foreach (Language::getAllActiveTable() as $languageRow) {
+            $langId             = $languageRow['part2_t'];
+            $languages[$langId] = $translate->translateLanguage($langId);
         }
-        self::$_languageList = $languages;
-        Zend_Registry::set('Available_Languages', $languages);
+        self::$languageList = $languages;
     }
 }

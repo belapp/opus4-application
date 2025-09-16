@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,36 +25,30 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Frontdoor
- * @author      Simone Finkbeiner-Franke <simone.finkbeiner@ub.uni-stuttgart.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @author      Sascha Szott <szott@zib.de>
  * @copyright   Copyright (c) 2009, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Mail\SendMail;
 
 /**
  * Controller for document recommendation starting from Frontdoor
- *
  */
-class Frontdoor_MailController extends Application_Controller_Action {
-
+class Frontdoor_MailController extends Application_Controller_Action
+{
     /**
-     *
      * TODO: this action is currently untested and therefore not supported
-     *
      */
-    public function indexAction() {
+    public function indexAction()
+    {
         throw new Application_Exception('currently not supported');
         /*
         $docId = $this->getRequest()->getParam('docId');
-        if (is_null($docId)) {
+        if ($docId === null) {
             throw new Application_Exception('missing parameter docId');
         }
 
-        $document = new Opus_Document($docId);
+        $document = Document::get($docId);
         $this->view->docId = $docId;
         $this->view->type = $document->getType();
 
@@ -86,11 +81,10 @@ class Frontdoor_MailController extends Application_Controller_Action {
     }
 
     /**
-     *
      * TODO: this action is currently untested and therefore not supported
-     *
      */
-    public function sendmailAction() {
+    public function sendmailAction()
+    {
         throw new Application_Exception('currently not supported');
 
         /*
@@ -107,8 +101,8 @@ class Frontdoor_MailController extends Application_Controller_Action {
 
         $from = '';
         $from = $form->getValue('sender_mail');
-        if ($from == '') {
-            $config = Zend_Registry::get('Zend_Config');
+        if ($from === '') {
+            $config = Config::get();
             if (true === isset($config->mail->opus->address)) {
                 $from = $config->mail->opus->address;
             }
@@ -126,7 +120,7 @@ class Frontdoor_MailController extends Application_Controller_Action {
         $bodyText .= '\n' . $this->view->translate('frontdoor_sendersname') . ': ' . $fromName;
         $bodyText .= '\n' . $this->view->translate('frontdoor_sendersmail') . ': ' . $from;
         $recipient = array(1 => array('address' => $recipientMail, 'name' => $form->getValue('recipient')));
-        $mailSendMail = new Opus_Mail_SendMail();
+        $mailSendMail = new SendMail();
         try {
             $mailSendMail->sendMail($from, $fromName, $subject, $bodyText, $recipient);
             $this->view->ok = '1';
@@ -145,22 +139,23 @@ class Frontdoor_MailController extends Application_Controller_Action {
          */
     }
 
-
     /**
      * Send mail to author(s) of document.
      */
-    public function toauthorAction() {
-
+    public function toauthorAction()
+    {
         $docId = $this->getRequest()->getParam('docId');
-        if (is_null($docId)) {
+        if ($docId === null) {
             throw new Application_Exception('missing parameter docId');
+        }
+        if (is_array($docId)) {
+            $docId = end($docId);
         }
 
         $authorsModel = null;
         try {
             $authorsModel = new Frontdoor_Model_Authors($docId);
-        }
-        catch (Frontdoor_Model_Exception $e) {
+        } catch (Frontdoor_Model_Exception $e) {
             throw new Application_Exception($e->getMessage());
         }
 
@@ -169,30 +164,31 @@ class Frontdoor_MailController extends Application_Controller_Action {
             throw new Application_Exception('no authors contactable via email');
         }
 
-        $form = new Frontdoor_Form_ToauthorForm(array('authors' => $authors));
+        $form = new Frontdoor_Form_ToauthorForm(['authors' => $authors]);
         $form->setAction(
             $this->view->url(
-                array(
-                    'module' => 'frontdoor',
+                [
+                    'module'     => 'frontdoor',
                     'controller' => 'mail',
-                    'action' => 'toauthor')
+                    'action'     => 'toauthor',
+                ]
             )
         );
         $form->setMethod('post');
 
         $this->view->docId = $docId;
 
-        if (!$this->getRequest()->isPost() || !$form->isValid($this->getRequest()->getPost())) {
-            $this->view->form = $form;
+        if (! $this->getRequest()->isPost() || ! $form->isValid($this->getRequest()->getPost())) {
+            $this->view->form   = $form;
             $this->view->author = $authors;
-            $this->view->type = $authorsModel->getDocument()->getType();
-            $this->view->title = $authorsModel->getDocument()->getTitleMain(0)->getValue();
+            $this->view->type   = $authorsModel->getDocument()->getType();
+            $this->view->title  = $authorsModel->getDocument()->getTitleMain(0)->getValue();
             return;
         }
 
         try {
             $authorsModel->sendMail(
-                new Opus_Mail_SendMail(),
+                new SendMail(),
                 $form->getValue('sender_mail'),
                 $form->getValue('sender'),
                 $this->view->translate('mail_toauthor_subject'),
@@ -200,8 +196,7 @@ class Frontdoor_MailController extends Application_Controller_Action {
                 $form->getValue('authors')
             );
             $this->view->success = 'frontdoor_mail_ok';
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             $this->getLogger()->err($e->getMessage());
             $this->view->success = 'frontdoor_mail_notok';
         }

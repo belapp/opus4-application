@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,64 +25,74 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Date;
+use Opus\Common\Document;
 
 /**
  * Unit tests for FormatValue view helper.
  */
-class Application_View_Helper_FormatValueTest extends ControllerTestCase {
+class Application_View_Helper_FormatValueTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'view', 'translation'];
 
-    private $__helper;
+    /** @var Application_View_Helper_FormatValue */
+    private $helper;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
-        $this->__helper = new Application_View_Helper_FormatValue();
-        $this->__helper->setView(Zend_Registry::get('Opus_View'));
+        $this->helper = new Application_View_Helper_FormatValue();
+        $this->helper->setView($this->getView());
     }
 
-    public function testViewHelperReturnsItself() {
-        $this->assertEquals($this->__helper, $this->__helper->formatValue());
+    public function testViewHelperReturnsItself()
+    {
+        $this->assertEquals($this->helper, $this->helper->formatValue());
     }
 
-    public function testFormatValueForNull() {
-        $ouput = $this->__helper->format(null);
+    public function testFormatValueForNull()
+    {
+        $ouput = $this->helper->format(null);
 
         $this->assertTrue(empty($output));
     }
 
-    public function testFormatValueForString() {
+    public function testFormatValueForString()
+    {
         $value = "Test";
 
-        $output = $this->__helper->format($value);
+        $output = $this->helper->format($value);
 
         $this->assertEquals($value, $output);
     }
 
-    public function testFormatValueForSelectField() {
+    public function testFormatValueForSelectField()
+    {
         $doc = $this->createTestDocument();
 
         $field = $doc->getField('Language');
 
         $field->setValue('deu');
 
-        $output = $this->__helper->format($field, 'Opus_Document');
+        $output = $this->helper->format($field, Opus\Document::class);
 
-        $this->assertTrue(in_array($output, array('German', 'Deutsch')));
+        $this->assertTrue(in_array($output, ['German', 'Deutsch']));
     }
 
-    public function testFormatValueForYear() {
+    public function testFormatValueForYear()
+    {
         $doc = $this->createTestDocument();
 
         $field = $doc->getField('PublishedYear');
 
         $field->setValue(2010);
 
-        $output = $this->__helper->format($field);
+        $output = $this->helper->format($field);
 
         $this->assertEquals('2010', $output);
     }
@@ -92,39 +103,39 @@ class Application_View_Helper_FormatValueTest extends ControllerTestCase {
      *
      * TODO figure out unit test that checks all locales
      */
-    public function testFormatValueForDate() {
-        $doc = new Opus_Document(3);
+    public function testFormatValueForDate()
+    {
+        $doc = Document::get(3);
 
         $field = $doc->getField('ThesisDateAccepted');
 
-        $output = $this->__helper->format($field);
+        $output = $this->helper->format($field);
 
-        $this->assertTrue(in_array($output, array('2002/06/17', '17.06.2002')));
+        $this->assertTrue(in_array($output, ['2002/06/17', '17.06.2002']));
     }
 
-    public function testFormatValueForInvalidDate() {
+    public function testFormatValueForInvalidDate()
+    {
         $doc = $this->createTestDocument();
 
-        $doc->setPublishedDate(new Opus_Date('2005'));
+        $doc->setPublishedDate(new Date('2005'));
 
         $field = $doc->getField('PublishedDate');
 
-        $output = $this->__helper->format($field);
+        $output = $this->helper->format($field);
 
         $this->assertEquals(null, $output);
     }
 
-    public function testFormatValueForPublicationState() {
-
-        $doc = new Opus_Document(3);
+    public function testFormatValueForPublicationState()
+    {
+        $doc = Document::get(3);
 
         $field = $doc->getField('PublicationState');
 
-        $output = $this->__helper->format($field, 'Opus_Document');
+        $output = $this->helper->format($field, Opus\Document::class);
 
         // PublicationState is not translated right now
         $this->assertEquals('draft', $output);
     }
-
 }
-

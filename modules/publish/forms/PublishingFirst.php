@@ -25,39 +25,44 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Publish
- * @author      Susanne Gottwald <gottwald@zib.de>
- * @author      Maximilian Salomon <salomon@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 /**
  * Builds the fist page of an upload form for one file
- *
  */
-class Publish_Form_PublishingFirst extends Publish_Form_PublishingAbstract {
-
+class Publish_Form_PublishingFirst extends Publish_Form_PublishingAbstract
+{
+    /** @var bool */
     public $bibliographie;
 
-    public $showRights;
-    /**
-     *
-     * @var boolean
-     */
+    /** @var bool */
+    public $showRights; // TODO BUG used to be int - verify it works
+
+    /** @var bool */
     public $enableUpload = false;
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
     }
 
-    public function isValid($data) {
+    /**
+     * @param array $data
+     * @return bool
+     * @throws Zend_Form_Exception
+     */
+    public function isValid($data)
+    {
         $valid = parent::isValid($data);
 
-        if ($this->_config->form->first->show_rights_checkbox == 1) {
+        if (
+            isset($this->config->form->first->show_rights_checkbox) &&
+            filter_var($this->config->form->first->show_rights_checkbox, FILTER_VALIDATE_BOOLEAN)
+        ) {
             if (array_key_exists('rights', $data)) {
-                if ($data['rights'] == '0') {
+                if (! $data['rights']) {
                     $rights = $this->getElement('rights');
                     $rights->addError($this->view->translate('publish_error_rights_checkbox_empty'));
                     $valid = false;
@@ -71,34 +76,34 @@ class Publish_Form_PublishingFirst extends Publish_Form_PublishingAbstract {
     /**
      * First publishing form of two forms
      * Here: Doctype + Upload-File
-     *
-     * @return void
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->setDisableTranslator(true);
 
         //create and add document type
-        $doctypes = $this->_createDocumentTypeField();
+        $doctypes = $this->createDocumentTypeField();
         $this->addElement($doctypes);
 
         //create and add file upload
-        $this->enableUpload = ($this->_config->form->first->enable_upload == 1);
+        $this->enableUpload = isset($this->config->form->first->enable_upload) &&
+            filter_var($this->config->form->first->enable_upload, FILTER_VALIDATE_BOOLEAN);
         if ($this->enableUpload) {
-            $fileupload = $this->_createFileuploadField();
+            $fileupload = $this->createFileuploadField();
             $this->addDisplayGroup($fileupload, 'documentUpload');
         }
 
         //create and add bibliographie
-        $bibliographie = $this->_createBibliographyField();
-        if (!is_null($bibliographie)) {
+        $bibliographie = $this->createBibliographyField();
+        if ($bibliographie !== null) {
             $this->addElement($bibliographie);
         }
 
         //create and add rights checkbox
-        $rights = $this->_createRightsCheckBox();
-        if (!is_null($rights)) {
+        $rights = $this->createRightsCheckBox();
+        if ($rights !== null) {
             $this->addElement($rights);
         }
 
@@ -114,11 +119,12 @@ class Publish_Form_PublishingFirst extends Publish_Form_PublishingAbstract {
      * shows selection: >1 Options
      * shows text field: =1 Option
      *
-     * @return <Zend_Element>
+     * @return Zend_Form_Element
      */
-    private function _createDocumentTypeField() {
-        $optionsSorted = array();
-        foreach ($this->_documentTypesHelper->getDocumentTypes() as $value => $path) {
+    private function createDocumentTypeField()
+    {
+        $optionsSorted = [];
+        foreach ($this->documentTypesHelper->getDocumentTypes() as $value => $path) {
             $optionsSorted[$value] = $this->view->translate($value);
         }
         asort($optionsSorted);
@@ -127,49 +133,45 @@ class Publish_Form_PublishingFirst extends Publish_Form_PublishingAbstract {
         $doctypes->setDisableTranslator(true)
                 ->setLabel('selecttype')
                 ->setMultiOptions(
-                    array_merge(array('' => $this->view->translate('choose_valid_doctype')), $optionsSorted)
+                    array_merge(['' => $this->view->translate('choose_valid_doctype')], $optionsSorted)
                 )
                 ->setRequired(true)
-                ->setErrorMessages(array($this->view->translate('publish_error_missing_doctype')));
+                ->setErrorMessages([$this->view->translate('publish_error_missing_doctype')]);
 
         return $doctypes;
     }
 
     /**
      * Method shows the fields for file uploads by looking in config file
-     * @return <Zend_Element>
+     *
+     * @return array
      */
-    private function _createFileuploadField() {
+    private function createFileuploadField()
+    {
         // get path to store files
-        $tempPath = $this->_config->form->first->temp;
+        $tempPath = $this->config->form->first->temp;
         if (true === empty($tempPath)) {
             $tempPath = APPLICATION_PATH . '/workspace/tmp/';
         }
 
         // get allowed filetypes
-        $filetypes = $this->_config->publish->filetypes->allowed;
+        $filetypes = $this->config->publish->filetypes->allowed;
         if (true === empty($filetypes)) {
             $filetypes = 'pdf,txt,html,htm';
         }
 
         //get allowed file size
-        $maxFileSize = (int) $this->_config->publish->maxfilesize;
+        $maxFileSize = (int) $this->config->publish->maxfilesize;
         if (true === empty($maxFileSize)) {
             $maxFileSize = 1024000; //1MB
         }
 
-        // Upload-fields required to enter second stage
-        $requireUpload = $this->_config->form->first->require_upload;
-        if (true === empty($requireUpload)) {
-            $requireUpload = 0;
-        }
-
         //initialization of filename-validator
-        $filenameMaxLength = $this->_config->publish->filenameMaxLength;
-        $filenameFormat = $this->_config->publish->filenameFormat;
-        $filenameOptions = [
+        $filenameMaxLength = $this->config->publish->filenameMaxLength;
+        $filenameFormat    = $this->config->publish->filenameFormat;
+        $filenameOptions   = [
             'filenameMaxLength' => $filenameMaxLength,
-            'filenameFormat' => $filenameFormat
+            'filenameFormat'    => $filenameFormat,
         ];
         $filenameValidator = new Application_Form_Validate_Filename($filenameOptions);
 
@@ -186,12 +188,16 @@ class Publish_Form_PublishingFirst extends Publish_Form_PublishingAbstract {
                 ->addValidator($filenameValidator, false)       // filename-format
                 ->setAttrib('enctype', 'multipart/form-data');
 
-        if (1 == $requireUpload) {
-            if (!isset($this->_session->fulltext) || $this->_session->fulltext == '0') {
+        // Upload-fields required to enter second stage
+        if (
+            isset($this->config->form->first->require_upload) &&
+            filter_var($this->config->form->first->require_upload, FILTER_VALIDATE_BOOLEAN)
+        ) {
+            if (! isset($this->session->fulltext) || ! $this->session->fulltext) {
+                // noch keine Datei zum Upload ausgewählt
                 $fileupload->setRequired(true);
             }
-        }
-        else {
+        } else {
             $fileupload->setRequired(false);
         }
 
@@ -204,51 +210,52 @@ class Publish_Form_PublishingFirst extends Publish_Form_PublishingAbstract {
         $comment->setLabel('uploadComment');
         $this->addElement($comment);
 
-        $group = array($fileupload->getName(), 'addAnotherFile', $comment->getName());
-
-        return $group;
+        return [$fileupload->getName(), 'addAnotherFile', $comment->getName()];
     }
 
     /**
      * Method shows bibliography field by looking in config file
-     * @return <Zend_Element>
+     *
+     * @return Zend_Form_Element
      */
-    private function _createBibliographyField() {
-        $bib = $this->_config->form->first->bibliographie;
-        if (true === empty($bib)) {
-            $bib = 0;
-            $this->bibliographie = 0;
-        }
-
-        $bibliographie = null;
-
-        if ($bib == 1) {
-            $this->bibliographie = 1;
-            $bibliographie = $this->createElement('checkbox', 'bibliographie');
+    private function createBibliographyField()
+    {
+        if (
+            isset($this->config->form->first->bibliographie) &&
+            filter_var($this->config->form->first->bibliographie, FILTER_VALIDATE_BOOLEAN)
+        ) {
+            $this->bibliographie = true;
+            $bibliographie       = $this->createElement('checkbox', 'bibliographie');
             $bibliographie->setDisableTranslator(true);
             $bibliographie->setLabel('bibliographie');
+        } else {
+            $this->bibliographie = false;
+            $bibliographie       = null;
         }
 
         return $bibliographie;
     }
 
-    private function _createRightsCheckBox() {
-        $showRights = $this->_config->form->first->show_rights_checkbox;
-        if (true === empty($showRights)) {
-            $showRights = 0;
-            $this->showRights = 0;
-        }
-
-        $rightsCheckbox = null;
-
-        if ($showRights == 1) {
-            $this->showRights = 1;
-            $rightsCheckbox = $this->createElement('checkbox', 'rights');
+    /**
+     * @return Zend_Form_Element|null
+     * @throws Zend_Form_Exception
+     */
+    private function createRightsCheckBox()
+    {
+        if (
+            isset($this->config->form->first->show_rights_checkbox) &&
+            filter_var($this->config->form->first->show_rights_checkbox, FILTER_VALIDATE_BOOLEAN)
+        ) {
+            $this->showRights = true;
+            $rightsCheckbox   = $this->createElement('checkbox', 'rights');
             $rightsCheckbox
-                    ->setDisableTranslator(true)
-                    ->setLabel('rights')
-                    ->setRequired(true)
-                    ->setChecked(false);
+                ->setDisableTranslator(true)
+                ->setLabel('rights')
+                ->setRequired(true)
+                ->setChecked(false);
+        } else {
+            $this->showRights = false;
+            $rightsCheckbox   = null;
         }
 
         return $rightsCheckbox;
@@ -257,23 +264,23 @@ class Publish_Form_PublishingFirst extends Publish_Form_PublishingAbstract {
     /**
      * Method sets the different variables and arrays for the view and the templates in the first form
      */
-    public function setViewValues() {
-        foreach ($this->getElements() AS $currentElement => $value) {
+    public function setViewValues()
+    {
+        foreach ($this->getElements() as $currentElement => $value) {
             $this->view->$currentElement = $this->getElementAttributes($currentElement);
         }
 
         if ($this->enableUpload) {
             $displayGroup = $this->getDisplayGroup('documentUpload');
 
-            $group = $this->buildViewDisplayGroup($displayGroup);
-            $group['Name'] = 'documentUpload';
+            $group            = $this->buildViewDisplayGroup($displayGroup);
+            $group['Name']    = 'documentUpload';
             $group['Counter'] = 2;
 
-            $this->view->documentUpload = $group;
-            $this->view->MAX_FILE_SIZE = $this->_config->publish->maxfilesize;
-            $this->view->filenameMaxLength = $this->_config->publish->filenameMaxLength;
-            $this->view->filenameFormat = $this->_config->publish->filenameFormat;
+            $this->view->documentUpload    = $group;
+            $this->view->MAX_FILE_SIZE     = $this->config->publish->maxfilesize;
+            $this->view->filenameMaxLength = $this->config->publish->filenameMaxLength;
+            $this->view->filenameFormat    = $this->config->publish->filenameFormat;
         }
     }
-
 }

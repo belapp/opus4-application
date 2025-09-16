@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,110 +24,119 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Model\ModelInterface;
+use Opus\Common\Model\PersistableInterface;
 
 /**
  * Formular für Bestätigungsabfragen an den Nutzer, z.B. beim Löschen von Modellen.
  *
- * @category    Application
- * @package     Application_Form
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
+ * TODO this "form" is actually a Zend_Form_SubForm, it should be a Zend_Form - Fix!
  */
-class Application_Form_Confirmation extends Application_Form_Abstract {
-
+class Application_Form_Confirmation extends Application_Form_Abstract
+{
     /**
      * Name von Formularelement für Model-ID.
      */
-    const ELEMENT_MODEL_ID = 'Id';
+    public const ELEMENT_MODEL_ID = 'Id';
 
     /**
      * Name für Button zum Bestätigen der Abfrage.
      */
-    const ELEMENT_YES = 'ConfirmYes';
+    public const ELEMENT_YES = 'ConfirmYes';
 
     /**
      * Name für Button zum Verneinen der Abfrage.
      */
-    const ELEMENT_NO = 'ConfirmNo';
+    public const ELEMENT_NO = 'ConfirmNo';
 
     /**
      * Ergebnis für Bestätigung der Frage (Ja).
      */
-    const RESULT_YES = 'true';
+    public const RESULT_YES = 'true';
 
     /**
      * Ergebnis für Abbrechen des Vorgangs (Nein).
      */
-    const RESULT_NO = 'false';
+    public const RESULT_NO = 'false';
 
     /**
      * Frage für Bestätigungsformular.
+     *
      * @var string
      */
-    private $_question = null;
+    private $question;
 
     /**
      * Model auf das sich die Frage bezieht.
-     * @var Opus_Model_Abstract
+     *
+     * @var ModelInterface
      */
-    private $_model = null;
+    private $model;
 
     /**
      * Klasse für Model.
-     * @var string
+     *
+     * @var ModelInterface
      */
-    private $_modelClass = null;
+    private $modelClass;
 
     /**
      * Angepasster Anzeigename für Model;
+     *
      * @var string
      */
-    private $_modelDisplayName = null;
+    private $modelDisplayName;
 
     /**
      * Konstruiert Formular.
      *
-     * @param string $modelClass Name der Modelklasse
-     * @param array $options
-     * @throws Application_Exception wenn $modelClass Parameer fehlt
+     * @param string     $modelClass Name der Modelklasse
+     * @param array|null $options
+     * @throws Application_Exception Wenn $modelClass Parameer fehlt.
      */
-    public function __construct($modelClass, $options = null) {
-        if (is_null($modelClass) || strlen(trim($modelClass)) === 0) {
+    public function __construct($modelClass, $options = null)
+    {
+        if ($modelClass === null || strlen(trim($modelClass)) === 0) {
             throw new Application_Exception(__CLASS__ . 'Attempt to construct without parameter "modelClass".');
         }
-        $this->_modelClass = $modelClass;
+        $this->modelClass = $modelClass;
         parent::__construct($options);
     }
 
     /**
      * Initialisiert die Formularelement.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
-        $this->addElement('hidden', self::ELEMENT_MODEL_ID, array('required' => true, 'validators' => array('int')));
-        $this->addElement('submit', self::ELEMENT_YES, array('label' => 'answer_yes'));
-        $this->addElement('submit', self::ELEMENT_NO, array('label' => 'answer_no'));
+        $this->addElement('hidden', self::ELEMENT_MODEL_ID, ['required' => true, 'validators' => ['int']]);
+        $this->addElement('submit', self::ELEMENT_YES, ['label' => 'answer_yes']);
+        $this->addElement('submit', self::ELEMENT_NO, ['label' => 'answer_no']);
 
         $this->setLegend($this->getFormLegend());
 
         $this->setDecorators(
-            array(
-            array('ViewScript', array('viewScript' => 'confirmation.phtml')),
-            array('Fieldset', array('class' => 'headline')),
-            'Form'
-            )
+            [
+                ['ViewScript', ['viewScript' => 'confirmation.phtml']],
+                ['Fieldset', ['class' => 'headline']],
+                'Form',
+            ]
         );
     }
 
     /**
      * Erzeugt Text für Überschrift (Legend) des Formulars.
+     *
      * @return string
      */
-    public function getFormLegend() {
+    public function getFormLegend()
+    {
         $legend = $this->getTranslator()->translate('confirmation_title_default');
         return sprintf($legend, $this->getModelClassName());
     }
@@ -136,33 +146,38 @@ class Application_Form_Confirmation extends Application_Form_Abstract {
      *
      * Der POST muss gültig sein (mit Model-ID) und der Button ELEMENT_YES muss geklickt worden sein.
      *
-     * @param $post POST array
+     * @param array $post POST array
      * @return bool
      */
-    public function isConfirmed($post) {
-        return ($this->isValid($post) && ($this->processPost($post) === self::RESULT_YES)) ? true : false;
+    public function isConfirmed($post)
+    {
+        return $this->isValid($post) && ($this->processPost($post) === self::RESULT_YES) ? true : false;
     }
 
     /**
      * Verarbeitet POST und stellt fest welcher Button geklickt wurde.
-     * @param $post POST array
-     * @return string
+     *
+     * @param array $post POST array
+     * @return string|null
      */
-    public function processPost($post) {
+    public function processPost($post)
+    {
         if (array_key_exists(self::ELEMENT_YES, $post)) {
             return self::RESULT_YES;
-
-        }
-        else if (array_key_exists(self::ELEMENT_NO, $post)) {
+        } elseif (array_key_exists(self::ELEMENT_NO, $post)) {
             return self::RESULT_NO;
         }
+
+        return null;
     }
 
     /**
      * Liefert Model-ID, die im Hidden-Feld gespeichert ist.
+     *
      * @return string
      */
-    public function getModelId() {
+    public function getModelId()
+    {
         return $this->getElement(self::ELEMENT_MODEL_ID)->getValue();
     }
 
@@ -172,82 +187,104 @@ class Application_Form_Confirmation extends Application_Form_Abstract {
      * Eigentlich wird nur die ID benötigt, aber in abgeleiteten Klassen könnte das Model verwendet werden, um
      * specifischer Informationen anzuzeigen.
      *
-     * @param Opus_Abstract_Model $model
+     * @param PersistableInterface $model
+     * @return $this
      * @throws Application_Exception
      */
-    public function setModel($model) {
-        if (!is_null($model) && $model instanceof Opus_Model_AbstractDb) {
-            $this->_model = $model;
+    public function setModel($model)
+    {
+        if ($model !== null && $model instanceof PersistableInterface) {
+            $this->model = $model;
             $this->getElement(self::ELEMENT_MODEL_ID)->setValue($model->getId());
-        }
-        else {
+        } else {
             if (is_object($model)) {
                 throw new Application_Exception(
                     __METHOD__ . ' Parameter ' . get_class($model)
-                    . ' not instance of Opus_Model_AbstractDb.'
+                    . ' not instance of Opus\Model\AbstractDb.'
                 );
-            }
-            else {
-                throw new Application_Exception(__METHOD__ . ' Parameter must be Opus_Model_AbstractDb.');
+            } else {
+                throw new Application_Exception(__METHOD__ . ' Parameter must be Opus\Model\AbstractDb.');
             }
         }
+        return $this;
     }
 
     /**
      * Liefert Klasse für Model.
+     *
      * @return string|null
      */
-    public function getModelClass() {
-        return $this->_modelClass;
+    public function getModelClass()
+    {
+        return $this->modelClass;
     }
 
     /**
      * Liefert Übersetzung für Modelklasse.
+     *
      * @return string
      */
-    public function getModelClassName() {
-        return $this->getTranslator()->translate($this->_modelClass);
+    public function getModelClassName()
+    {
+        if (strpos($this->modelClass, 'Opus\\Common\\') === 0) {
+            $modelType      = $this->modelClass::getModelType();
+            $translationKey = 'Opus_' . $modelType;
+        } else {
+            $translationKey = preg_replace('/\\\\/', '_', $this->modelClass);
+        }
+        return $this->getTranslator()->translate($translationKey);
     }
 
     /**
      * Liefert den Anzeigenamen für Modelinstanz.
+     *
      * @return string
      */
-    public function getModelDisplayName() {
-        if (!is_null($this->_modelDisplayName)) {
-            return $this->_modelDisplayName;
-        }
-        else if (!is_null($this->_model)) {
-            return $this->_model->getDisplayName();
-        }
-        else {
+    public function getModelDisplayName()
+    {
+        if ($this->modelDisplayName !== null) {
+            return $this->modelDisplayName;
+        } elseif ($this->model !== null) {
+            return $this->model->getDisplayName();
+        } else {
             return '';
         }
     }
 
-    public function setModelDisplayName($displayName) {
-        $this->_modelDisplayName = $displayName;
+    /**
+     * @param string $displayName
+     * @return $this
+     */
+    public function setModelDisplayName($displayName)
+    {
+        $this->modelDisplayName = $displayName;
+        return $this;
     }
 
     /**
      * Liefert den Fragetext für das Formular.
+     *
      * @return string
      */
-    public function getQuestion() {
-        if (is_null($this->_question)) {
+    public function getQuestion()
+    {
+        if ($this->question === null) {
             return 'confirmation_question_default';
-        }
-        else {
-            return $this->_question;
+        } else {
+            return $this->question;
         }
     }
 
     /**
      * Setzt den Fragetext für das Formular.
+     *
      * @param string $question
+     * @return $this
      */
-    public function setQuestion($question) {
-        $this->_question = $question;
+    public function setQuestion($question)
+    {
+        $this->question = $question;
+        return $this;
     }
 
     /**
@@ -259,7 +296,8 @@ class Application_Form_Confirmation extends Application_Form_Abstract {
      *
      * @return string
      */
-    public function renderQuestion() {
+    public function renderQuestion()
+    {
         $question = $this->getTranslator()->translate($this->getQuestion());
 
         return sprintf(
@@ -268,5 +306,4 @@ class Application_Form_Confirmation extends Application_Form_Abstract {
             '<span class="displayname">' . htmlspecialchars($this->getModelDisplayName()) . '</span>'
         );
     }
-
 }

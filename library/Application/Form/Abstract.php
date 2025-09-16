@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,49 +24,47 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright Copyright (c) 2008, OPUS 4 development team
+ * @license   http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Config;
+use Opus\Common\LoggingTrait;
 
 /**
  * Abstrakte Basisklasse für OPUS Formulare.
- *
- * @category    Application
- * @package     Application_Form
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-abstract class Application_Form_Abstract extends Zend_Form_SubForm {
+abstract class Application_Form_Abstract extends Zend_Form_SubForm
+{
+    use LoggingTrait;
 
     /**
      * Konfiguration Objekt für Applikation.
+     *
      * @var Zend_Config
      */
-    private $_config;
-
-
-    /**
-     * Logger für Formularklasse.
-     * @var Zend_Log
-     */
-    private $_logger;
+    private $config;
 
     /**
      * Option für die automatische Verwendung der Element-Namen als Labels.
+     *
      * @var bool
      */
-    private $_useNameAsLabel = false;
+    private $useNameAsLabel = false;
 
     /**
      * Prefix fuer automatische Label.
+     *
      * @var string
      */
-    private $_labelPrefix;
+    private $labelPrefix;
 
     /**
      * Initialisiert das Formular.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         $this->addPrefixPath('Application_Form_Decorator', 'Application/Form/Decorator', Zend_Form::DECORATOR);
@@ -81,25 +80,26 @@ abstract class Application_Form_Abstract extends Zend_Form_SubForm {
      * geliefert.
      *
      * @param string $name
-     * @return mixed
+     * @return mixed|null
      *
      * TODO Sind alle Fälle abgedeckt?
      * TODO replace with filter or override getValue($name)
      */
-    public function getElementValue($name) {
+    public function getElementValue($name)
+    {
         $element = $this->getElement($name);
-        if (!is_null($element)) {
+        if ($element !== null) {
             $value = $element->getValue();
 
-            if ($element instanceof Zend_Form_Element_Text || $element instanceof Zend_Form_Element_Textarea
-                || $element instanceof Zend_Form_Element_Hidden) {
-                return (trim($value) === '') ? null : $value;
-            }
-            else {
+            if (
+                $element instanceof Zend_Form_Element_Text || $element instanceof Zend_Form_Element_Textarea
+                || $element instanceof Zend_Form_Element_Hidden
+            ) {
+                return $value === null || trim($value) === '' ? null : $value;
+            } else {
                 return $value;
             }
-        }
-        else {
+        } else {
             // Sollte nie passieren - Schreibe Fehlermeldung ins Log
             $this->getLogger()->err("Element '$name' in form '" . $this->getName() . "' not found.");
             return null;
@@ -115,19 +115,20 @@ abstract class Application_Form_Abstract extends Zend_Form_SubForm {
      * Bei vielen Opus Model Formularen stimmt der Element-Name mit dem Übersetzungsschlüssel überein.
      *
      * @param string|Zend_Form_Element $element
-     * @param null $name
-     * @param null $options
-     * @return void|Zend_Form
+     * @param string                   $name
+     * @param array|null               $options
+     * @return Zend_Form_Element
      */
-    public function createElement($element, $name , $options = null) {
+    public function createElement($element, $name, $options = null)
+    {
         if ($this->isUseNameAsLabel()) {
-            $labelOption = array('label' => is_null($this->_labelPrefix) ? $name : $this->_labelPrefix . $name);
-            $options = (is_array($options)) ? array_merge($labelOption, $options) : $labelOption;
+            $labelOption = ['label' => $this->labelPrefix === null ? $name : $this->labelPrefix . $name];
+            $options     = is_array($options) ? array_merge($labelOption, $options) : $labelOption;
         }
 
         $element = parent::createElement($element, $name, $options);
 
-        if (!is_null($element)) {
+        if ($element !== null) {
             $this->applyCustomMessages($element);
         }
 
@@ -136,12 +137,14 @@ abstract class Application_Form_Abstract extends Zend_Form_SubForm {
 
     /**
      * Fügt angepasste Nachrichten für Validierungen hinzu.
+     *
      * @param Zend_Form_Element $element
      */
-    protected function applyCustomMessages($element) {
+    protected function applyCustomMessages($element)
+    {
         if ($element->isRequired()) {
             // wenn Validator 'notEmpty' bereits gesetzt ist; nicht modifizieren
-            if (!$element->getValidator('notEmpty') && $element->autoInsertNotEmptyValidator()) {
+            if (! $element->getValidator('notEmpty') && $element->autoInsertNotEmptyValidator()) {
                 $notEmptyValidator = new Zend_Validate_NotEmpty();
                 $notEmptyValidator->setMessage('admin_validate_error_notempty');
                 $element->addValidator($notEmptyValidator);
@@ -150,95 +153,72 @@ abstract class Application_Form_Abstract extends Zend_Form_SubForm {
     }
 
     /**
-     * TODO Verwendung entfernen und dann löschen
-     * @deprecated wir sollten einheitlich get/setLogger verwenden
-     */
-    public function getLog() {
-        return $this->getLogger();
-    }
-
-    /**
-     * TODO Verwendung entfernen und dann löschen
-     * @deprecated wir sollten einheitlich get/setLogger verwenden
-     */
-    public function setLog($logger) {
-        $this->setLogger($logger);
-    }
-
-    /**
-     * Liefert den Logger für diese Klasse.
-     *
-     * Wenn für die Klasse kein Logger gesetzt wurde, wird der Wert von 'Zend_Log' in Zend_Registry zurueck geliefert.
-     *
-     * @return Zend_Log
-     */
-    public function getLogger() {
-        if (is_null($this->_logger)) {
-            $this->_logger = Zend_Registry::get('Zend_Log');
-        }
-
-        return $this->_logger;
-    }
-
-    /**
-     * Setzt den Logger für diese Klasse
-     * @param $logger
-     */
-    public function setLogger($logger) {
-        $this->_logger = $logger;
-    }
-
-    /**
      * Meldet, ob Element-Namen als Label verwendet werden.
+     *
      * @return bool TRUE - Element Namen werden als Label verwendet; FALSE - keine automatischen Label
      */
-    public function isUseNameAsLabel() {
-        return $this->_useNameAsLabel;
+    public function isUseNameAsLabel()
+    {
+        return $this->useNameAsLabel;
     }
 
     /**
      * Setzt Option fuer die automatische Verwendung von Element-Namen als Label.
+     *
      * @param bool $useNameAsLabel
+     * @return $this
      */
-    public function setUseNameAsLabel($useNameAsLabel) {
-        $this->_useNameAsLabel = $useNameAsLabel;
+    public function setUseNameAsLabel($useNameAsLabel)
+    {
+        $this->useNameAsLabel = $useNameAsLabel;
+        return $this;
     }
 
     /**
      * Liefert den gesetzten Prefix fuer automatisch generierte Label.
+     *
      * @return string
      */
-    public function getLabelPrefix() {
-        return $this->_labelPrefix;
+    public function getLabelPrefix()
+    {
+        return $this->labelPrefix;
     }
 
     /**
      * Setzt den Prefix der fuer automatische Label verwendet werden soll.
      *
-     * @param $prefix
+     * @param string $prefix
+     * @return $this
      */
-    public function setLabelPrefix($prefix) {
-        $this->_labelPrefix = $prefix;
+    public function setLabelPrefix($prefix)
+    {
+        $this->labelPrefix = $prefix;
+        return $this;
     }
 
     /**
      * Returns configuration.
+     *
      * @return Zend_Config
      */
-    public function getApplicationConfig() {
-        if (is_null($this->_config)) {
-            $this->_config = Zend_Registry::get('Zend_Config');
+    public function getApplicationConfig()
+    {
+        if ($this->config === null) {
+            $this->config = Config::get();
         }
 
-        return $this->_config;
+        return $this->config;
     }
 
     /**
      * Sets configuration.
-     * @param $config Zend_Config
+     *
+     * @param Zend_Config $config
+     * @return $this
      */
-    public function setApplicationConfig($config) {
-        $this->_config = $config;
+    public function setApplicationConfig($config)
+    {
+        $this->config = $config;
+        return $this;
     }
-
 }

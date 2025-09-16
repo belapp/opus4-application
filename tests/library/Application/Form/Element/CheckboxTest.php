@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,33 +24,40 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- */
-
-/**
- * @category    Application Unit Test
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class Application_Form_Element_CheckboxTest extends FormElementTestCase {
 
-    public function setUp() {
-        $this->_formElementClass = 'Application_Form_Element_Checkbox';
-        $this->_expectedDecoratorCount = 6;
-        $this->_expectedDecorators = array('ViewHelper', 'Errors', 'Description', 'ElementHtmlTag', 'Label',
-            'dataWrapper');
+class Application_Form_Element_CheckboxTest extends FormElementTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'translation';
+
+    public function setUp(): void
+    {
+        $this->formElementClass       = 'Application_Form_Element_Checkbox';
+        $this->expectedDecoratorCount = 6;
+        $this->expectedDecorators     = [
+            'ViewHelper',
+            'Errors',
+            'Description',
+            'ElementHtmlTag',
+            'Label',
+            'dataWrapper',
+        ];
         parent::setUp();
     }
 
-    public function testGetViewCheckedValue() {
+    public function testGetViewCheckedValue()
+    {
         $element = $this->getElement();
 
         $this->assertEquals('Field_Value_True', $element->getViewCheckedValue());
     }
 
-    public function testSetViewCheckedValue() {
+    public function testSetViewCheckedValue()
+    {
         $element = $this->getElement();
 
         $element->setViewCheckedValue('Public');
@@ -57,13 +65,15 @@ class Application_Form_Element_CheckboxTest extends FormElementTestCase {
         $this->assertEquals('Public', $element->getViewCheckedValue());
     }
 
-    public function testGetViewUncheckedValue() {
+    public function testGetViewUncheckedValue()
+    {
         $element = $this->getElement();
 
         $this->assertEquals('Field_Value_False', $element->getViewUncheckedValue());
     }
 
-    public function testSetViewUncheckedValue() {
+    public function testSetViewUncheckedValue()
+    {
         $element = $this->getElement();
 
         $element->setViewUncheckedValue('Private');
@@ -71,7 +81,8 @@ class Application_Form_Element_CheckboxTest extends FormElementTestCase {
         $this->assertEquals('Private', $element->getViewUncheckedValue());
     }
 
-    public function testPrepareRenderingAsViewModifyValues() {
+    public function testPrepareRenderingAsViewModifyValues()
+    {
         $this->useEnglish();
 
         $element = $this->getElement();
@@ -83,8 +94,8 @@ class Application_Form_Element_CheckboxTest extends FormElementTestCase {
         $this->assertEquals('Yes', $element->getValue());
     }
 
-    public function testGetHint() {
+    public function testGetHint()
+    {
         $this->assertNull($this->getElement()->getHint());
     }
-
 }

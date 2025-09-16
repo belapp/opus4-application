@@ -26,13 +26,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Export
- * @author      Gunar Maiwald <maiwald@zib.de>
- * @author      Edouard Simon <edouard.simon@zib.de>
  * @copyright   Copyright (c) 2013, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 -->
 
@@ -262,7 +257,7 @@
         <!-- Edition -->
         <xsl:apply-templates select="@Edition" />
         <!-- Isbn -->
-        <xsl:apply-templates select="IdentifierIsbn" />
+        <xsl:apply-templates select="Identifier[@Type = 'isbn']" />
         <!-- CompleteadDate, CompletedYear -->
         <xsl:call-template name="Year" />
     </xsl:template>
@@ -339,7 +334,7 @@
         <xsl:text>, </xsl:text>
     </xsl:template>
 
-    <xsl:template match="IdentifierIsbn">
+    <xsl:template match="Identifier[@Type = 'isbn']">
         <xsl:value-of select="@Value" />
         <xsl:text>, </xsl:text>
     </xsl:template>
@@ -562,7 +557,7 @@
         <xsl:if test="@Type='doi'">
             <xsl:element name="a">
                 <xsl:attribute name="href">
-                    <xsl:text>http://dx.doi.org/</xsl:text>
+                    <xsl:value-of select="php:functionString('Application_Xslt::optionValue', 'doi.resolverUrl')"/>
                     <xsl:value-of select="@Value" />
                 </xsl:attribute>
                 <xsl:text>DOI</xsl:text>
@@ -572,7 +567,7 @@
        <xsl:if test="@Type='pubmed'">
             <xsl:element name="a">
                 <xsl:attribute name="href">
-                    <xsl:text>http://www.ncbi.nlm.nih.gov/pubmed/</xsl:text>
+                    <xsl:value-of select="php:functionString('Application_Xslt::optionValue', 'baseUrl', 'pubmed')"/>
                     <xsl:value-of select="@Value" />
                 </xsl:attribute>
                 <xsl:text>PMID</xsl:text>

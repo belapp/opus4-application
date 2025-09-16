@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,17 +25,19 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Export
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Export_Model_PublistExportTest extends ControllerTestCase {
+use Opus\Common\Config;
 
-    public function testConstruction() {
+class Export_Model_PublistExportTest extends ControllerTestCase
+{
+    /** @var bool */
+    protected $configModifiable = true;
+
+    public function testConstruction()
+    {
         $plugin = new Export_Model_PublistExport('publist');
 
         $this->assertEquals('publist', $plugin->getName());
@@ -44,19 +47,25 @@ class Export_Model_PublistExportTest extends ControllerTestCase {
 
     public function testGetMimeTypes()
     {
-        $config = Zend_Registry::get('Zend_Config');
+        $this->adjustConfiguration([
+            'plugins' => [
+                'export' => [
+                    'publist' => [
+                        'file' => [
+                            'allow' => [
+                                'mimetype' => ['application/xhtml+xml' => 'HTML'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
 
-        $config->merge(
-            new Zend_Config(array('plugins' => array('export' => array(
-                'publist' => array(
-                    'file' => array(
-                        'allow' => array(
-                            'mimetype' => array('application/xhtml+xml' => 'HTML')))))))));
+        $config = Config::get();
 
         $plugin = new Export_Model_PublistExport('publist');
         $plugin->setConfig($config->plugins->export->publist);
 
-        $this->assertEquals(array('application/xhtml+xml' => 'HTML'), $plugin->getMimeTypes());
+        $this->assertEquals(['application/xhtml+xml' => 'HTML'], $plugin->getMimeTypes());
     }
-
 }

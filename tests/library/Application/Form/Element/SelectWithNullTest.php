@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,26 +25,31 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @package     Form_Element
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Application_Form_Element_SelectWithNullTest extends FormElementTestCase {
-
-    public function setUp() {
-        $this->_formElementClass = 'Application_Form_Element_SelectWithNull';
-        $this->_expectedDecoratorCount = 6;
-        $this->_expectedDecorators = array('ViewHelper', 'Errors', 'Description', 'ElementHtmlTag', 'LabelNotEmpty',
-            'dataWrapper');
-        $this->_staticViewHelper = 'viewFormSelect';
+class Application_Form_Element_SelectWithNullTest extends FormElementTestCase
+{
+    public function setUp(): void
+    {
+        $this->formElementClass       = 'Application_Form_Element_SelectWithNull';
+        $this->expectedDecorators     = [
+            'ViewHelper',
+            'Errors',
+            'Description',
+            'ElementHtmlTag',
+            'LabelNotEmpty',
+            'dataWrapper',
+            'ElementHint',
+        ];
+        $this->expectedDecoratorCount = count($this->expectedDecorators);
+        $this->staticViewHelper       = 'viewFormSelect';
         parent::setUp();
     }
 
-    public function testSetValueNull() {
+    public function testSetValueNull()
+    {
         $element = $this->getElement();
 
         $element->setValue(null);
@@ -51,7 +57,8 @@ class Application_Form_Element_SelectWithNullTest extends FormElementTestCase {
         $this->assertEquals('Null', $element->getUnfilteredValue());
     }
 
-    public function testGetValueNull() {
+    public function testGetValueNull()
+    {
         $element = $this->getElement();
 
         $element->setValue('Null');
@@ -59,4 +66,18 @@ class Application_Form_Element_SelectWithNullTest extends FormElementTestCase {
         $this->assertNull($element->getValue());
     }
 
+    public function testTestConfigureNullValue()
+    {
+        $element = $this->getElement();
+
+        $element->setNullValue('all');
+
+        $element->setValue('all');
+
+        $this->assertNull($element->getValue());
+
+        $element->setValue(null);
+
+        $this->assertEquals('all', $element->getUnfilteredValue());
+    }
 }

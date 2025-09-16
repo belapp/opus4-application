@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -25,9 +26,6 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     scripts
- * @author      Jens Schwidder <schwidder@zib.de>
  * @copyright   Copyright (c) 2017, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
@@ -35,13 +33,14 @@
 // Configure include path.
 set_include_path(
     implode(
-        PATH_SEPARATOR, array(
+        PATH_SEPARATOR,
+        [
             '.',
             dirname(__FILE__),
             dirname(dirname(dirname(__FILE__))) . '/library',
             dirname(dirname(dirname(__FILE__))) . '/vendor',
             get_include_path(),
-        )
+        ]
     )
 );
 
@@ -52,32 +51,39 @@ defined('APPLICATION_PATH')
 // Define application environment
 // TODO scripts using this might be executed with a different environment than requests to the application
 defined('APPLICATION_ENV')
-|| define('APPLICATION_ENV', (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production'));
+|| define('APPLICATION_ENV', getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production');
 
 require_once 'autoload.php';
 require_once 'opus-php-compatibility.php';
 
+// TODO OPUSVIER-4420 remove after switching to Laminas/ZF3
+require_once APPLICATION_PATH . '/vendor/opus4-repo/framework/library/OpusDb/Mysqlutf8.php';
+
 // environment initializiation
 $application = new Zend_Application(
     APPLICATION_ENV,
-    array(
-        "config" => array(
+    [
+        "config" => [
             APPLICATION_PATH . '/application/configs/application.ini',
             APPLICATION_PATH . '/application/configs/config.ini',
-            APPLICATION_PATH . '/application/configs/console.ini'
-        )
-    )
+            APPLICATION_PATH . '/application/configs/console.ini',
+        ],
+    ]
 );
 
 // setup logging for updates
-$options = $application->mergeOptions($application->getOptions(), array(
-    'log' => array(
+$options = $application->mergeOptions($application->getOptions(), [
+    'log'              => [
         'filename' => 'update.log',
-        'level' => 'INFO'
-    )
-));
+        'level'    => 'INFO',
+    ],
+    'updateInProgress' => true,
+]);
 
 $application->setOptions($options);
 
 // Bootstrapping application
 $application->bootstrap('Backend');
+
+// Bootstrapping modules so classes can be found
+$application->getBootstrap()->getPluginResource('modules')->init();

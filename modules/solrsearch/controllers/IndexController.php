@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,15 +25,11 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Solrsearch
- * @author      Julian Heise <heise@zib.de>
- * @author      Sascha Szott <szott@zib.de>
- * @author      Michael Lang <lang@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2017, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\Security\Realm;
 
 /**
  * Main controller for solrsearch module.
@@ -43,7 +40,6 @@
  */
 class Solrsearch_IndexController extends Application_Controller_Action
 {
-
     /**
      * Initialize controller.
      */
@@ -52,6 +48,7 @@ class Solrsearch_IndexController extends Application_Controller_Action
         parent::init();
 
         $this->_helper->mainMenu('search'); // activate entry in main menu
+        $this->view->robots = 'noindex, nofollow';
     }
 
     /**
@@ -70,28 +67,28 @@ class Solrsearch_IndexController extends Application_Controller_Action
     public function advancedAction()
     {
         $form = new Solrsearch_Form_AdvancedSearch();
-        $form->setAction($this->view->url(array(
-                    'module' => 'solrsearch', 'controller' => 'dispatch', 'action' => 'index'
-        )));
-        $this->view->form = $form;
+        $form->setAction($this->view->url([
+            'module'     => 'solrsearch',
+            'controller' => 'dispatch',
+            'action'     => 'index',
+        ]));
+        $this->view->form  = $form;
         $this->view->title = $this->view->translate('solrsearch_title_advanced');
     }
 
     /**
-     *
      * TODO get rid of this action
      */
-    public function invalidsearchtermAction() {
+    public function invalidsearchtermAction()
+    {
         $this->view->title = $this->view->translate('solrsearch_title_invalidsearchterm');
-        $searchtype = $this->getRequest()->getParam('searchtype');
+        $searchtype        = $this->getRequest()->getParam('searchtype');
 
         // TODO create form
 
-
         if ($searchtype === Application_Util_Searchtypes::ADVANCED_SEARCH) {
             $this->view->searchType = Application_Util_Searchtypes::ADVANCED_SEARCH;
-        }
-        else {
+        } else {
             $this->view->searchType = Application_Util_Searchtypes::SIMPLE_SEARCH;
         }
     }
@@ -101,23 +98,25 @@ class Solrsearch_IndexController extends Application_Controller_Action
      *
      * TODO remove?
      */
-    public function searchdispatchAction() {
+    public function searchdispatchAction()
+    {
         $this->_forward('index', 'dispatch');
     }
 
     /**
      * Redirects to the Export Module.
-     * @param $params Parameters for url
+     *
+     * @param array $params Parameters for url
      *
      * TODO remove this - go to export directly
      */
-    private function redirectToExport($params) {
+    private function redirectToExport($params)
+    {
         unset($params['start']);
-        if ($params['searchtype'] != 'latest') {
+        if ($params['searchtype'] !== 'latest') {
             unset($params['rows']);
-        }
-        else {
-            if (!array_key_exists('rows', $params)) {
+        } else {
+            if (! array_key_exists('rows', $params)) {
                 $params['rows'] = 10;
             }
         }
@@ -126,22 +125,24 @@ class Solrsearch_IndexController extends Application_Controller_Action
             unset($params['export']);
             unset($params['sortfield']);
             unset($params['sortorder']);
-            return $this->_helper->Redirector->redirectToAndExit('index', null, 'index', 'rss', $params);
+            $this->_helper->Redirector->redirectToAndExit('index', null, 'index', 'rss', $params);
+            return;
         }
 
-        return $this->_helper->Redirector->redirectToAndExit('index', null, 'index', 'export', $params);
+        $this->_helper->Redirector->redirectToAndExit('index', null, 'index', 'export', $params);
     }
 
     /**
      * @throws Application_SearchException
      * @throws Zend_Form_Exception
      */
-    public function searchAction() {
+    public function searchAction()
+    {
         // check if searchtype = latest and params parsed incorrect
         $searchType = $this->getParam('searchtype');
-        $request = $this->getRequest();
+        $request    = $this->getRequest();
 
-        if (in_array($searchType, array('advanced', 'authorsearch')) && !is_null($this->getParam('Reset'))) {
+        if (in_array($searchType, ['advanced', 'authorsearch']) && $this->getParam('Reset') !== null) {
             // redirect to new advanced search form
             // TODO find better way
             $this->_helper->Redirector->redirectTo('advanced', null, 'index', 'solrsearch');
@@ -150,16 +151,16 @@ class Solrsearch_IndexController extends Application_Controller_Action
 
         // TODO remove this export redirect
         if (strpos($searchType, 'latest/export') !== false) {
-            $paramArray = explode('/', $searchType);
-            $params = $request->getParams();
+            $paramArray           = explode('/', $searchType);
+            $params               = $request->getParams();
             $params['searchtype'] = 'latest';
-            $params['export'] = $paramArray[2];
+            $params['export']     = $paramArray[2];
             $params['stylesheet'] = $paramArray[4];
             $this->redirectToExport($params);
             return;
         }
 
-        if (!is_null($request->getParam('export'))) {
+        if ($request->getParam('export') !== null) {
             $params = $request->getParams();
             // export module ignores pagination parameters
             $this->redirectToExport($params);
@@ -167,8 +168,9 @@ class Solrsearch_IndexController extends Application_Controller_Action
         }
 
         // TODO does the following make sense after the above?
+        // TODO move code somewhere else (encapsulate)
         $config = $this->getConfig();
-        if (isset($config->export->stylesheet->search) && Opus_Security_Realm::getInstance()->checkModule('export')) {
+        if (isset($config->export->stylesheet->search) && Realm::getInstance()->checkModule('export')) {
             $this->view->stylesheet = $config->export->stylesheet->search;
         }
 
@@ -180,47 +182,54 @@ class Solrsearch_IndexController extends Application_Controller_Action
         $query = $searchPlugin->buildQuery($request);
 
         // if query is null, redirect has already been set
-        if (!is_null($query)) {
+        if ($query !== null) {
+            /*
+             * TODO refactor to make facets independent of each other (no openFacets with list of facets,
+             *      just a list of facets that know if they are open or not)
+             * TODO what are open/close facets? document!
+             * TODO replace FacetMenu with FacetManager? NO - facetMenu is request dependent (FacetManager is not)
+             */
             $facetMenu = new Solrsearch_Model_FacetMenu();
 
-            $openFacets = $facetMenu->buildFacetArray( $this->getRequest()->getParams() );
+            $openFacets = $facetMenu->buildFacetArray($request->getParams());
 
             $resultList = $searchPlugin->performSearch($query, $openFacets);
+
             $this->view->openFacets = $openFacets;
 
+            // TODO What happens here?
             $searchPlugin->setViewValues($request, $query, $resultList, $searchType);
 
-            $facetMenu->prepareViewFacets($resultList, $this->getRequest());
-            $this->view->facets = $facetMenu->getFacets();
-            $this->view->selectedFacets = $facetMenu->getSelectedFacets();
-            $this->view->facetNumberContainer = $facetMenu->getFacetNumberContainer();
-            $this->view->showFacetExtender = $facetMenu->getShowFacetExtender();
+            $this->view->facets = $facetMenu->getFacets($resultList, $request);
 
+            // TODO What happens here?
             $this->setLinkRelCanonical();
 
             $this->view->form = $searchPlugin->createForm($request);
 
             $numOfHits = $resultList->getNumberOfHits();
 
+            $this->view->resultScript = $this->_helper->resultScript();
+
+            // TODO not sure I like having a separate nohits page (leads to redundant code)
             if ($numOfHits === 0 || $query->getStart() >= $numOfHits) {
                 $this->render('nohits');
-            }
-            else {
+            } else {
                 $this->render('results');
             }
         }
     }
 
-    private function setLinkRelCanonical() {
-        $query = $this->getRequest()->getParams();
+    private function setLinkRelCanonical()
+    {
+        $query         = $this->getRequest()->getParams();
         $query['rows'] = 10;
         unset($query['sortfield']);
         unset($query['sortorder']);
 
-        $serverUrl = $this->view->serverUrl();
+        $serverUrl        = $this->view->serverUrl();
         $fullCanonicalUrl = $serverUrl . $this->view->url($query, null, true);
 
-        $this->view->headLink(array('rel' => 'canonical', 'href' => $fullCanonicalUrl));
+        $this->view->headLink(['rel' => 'canonical', 'href' => $fullCanonicalUrl]);
     }
-
 }

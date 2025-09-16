@@ -26,13 +26,15 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2011-2016, OPUS 4 development team
+ * @copyright   Copyright (c) 2011, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
 require_once dirname(__FILE__) . '/../common/bootstrap.php';
+
+use Opus\Common\Date;
+use Opus\Common\Document;
+use Opus\Common\Repository;
 
 /*
  * This cron job must be used if embargo dates are used in repository.
@@ -46,17 +48,24 @@ require_once dirname(__FILE__) . '/../common/bootstrap.php';
  * expiration access to the files is possible. However the document will not
  * be harvested again automatically. In order for the document to be included
  * in the next harvesting ServerDateModified needs to be updated.
+ *
+ * TODO put functionality in class that can be tested and reused
+ * TODO document policies of EmbargoDate - is it '<' or '<=' ?
  */
 
-$docfinder = new Opus_DocumentFinder();
-
-$now = new Opus_Date();
-$now->setNow();
+$finder = Repository::getInstance()->getDocumentFinder();
 
 // Find documents with expired EmbargoDate and ServerDateModified < EmbargoDate
-$docfinder->setEmbargoDateBeforeNotModifiedAfter(date('Y-m-d', time()));
+$finder->setEmbargoDateBefore(date('Y-m-d', time()));
+$finder->setNotModifiedAfterEmbargoDate();
 
-$foundIds = $docfinder->ids();
+$foundIds = $finder->getIds();
 
 // Update ServerDateModified for all found documents
-Opus_Document::setServerDateModifiedByIds($now, $foundIds);
+
+$now = new Date();
+$now->setNow();
+
+$documents = Repository::getInstance()->getModelRepository(Document::class);
+
+$documents->setServerDateModifiedForDocuments($now, $foundIds);

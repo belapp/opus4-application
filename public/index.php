@@ -25,12 +25,8 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Ralf Claussnitzer (ralf.claussnitzer@slub-dresden.de)
- * @author      Thoralf Klein <thoralf.klein@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
 // Saving start time for profiling.
@@ -42,30 +38,35 @@ defined('APPLICATION_PATH')
 
 // Define application environment (use 'production' by default)
 defined('APPLICATION_ENV')
-        || define('APPLICATION_ENV',
-        (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production'));
+        || define(
+            'APPLICATION_ENV',
+            getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production'
+        );
 
 // Ensure library/ is on include_path
-set_include_path(implode(PATH_SEPARATOR, array(
-            realpath(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'library'),
-            realpath(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'vendor'),
-            get_include_path(),
-        )));
+set_include_path(implode(PATH_SEPARATOR, [
+    realpath(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'library'),
+    realpath(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'vendor'),
+    get_include_path(),
+]));
 
 require_once 'autoload.php';
 require_once 'opus-php-compatibility.php';
 
+// TODO OPUSVIER-4420 remove after switching to Laminas/ZF3
+require_once APPLICATION_PATH . '/vendor/opus4-repo/framework/library/OpusDb/Mysqlutf8.php';
+
 // Zend_Application
 $config = new Zend_Config_Ini(
-        APPLICATION_PATH . '/application/configs/application.ini',
-        APPLICATION_ENV,
-        array('allowModifications'=>true)
+    APPLICATION_PATH . '/application/configs/application.ini',
+    APPLICATION_ENV,
+    ['allowModifications' => true]
 );
 
 $localConfig = new Zend_Config_Ini(
-        APPLICATION_PATH . '/application/configs/config.ini',
-        APPLICATION_ENV,
-        array('allowModifications'=>true)
+    APPLICATION_PATH . '/application/configs/config.ini',
+    APPLICATION_ENV,
+    ['allowModifications' => true]
 );
 
 $config->merge($localConfig);
@@ -73,7 +74,7 @@ $config->merge($localConfig);
 // configuration file that is modified via application user interface
 if (is_readable(APPLICATION_PATH . '/application/configs/config.xml')) {
     $onlineConfig = new Zend_Config_Xml(
-            APPLICATION_PATH . '/application/configs/config.xml'
+        APPLICATION_PATH . '/application/configs/config.xml'
     );
     $config->merge($onlineConfig);
 }
@@ -83,17 +84,14 @@ $application = new Zend_Application(APPLICATION_ENV, $config);
 
 try {
     $application->bootstrap()->run();
-}
-catch (Exception $e) {
+} catch (Exception $e) {
     if (APPLICATION_ENV === 'production') {
         header("HTTP/1.0 500 Internal Server Error");
         echo '<b>OPUS 4</b>' . PHP_EOL;
         echo '<p>Internal server error - See server logs for more information.</p>' . PHP_EOL;
         echo 'Timestamp: ' . date('Y-m-d H:i:s', time()) . PHP_EOL;
         error_log($e->getMessage());
-    }
-    else {
+    } else {
         throw $e;
     }
 }
-

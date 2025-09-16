@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,26 +25,26 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     View_Helper
- * @author      Sascha Szott <szott@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2015, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Config;
 
 /**
  * Checks if JQuery Library is available.
  */
-class Application_View_Helper_JQueryEnabled extends Zend_View_Helper_Abstract {
-
-    public function jQueryEnabled() {
-        $config = Zend_Registry::get('Zend_Config');
-        if (!isset($config->javascript->jquery->path)) {
+class Application_View_Helper_JQueryEnabled extends Zend_View_Helper_Abstract
+{
+    /**
+     * @return bool
+     */
+    public function jQueryEnabled()
+    {
+        $config = Config::get();
+        if (! isset($config->javascript->jquery->path)) {
             return false;
         }
         return is_readable(APPLICATION_PATH . '/public/' . $config->javascript->jquery->path);
     }
-
 }

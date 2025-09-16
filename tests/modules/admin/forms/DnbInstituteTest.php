@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,20 +25,22 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Appication Unit Test
- * @package     Admin_Form
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-class Admin_Form_DnbInstituteTest extends ControllerTestCase {
+use Opus\Common\DnbInstitute;
 
-    public function testConstructForm() {
+class Admin_Form_DnbInstituteTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'translation'];
+
+    public function testConstructForm()
+    {
         $form = new Admin_Form_DnbInstitute();
 
-        $this->assertEquals(11, count($form->getElements()));
+        $this->assertCount(11, $form->getElements());
 
         $this->assertNotNull($form->getElement('Name'));
         $this->assertNotNull($form->getElement('Department'));
@@ -53,10 +56,11 @@ class Admin_Form_DnbInstituteTest extends ControllerTestCase {
         $this->assertNotNull($form->getElement('Id'));
     }
 
-    public function testPopulateFromModel() {
+    public function testPopulateFromModel()
+    {
         $form = new Admin_Form_DnbInstitute();
 
-        $model = new Opus_DnbInstitute();
+        $model = DnbInstitute::new();
         $model->setName('TestName');
         $model->setDepartment('TestDepartment');
         $model->setAddress('TestAddress');
@@ -80,17 +84,19 @@ class Admin_Form_DnbInstituteTest extends ControllerTestCase {
         $this->assertNull($form->getElement('Id')->getValue());
     }
 
-    public function testPopulateFromModelWithId() {
+    public function testPopulateFromModelWithId()
+    {
         $form = new Admin_Form_DnbInstitute();
 
-        $model = new Opus_DnbInstitute(2);
+        $model = DnbInstitute::get(2);
 
         $form->populateFromModel($model);
 
         $this->assertEquals(2, $form->getElement('Id')->getValue());
     }
 
-    public function testUpdateModel() {
+    public function testUpdateModel()
+    {
         $form = new Admin_Form_DnbInstitute();
 
         $form->getElement('Id')->setValue(99);
@@ -102,7 +108,7 @@ class Admin_Form_DnbInstituteTest extends ControllerTestCase {
         $form->getElement('IsGrantor')->setChecked(true);
         $form->getElement('IsPublisher')->setChecked(false);
 
-        $model = new Opus_DnbInstitute();
+        $model = DnbInstitute::new();
 
         $form->updateModel($model);
 
@@ -116,43 +122,51 @@ class Admin_Form_DnbInstituteTest extends ControllerTestCase {
         $this->assertEquals('0', $model->getIsPublisher());
     }
 
-    public function testValidationEmptyPost() {
+    public function testValidationEmptyPost()
+    {
         $form = new Admin_Form_DnbInstitute();
 
-        $this->assertFalse($form->isValid(array()));
+        $this->assertFalse($form->isValid([]));
 
         $this->assertContains('isEmpty', $form->getErrors('Name'));
         $this->assertContains('isEmpty', $form->getErrors('City'));
     }
 
-    public function testValidationEmptyFields() {
+    public function testValidationEmptyFields()
+    {
         $form = new Admin_Form_DnbInstitute();
 
-        $this->assertFalse($form->isValid(array(
+        $this->assertFalse($form->isValid([
             'Name' => '   ',
-            'City' => ' '
-        )));
+            'City' => ' ',
+        ]));
 
         $this->assertContains('isEmpty', $form->getErrors('Name'));
         $this->assertContains('isEmpty', $form->getErrors('City'));
     }
 
-    public function testValidationTrue() {
+    public function testValidationTrue()
+    {
         $form = new Admin_Form_DnbInstitute();
 
-        $this->assertTrue($form->isValid(array(
+        $this->assertTrue($form->isValid([
             'Name' => 'OPUS 4 University',
-            'City' => 'Berlin'
-        )));
+            'City' => 'Berlin',
+        ]));
     }
 
-    public function testTranslationKeysForElements() {
+    public function testTranslationKeysForElements()
+    {
         $form = new Admin_Form_DnbInstitute();
 
         foreach ($form->getElements() as $name => $element) {
-            $this->assertTrue(strpos($element->getLabel(), 'Opus_DnbInstitute_') === FALSE,
-                    "Element '$name' is not translated.");
+            $label = $element->getLabel();
+            if ($label !== null) {
+                $this->assertFalse(
+                    strpos($label, 'Opus_DnbInstitute_'),
+                    "Element '$name' is not translated."
+                );
+            }
         }
     }
-
 }

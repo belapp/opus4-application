@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,21 +25,27 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class ReviewerTest extends ControllerTestCase {
 
-    public function setUp() {
+class ReviewerTest extends ControllerTestCase
+{
+    /** @var bool */
+    protected $configModifiable = true;
+
+    /** @var string[] */
+    protected $additionalResources = ['database', 'translation', 'view', 'mainMenu'];
+
+    public function setUp(): void
+    {
         parent::setUp();
         $this->enableSecurity();
         $this->loginUser('security3', 'security3pwd');
     }
 
-    public function tearDown() {
+    public function tearDown(): void
+    {
         $this->logoutUser();
         $this->restoreSecuritySetting();
         parent::tearDown();
@@ -47,7 +54,8 @@ class ReviewerTest extends ControllerTestCase {
     /**
      * Prüft, ob 'Review' Eintrag im Hauptmenu existiert.
      */
-    public function testMainMenu() {
+    public function testMainMenu()
+    {
         $this->useEnglish();
         $this->dispatch('/home');
         $this->assertQueryContentContains("//div[@id='header']", 'Review');
@@ -56,7 +64,8 @@ class ReviewerTest extends ControllerTestCase {
     /**
      * Prüft, daß nicht auf das Admin Menu zugegriffen werden kann.
      */
-    public function testNoAccessAdminMenu() {
+    public function testNoAccessAdminMenu()
+    {
         $this->dispatch('/admin');
         $this->assertRedirectTo(
             '/auth/index/rmodule/admin/rcontroller/index/raction/index',
@@ -67,7 +76,8 @@ class ReviewerTest extends ControllerTestCase {
     /**
      * Prüft, ob auf die Startseite des Review Modules zugegriffen werden kann.
      */
-    public function testAccessReviewModule() {
+    public function testAccessReviewModule()
+    {
         $this->useEnglish();
         $this->dispatch('/review');
         $this->assertQueryContentContains('//html/head/title', 'Review Documents');
@@ -76,12 +86,12 @@ class ReviewerTest extends ControllerTestCase {
     /**
      * Prüft, das nicht auf die Seite zur Verwaltung von Dokumenten zugegriffen werden kann.
      */
-    public function testNoAccessDocumentsController() {
+    public function testNoAccessDocumentsController()
+    {
         $this->dispatch('/admin/documents');
         $this->assertRedirectTo(
             '/auth/index/rmodule/admin/rcontroller/documents/raction/index',
             'redirect to /auth from /admin/documents not asserted'
         );
     }
-
 }

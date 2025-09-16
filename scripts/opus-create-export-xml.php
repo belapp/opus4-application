@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,13 +25,14 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @author      Gunar Maiwald <maiwald@zib.de>
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2011-2016, OPUS 4 development team
+ * @copyright   Copyright (c) 2011, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
+use Opus\Common\Config;
+use Opus\Common\Document;
+use Opus\Common\Model\NotFoundException;
+use Opus\Common\Repository;
 
 /**
  * Script for exporting all documents.
@@ -44,32 +46,30 @@
 
 require_once dirname(__FILE__) . '/common/bootstrap.php';
 
-$config = Zend_Registry::get('Zend_Config');
+$config = Config::get();
 
 // process options
 $options = getopt('o:');
 
 if (array_key_exists('o', $options)) {
     $exportFilePath = $options['o'];
-    $exportPath = dirname($exportFilePath);
+    $exportPath     = dirname($exportFilePath);
     $exportFilePath = basename($exportFilePath);
 
     // if path is not absolute use export folder
     if ($exportPath === '.') {
         $exportPath = $config->workspacePath . DIRECTORY_SEPARATOR . "export";
     }
-}
-else {
+} else {
     $exportFilePath = 'export.xml';
-    $exportPath = $config->workspacePath . DIRECTORY_SEPARATOR . "export";
+    $exportPath     = $config->workspacePath . DIRECTORY_SEPARATOR . "export";
 }
 
 $exportFilePath = $exportPath . DIRECTORY_SEPARATOR . $exportFilePath;
 
-
 // Exception if not writeable
 try {
-    if (!is_writeable($exportPath)) {
+    if (! is_writable($exportPath)) {
         throw new Exception("export folder is not writeable ($exportPath)");
     }
     if (file_exists($exportFilePath)) {
@@ -80,27 +80,26 @@ try {
     exit(1);
 }
 
-$opusDocuments = new DOMDocument('1.0', 'utf-8');
-$opusDocuments->formatOutput = true; 
-$export = $opusDocuments->createElement('export');
+$opusDocuments               = new DOMDocument('1.0', 'utf-8');
+$opusDocuments->formatOutput = true;
+$export                      = $opusDocuments->createElement('export');
 
-$docFinder = new Opus_DocumentFinder();
+$docFinder = Repository::getInstance()->getDocumentFinder();
 
 // get all documents
-foreach ($docFinder->ids() as $id) {
+foreach ($docFinder->getIds() as $id) {
     $doc = null;
 
     try {
-        $doc = new Opus_Document($id);
-    }
-    catch (Opus_Model_NotFoundException $e) {
+        $doc = Document::get($id);
+    } catch (NotFoundException $e) {
         echo "Document with id $id does not exist." . PHP_EOL;
         continue;
     }
 
-    $domDocument = $doc->toXml();
+    $domDocument  = $doc->toXml();
     $opusDocument = $domDocument->getElementsByTagName('Opus_Document')->item(0);
-    $node = $opusDocuments->importNode($opusDocument, true);
+    $node         = $opusDocuments->importNode($opusDocument, true);
     $export->appendChild($node);
 }
 
@@ -108,8 +107,8 @@ $opusDocuments->appendChild($export);
 
 // write XML to export file
 echo "Writing export to $exportFilePath ..." . PHP_EOL;
-$exportFile= fopen($exportFilePath, 'w');
-fputs($exportFile, $opusDocuments->saveXML());
+$exportFile = fopen($exportFilePath, 'w');
+fwrite($exportFile, $opusDocuments->saveXML());
 fclose($exportFile);
 
 exit();

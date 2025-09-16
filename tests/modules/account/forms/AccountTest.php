@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,40 +25,44 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    TODO
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Account;
+use Opus\Common\AccountInterface;
+use Opus\Common\Security\SecurityException;
 
 /**
  * Basic unit tests for account form for users.
  */
-class Account_Form_AccountTest extends ControllerTestCase {
+class Account_Form_AccountTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'translation'];
 
-    private $account = null;
+    /** @var AccountInterface  */
+    private $account;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
-        $account = Opus_Account::fetchAccountByLogin('user');
-
-        if (is_null($account))
-        {
-            $account = new Opus_Account();
+        try {
+            $account = Account::fetchAccountByLogin('user');
+        } catch (SecurityException $ex) {
+            $account = Account::new();
             $account->setLogin('user');
             $account->setPassword('userpwd');
             $account->store();
-            $this->account = $account;
         }
+
+        $this->account = $account;
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
-        if (!is_null($this->account))
-        {
+        if ($this->account !== null) {
             $this->account->delete();
         }
 
@@ -67,7 +72,8 @@ class Account_Form_AccountTest extends ControllerTestCase {
     /**
      * Test creating an account form.
      */
-    public function testCreateForm() {
+    public function testCreateForm()
+    {
         $form = new Account_Form_Account('user');
 
         $this->assertNotNull($form);
@@ -76,7 +82,8 @@ class Account_Form_AccountTest extends ControllerTestCase {
     /**
      * OPUSVIER-2413 Regression Test.
      */
-    public function testDoNotLowerCaseUsername() {
+    public function testDoNotLowerCaseUsername()
+    {
         $form = new Account_Form_Account('user');
 
         $username = $form->getElement("username");
@@ -86,68 +93,72 @@ class Account_Form_AccountTest extends ControllerTestCase {
         $this->assertTrue($username->getValue() === 'DummYuser');
     }
 
-    public function testChangedLoginNameValidationExistingLoginNameAccount() {
+    public function testChangedLoginNameValidationExistingLoginNameAccount()
+    {
         $form = new Account_Form_Account('user');
 
         $this->assertNotNull($form);
 
-        $postData = array(
-            'username' => 'admin',
-            'roleguest' => '1',
-            'password' => 'notchanged',
-            'confirmPassword' => 'notchanged'
-            );
+        $postData = [
+            'username'        => 'admin',
+            'roleguest'       => '1',
+            'password'        => 'notchanged',
+            'confirmPassword' => 'notchanged',
+        ];
 
         $this->assertFalse($form->isValid($postData));
     }
 
-    public function testChangedLoginNameValidationNewLoginName() {
-        $form = new Account_Form_Account();
-        $account = new Opus_Account(null, null, 'user');
+    public function testChangedLoginNameValidationNewLoginName()
+    {
+        $form    = new Account_Form_Account();
+        $account = Account::fetchAccountByLogin('user');
         $form->populateFromModel($account);
 
         $this->assertNotNull($form);
 
-        $postData = array(
-            'username' => 'newuser',
+        $postData = [
+            'username'  => 'newuser',
             'roleguest' => '1',
-            'password' => 'notchanged',
-            'confirm' => 'notchanged'
-            );
+            'password'  => 'notchanged',
+            'confirm'   => 'notchanged',
+        ];
 
         $this->assertTrue($form->isValid($postData));
     }
 
-    public function testEditValidationSameAccount() {
-        $form = new Account_Form_Account();
-        $account = new Opus_Account(null, null, 'user');
+    public function testEditValidationSameAccount()
+    {
+        $form    = new Account_Form_Account();
+        $account = Account::fetchAccountByLogin('user');
         $form->populateFromModel($account);
 
         // check that form was populated
         $this->assertEquals('user', $form->getElement('username')->getValue());
 
-        $postData = array(
-            'username' => 'user',
-            'oldLogin' => 'user', // added by AccountController based on ID
+        $postData = [
+            'username'  => 'user',
+            'oldLogin'  => 'user', // added by AccountController based on ID
             'roleguest' => '1',
-            'password' => 'notchanged',
-            'confirm' => 'notchanged'
-            );
+            'password'  => 'notchanged',
+            'confirm'   => 'notchanged',
+        ];
 
         $this->assertTrue($form->isValid($postData));
     }
 
-    public function testValidationMissmatchedPasswords() {
-        $form = new Account_Form_Account();
-        $account = new Opus_Account(null, null, 'user');
+    public function testValidationMissmatchedPasswords()
+    {
+        $form    = new Account_Form_Account();
+        $account = Account::fetchAccountByLogin('user');
         $form->populateFromModel($account);
 
-        $postData = array(
-            'username' => 'user',
+        $postData = [
+            'username'  => 'user',
             'roleguest' => '1',
-            'password' => 'password',
-            'confirm' => 'different'
-        );
+            'password'  => 'password',
+            'confirm'   => 'different',
+        ];
 
         $this->assertFalse($form->isValid($postData));
 
@@ -157,18 +168,19 @@ class Account_Form_AccountTest extends ControllerTestCase {
         $this->assertTrue(in_array('notMatch', $errors['confirm']));
     }
 
-    public function testValidationBadEmail() {
-        $form = new Account_Form_Account();
-        $account = new Opus_Account(null, null, 'user');
+    public function testValidationBadEmail()
+    {
+        $form    = new Account_Form_Account();
+        $account = Account::fetchAccountByLogin('user');
         $form->populateFromModel($account);
 
-        $postData = array(
-            'username' => 'user',
+        $postData = [
+            'username'  => 'user',
             'roleguest' => '1',
-            'email' => 'notAnEmail',
-            'password' => 'password',
-            'confirm' => 'password'
-        );
+            'email'     => 'notAnEmail',
+            'password'  => 'password',
+            'confirm'   => 'password',
+        ];
 
         $this->assertFalse($form->isValid($postData));
 
@@ -177,6 +189,4 @@ class Account_Form_AccountTest extends ControllerTestCase {
         $this->assertTrue(isset($errors['email']));
         $this->assertTrue(in_array('emailAddressInvalidFormat', $errors['email']));
     }
-
 }
-

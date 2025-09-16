@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -23,57 +24,60 @@
  * details. You should have received a copy of the GNU General Public License
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
+ * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
+
+use Opus\Common\DocumentInterface;
+use Opus\Common\Model\ModelInterface;
 
 /**
  * Abstraktes Unterformular (SubForm) fuer Metadaten-Formular.
- *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2013, OPUS 4 development team
- * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-abstract class Admin_Form_AbstractDocumentSubForm extends Application_Form_AbstractViewable {
-
-    public function init() {
+abstract class Admin_Form_AbstractDocumentSubForm extends Application_Form_AbstractViewable
+{
+    public function init()
+    {
         parent::init();
 
         $this->setDisableLoadDefaultDecorators(true);
         $this->setDecorators(
-            array(
+            [
                 'FormElements',
-                array(
-                    array('fieldsWrapper' => 'HtmlTag'), 
-                    array('tag' => 'div', 'class' => 'fields-wrapper')
-                ),
+                [
+                    ['fieldsWrapper' => 'HtmlTag'],
+                    ['tag' => 'div', 'class' => 'fields-wrapper'],
+                ],
                 'FieldsetWithButtons',
-                array(
-                    array('divWrapper' => 'HtmlTag'), 
-                    array('tag' => 'div', 'class' => 'subform')
-                )
-            )
+                [
+                    ['divWrapper' => 'HtmlTag'],
+                    ['tag' => 'div', 'class' => 'subform'],
+                ],
+            ]
         );
     }
 
     /**
      * Initialisiert das Formular mit den Werten des Models.
      *
-     * @param $model
+     * @param ModelInterface $model
      */
-    public function populateFromModel($model) {
+    public function populateFromModel($model)
+    {
         // leere Implementation
     }
 
     /**
      * Erzeugt Unterformularstruktur anhand der POST Hierarchy.
      *
-     * @param array $post
+     * @param array                  $post
+     * @param DocumentInterface|null $document
      *
      * TODO Möglich mit populate() zu verschmelzen?
      */
-    public function constructFromPost($post, $document = null) {
+    public function constructFromPost($post, $document = null)
+    {
     }
 
     /**
@@ -81,19 +85,24 @@ abstract class Admin_Form_AbstractDocumentSubForm extends Application_Form_Abstr
      *
      * Das Defaultverhalten ist das weiterleiten des POST an die Unterformulare.
      *
-     * @param $data POST Daten fuer Unterformular
-     * @param $context POST Daten vom gesamten Request
+     * @param array $data POST Daten fuer Unterformular
+     * @param array $context POST Daten vom gesamten Request
+     * @return array|string|null
+     *
      *
      * TODO Modifiziere zu $context = null um context optional zu machen?
+     *
+     * FIXME Verwendung eines Result Objects (statt null, string oder array)
      */
-    public function processPost($data, $context) {
+    public function processPost($data, $context)
+    {
         $subforms = $this->getSubForms();
 
         foreach ($subforms as $name => $subform) {
             if (array_key_exists($name, $data)) {
                 $result = $subform->processPost($data[$name], $context);
 
-                if (!is_null($result)) {
+                if ($result !== null) {
                     return $result;
                 }
             }
@@ -103,12 +112,14 @@ abstract class Admin_Form_AbstractDocumentSubForm extends Application_Form_Abstr
     }
 
     /**
-     * Aktualisiert die Instanz von Opus_Document durch Formularwerte.
+     * Aktualisiert die Instanz von Document durch Formularwerte.
      *
      * TODO consider options for ChangeLog
-     * @param Opus_Document $document
+     *
+     * @param DocumentInterface $model
      */
-    public function updateModel($model) {
+    public function updateModel($model)
+    {
         $subforms = $this->getSubForms();
 
         foreach ($subforms as $form) {
@@ -120,10 +131,11 @@ abstract class Admin_Form_AbstractDocumentSubForm extends Application_Form_Abstr
      * Funktion wird aufgerufen, wenn nach dem Hinzufügen einer Person oder Collection das Metadaten-Formular wieder
      * angezeigt wird.
      *
-     * @param $request
-     * @param null $session
+     * @param Zend_Controller_Request_Http         $request
+     * @param Admin_Model_DocumentEditSession|null $session
      */
-    public function continueEdit($request, $session = null) {
+    public function continueEdit($request, $session = null)
+    {
     }
 
     /**
@@ -134,13 +146,14 @@ abstract class Admin_Form_AbstractDocumentSubForm extends Application_Form_Abstr
      *
      * @param array $data
      * @param array $globalContext
-     * @return boolean true - wenn alle Abhängigkeiten erfüllt sind
+     * @return bool true - wenn alle Abhängigkeiten erfüllt sind
      */
-    public function isDependenciesValid($data, $globalContext) {
+    public function isDependenciesValid($data, $globalContext)
+    {
         $result = true;
 
         foreach ($this->getSubForms() as $name => $subform) {
-            if (array_key_exists($name, $data) && !$subform->isDependenciesValid($data[$name], $globalContext)) {
+            if (array_key_exists($name, $data) && ! $subform->isDependenciesValid($data[$name], $globalContext)) {
                 $result = false; // trotzdem Validierung über alle Unterformulare um auch mehrere Meldungen anzuzeigen
             }
         }
@@ -151,9 +164,10 @@ abstract class Admin_Form_AbstractDocumentSubForm extends Application_Form_Abstr
     /**
      * Liefert Helper fuer die Handhabung von Datumsangaben.
      *
-     * @return \Application_Controller_Action_Helper_Dates
+     * @return Application_Controller_Action_Helper_Dates
      */
-    public function getDatesHelper() {
+    public function getDatesHelper()
+    {
         return Zend_Controller_Action_HelperBroker::getStaticHelper('Dates');
     }
 
@@ -164,16 +178,15 @@ abstract class Admin_Form_AbstractDocumentSubForm extends Application_Form_Abstr
      * possible and therefore create log messages. Unfortunately some of our legends cannot be translated.
      *
      * @param string $legend
-     * @return void|Zend_Form
+     * @return $this
      */
-    public function setLegend($legend) {
+    public function setLegend($legend)
+    {
         $translator = $this->getTranslator();
-        if (!is_null($translator) && $translator->isTranslated($legend)) {
-            parent::setLegend($translator->translate($legend));
-        }
-        else {
-            parent::setLegend($legend);
+        if ($translator !== null && $translator->isTranslated($legend)) {
+            return parent::setLegend($translator->translate($legend));
+        } else {
+            return parent::setLegend($legend);
         }
     }
-
 }

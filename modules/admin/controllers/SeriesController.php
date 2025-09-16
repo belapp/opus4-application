@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,26 +25,25 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application
- * @package     Module_Admin
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
+
+use Opus\Common\Series;
 
 /**
- * Controller for management of Opus_Series models in database.
+ * Controller for management of Series models in database.
  *
- * Creating, editing, deleting of Opus_Series models. Changing the order
- * of Opus_Series models.
+ * Creating, editing, deleting of Series models. Changing the order
+ * of Series models.
  */
-class Admin_SeriesController extends Application_Controller_ActionCRUD {
-
+class Admin_SeriesController extends Application_Controller_ActionCRUD
+{
     /**
      * Konfiguriere Formularklasse für den Controller.
      */
-    public function init() {
+    public function init()
+    {
         $this->setFormClass('Admin_Form_Series');
         $this->setFunctionNameForGettingModels('getAllSortedBySortKey');
         parent::init();
@@ -51,23 +51,26 @@ class Admin_SeriesController extends Application_Controller_ActionCRUD {
 
     /**
      * Setzt Defaultwerte für das Formular.
-     * @return Opus_Series
+     *
+     * @return Series
      */
-    public function getNewModel() {
+    public function getNewModel()
+    {
         $series = parent::getNewModel();
         $series->setVisible(1);
-        $series->setSortOrder(Opus_Series::getMaxSortKey() + 1);
+        $series->setSortOrder(Series::getMaxSortKey() + 1);
         return $series;
     }
 
     /**
      * Modifiziert Formular für Indextabelle, so daß angepasstes ViewScript verwendet wird.
+     *
      * @return Application_Form_Model_Table
      */
-    public function getIndexForm() {
+    public function getIndexForm()
+    {
         $form = parent::getIndexForm();
         $form->setViewScript('series/modeltable.phtml');
         return $form;
     }
-
 }

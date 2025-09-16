@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
@@ -24,35 +25,41 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Tests
- * @package     Frontdoor
- * @author      Sascha Szott <szott@zib.de>
- * @copyright   Copyright (c) 2008-2018, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
  */
 
+use Opus\Common\Person;
+use Opus\Common\Title;
+
 /**
- * Class Frontdoor_MailControllerTest.
- *
  * @covers Frontdoor_MailController
  */
-class Frontdoor_MailControllerTest extends ControllerTestCase {
+class Frontdoor_MailControllerTest extends ControllerTestCase
+{
+    /** @var string[] */
+    protected $additionalResources = ['database', 'view', 'mainMenu', 'translation'];
 
+    /** @var int */
     private $documentId;
-    
+
+    /** @var int */
     private $authorDocumentId;
+
+    /** @var int */
     private $authorId;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
         $document = $this->createTestDocument();
         $document->setServerState('published');
         $document->setType('baz');
 
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setValue('foobartitle');
         $title->setLanguage('deu');
-        $document->setTitleMain($title);       
+        $document->setTitleMain($title);
 
         $this->documentId = $document->store();
         $this->assertNotNull($this->documentId);
@@ -61,70 +68,84 @@ class Frontdoor_MailControllerTest extends ControllerTestCase {
         $document->setServerState('published');
         $document->setType('baz');
 
-        $title = new Opus_Title();
+        $title = Title::new();
         $title->setValue('foobartitle');
         $title->setLanguage('deu');
         $document->setTitleMain($title);
 
-        $author = new Opus_Person();
+        $author = Person::new();
         $author->setFirstName('John');
         $author->setLastName('Doe');
         $author->setEmail('doe@example.org');
         $this->authorId = $author->store();
         $this->assertNotNull($this->authorId);
 
-        $link_person = $document->addPersonAuthor($author);
-        $link_person->setAllowEmailContact('1');
+        $linkPerson = $document->addPersonAuthor($author);
+        $linkPerson->setAllowEmailContact('1');
 
         $this->authorDocumentId = $document->store();
         $this->assertNotNull($this->authorDocumentId);
     }
 
-    public function testIndexActionNotSupported() {
+    public function testIndexActionNotSupported()
+    {
         $this->dispatch('/frontdoor/mail/index/');
         $this->assertResponseCode(500);
         $this->assertContains('currently not supported', $this->getResponse()->getBody());
     }
 
-    public function testSendmailActionNotSupported() {
+    public function testSendmailActionNotSupported()
+    {
         $this->dispatch('/frontdoor/mail/sendmail/');
         $this->assertResponseCode(500);
         $this->assertContains('currently not supported', $this->getResponse()->getBody());
     }
 
-    public function testToauthorActionWithMissingParam() {
+    public function testToauthorActionWithMissingParam()
+    {
         $this->dispatch('/frontdoor/mail/toauthor/');
         $this->assertResponseCode(500);
     }
 
-    public function testToauthorActionWithInvalidParam() {
+    public function testToauthorActionWithInvalidParam()
+    {
         $this->dispatch('/frontdoor/mail/toauthor/docId/invaliddocid');
         $this->assertResponseCode(500);
     }
 
-    public function testToauthorActionWithoutContactableAuthor() {
+    public function testToauthorActionWithoutContactableAuthor()
+    {
         $this->dispatch('/frontdoor/mail/toauthor/docId/' . $this->documentId);
         $this->assertResponseCode(500);
     }
 
-    public function testToauthorAction() {
+    public function testToauthorAction()
+    {
         $this->dispatch('/frontdoor/mail/toauthor/docId/' . $this->authorDocumentId);
         $this->assertResponseCode(200);
     }
 
-    public function testToauthorActionWithPost() {
+    public function testToauthorActionWithPost()
+    {
         $this->getRequest()->setMethod('POST');
         $this->dispatch('/frontdoor/mail/toauthor/docId/' . $this->authorDocumentId);
         $this->assertResponseCode(200);
     }
 
-    public function testToauthorActionWithInvalidPost() {
+    public function testToauthorActionWithInvalidPost()
+    {
         $this->markTestIncomplete('TODO');
     }
 
-    public function testToauthorActionWithValidPost() {
+    public function testToauthorActionWithValidPost()
+    {
         $this->markTestIncomplete('TODO');
     }
 
+    public function testToauthorDuplicateDocIdParameter()
+    {
+        $this->dispatch('/frontdoor/mail/toauthor/docId/147/docId/146');
+        $this->assertResponseCode(200);
+        $this->assertContains('<b>KOBV</b>', $this->getResponse()->getBody());
+    }
 }
-

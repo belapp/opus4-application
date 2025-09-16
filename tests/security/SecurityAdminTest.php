@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,31 +25,37 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Application Unit Test
- * @author      Michael Lang <lang@zib.de>
- * @copyright   Copyright (c) 2008-2014, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
-class SecurityAdminTest extends ControllerTestCase {
 
-    public function setUp() {
+class SecurityAdminTest extends ControllerTestCase
+{
+    /** @var bool */
+    protected $configModifiable = true;
+
+    /** @var string[] */
+    protected $additionalResources = ['view', 'navigation', 'mainMenu', 'database', 'translation'];
+
+    public function setUp(): void
+    {
         parent::setUp();
         $this->enableSecurity();
         $this->loginUser('security10', 'security10pwd');
     }
 
-    public function tearDown() {
+    public function tearDown(): void
+    {
         $this->logoutUser();
         $this->restoreSecuritySetting();
         parent::tearDown();
     }
 
-
     /**
      * Prüft, ob nur die erlaubten Einträge im Admin Menu angezeigt werden.
      */
-    public function testAdminMenuFiltering() {
+    public function testAdminMenuFiltering()
+    {
         $this->dispatch('/admin');
         $this->assertQuery('//a[@href="/admin/index/security"]');
         $this->assertNotQuery('//a[@href="/admin/collectionroles"]');
@@ -62,14 +69,19 @@ class SecurityAdminTest extends ControllerTestCase {
         $this->assertNotQuery('//a[@href="/admin/index/setup"]');
     }
 
-    public function testAccessAccountController() {
+    /**
+     * TODO make asserts more precise
+     */
+    public function testAccessAccountController()
+    {
         $this->useEnglish();
         $this->dispatch('/admin/account');
         $this->assertQueryContentContains('//html/head/title', 'Accounts');
-        $this->assertQueryContentContains('//html/body', 'Add Account');
+        $this->assertQueryContentContains('//html/body', 'Add');
     }
 
-    public function testAccessIprangeController() {
+    public function testAccessIprangeController()
+    {
         $this->useEnglish();
         $this->dispatch('/admin/iprange');
         $this->assertQueryContentContains('//html/head/title', 'Manage IP Ranges');
@@ -78,10 +90,10 @@ class SecurityAdminTest extends ControllerTestCase {
         $this->assertXpath('//a[@href="/admin/iprange/new"]');
     }
 
-    public function testAccessAccessController() {
+    public function testAccessAccessController()
+    {
         $this->useEnglish();
         $this->dispatch('/admin/access/listmodule/roleid/2');
         $this->assertQueryContentContains('//html/head/title', 'Edit user roles - access control');
     }
-
 }

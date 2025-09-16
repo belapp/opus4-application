@@ -1,5 +1,6 @@
 <?php
-/*
+
+/**
  * This file is part of OPUS. The software OPUS has been originally developed
  * at the University of Stuttgart with funding from the German Research Net,
  * the Federal Department of Higher Education and Research and the Ministry
@@ -24,38 +25,41 @@
  * along with OPUS; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * @category    Unit Tests
- * @author      Jens Schwidder <schwidder@zib.de>
- * @copyright   Copyright (c) 2008-2010, OPUS 4 development team
+ * @copyright   Copyright (c) 2008, OPUS 4 development team
  * @license     http://www.gnu.org/licenses/gpl.html General Public License
- * @version     $Id$
  */
 
-/**
- *
- */
-class Application_Form_Validate_LoginAvailableTest extends ControllerTestCase {
+use Opus\Common\Account;
+use Opus\Common\AccountInterface;
 
+class Application_Form_Validate_LoginAvailableTest extends ControllerTestCase
+{
+    /** @var string */
+    protected $additionalResources = 'database';
+
+    /** @var Application_Form_Validate_LoginAvailable */
     private $validator;
 
-    private $_account;
+    /** @var AccountInterface */
+    private $account;
 
-    public function setUp() {
+    public function setUp(): void
+    {
         parent::setUp();
         $this->validator = new Application_Form_Validate_LoginAvailable();
 
-        $user = new Opus_Account();
+        $user = Account::new();
         $user->setLogin('user');
         $user->setPassword('userpwd');
         $user->store();
 
-        $this->_account = $user;
+        $this->account = $user;
     }
 
-    public function tearDown() {
-        if (!is_null($this->_account))
-        {
-            $this->_account->delete();
+    public function tearDown(): void
+    {
+        if ($this->account !== null) {
+            $this->account->delete();
         }
 
         parent::tearDown();
@@ -66,28 +70,33 @@ class Application_Form_Validate_LoginAvailableTest extends ControllerTestCase {
      * This test will break if that behaviour of the database/framework will
      * change.
      */
-    public function testValidationNotCaseSensitive() {
+    public function testValidationNotCaseSensitive()
+    {
         $this->assertFalse($this->validator->isValid('User'));
         $this->assertFalse($this->validator->isValid('user'));
         $this->assertFalse($this->validator->isValid('uSer'));
         $this->assertFalse($this->validator->isValid('USER'));
     }
 
-    public function testAccountAvailable() {
+    public function testAccountAvailable()
+    {
         $this->assertTrue($this->validator->isValid('newuser'));
     }
 
-    public function testAccountNotAvailable() {
+    public function testAccountNotAvailable()
+    {
         $this->assertFalse($this->validator->isValid('admin'));
     }
 
-    public function testAccountAvailableInEditMode() {
-        $validator = new Application_Form_Validate_LoginAvailable(array('ignoreCase' => true));
+    public function testAccountAvailableInEditMode()
+    {
+        $validator = new Application_Form_Validate_LoginAvailable(['ignoreCase' => true]);
         $this->assertTrue($validator->isValid('newuser'));
     }
 
-    public function testAccountNotAvailableInEditMode() {
-        $validator = new Application_Form_Validate_LoginAvailable(array('ignoreCase' => true));
+    public function testAccountNotAvailableInEditMode()
+    {
+        $validator = new Application_Form_Validate_LoginAvailable(['ignoreCase' => true]);
         $this->assertFalse($validator->isValid('admin'));
     }
 
@@ -96,22 +105,22 @@ class Application_Form_Validate_LoginAvailableTest extends ControllerTestCase {
      * Account bereits existiert, aber sich der neue Name nur im Case von Zeichen
      * vom alten Namen unterscheidet.
      */
-    public function testIgnoreCaseChangesForEditMode() {
-        $validator = new Application_Form_Validate_LoginAvailable(array('ignoreCase' => true));
+    public function testIgnoreCaseChangesForEditMode()
+    {
+        $validator = new Application_Form_Validate_LoginAvailable(['ignoreCase' => true]);
 
-        $context = array('oldLogin' => 'admin');
+        $context = ['oldLogin' => 'admin'];
 
         $this->assertTrue($validator->isValid('ADMIN', $context));
         $this->assertTrue($validator->isValid('aDmin', $context));
     }
 
-    public function testNotAvailableForEditMode() {
-        $validator = new Application_Form_Validate_LoginAvailable(array('ignoreCase' => true));
+    public function testNotAvailableForEditMode()
+    {
+        $validator = new Application_Form_Validate_LoginAvailable(['ignoreCase' => true]);
 
-        $context = array('oldLogin' => 'admin');
+        $context = ['oldLogin' => 'admin'];
 
         $this->assertFalse($validator->isValid('user', $context));
     }
-
 }
-
